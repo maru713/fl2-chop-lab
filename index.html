@@ -88,7 +88,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
       <span><i style="background:var(--out)"></i>カット（入る）</span>
       <span><i style="background:var(--bad)"></i>カット（入らない）</span>
       <span>球の黒い線＝回る向き（見やすく遅くしています）</span>
-      <span>人の形＝身長165cmの目安。縦横とも実際の比率で描いています</span>
+      <span>人の形＝身長165cm、膝を軽く曲げた構え。肘の点の色：緑＝余裕あり、橙＝伸びすぎ・窮屈、赤＝伸びきり</span>
     </div>
     <div class="bar">
       <button class="btn" id="play" type="button">一時停止</button>
@@ -190,6 +190,8 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
   <details>
     <summary>詳しい数値と打点の速度</summary>
     <dl class="kv">
+      <dt>打点（体のどの高さか）</dt><dd id="o-body"></dd>
+      <dt>腕の状態</dt><dd id="o-arm"></dd>
       <dt>返球のネット上の高さ</dt><dd id="o-clr"></dd>
       <dt>弾んだ後の頂点の高さ・位置</dt><dd id="o-pk"></dd>
       <dt>この位置で許される高さ</dt><dd id="o-allow"></dd>
@@ -349,22 +351,31 @@ function drawCourt(){if(!S)return;const g=geom(),{cv,W,H,X,Y,xmin,xmax}=g,dpr=wi
   const ia=S.inc.pts[0]?S.inc.pts[0][2]:0,oa=S.o?S.o.om:0;let ph="";if(idx<nIn)ph="相手の打球（"+(ia>=0?"上回転":"下回転")+"）";else if(S.out&&idx-nIn<nOut)ph="返球（相手から見て"+(oa>=0?"下回転":"上回転")+"）";else ph="着地";
   $("phase").textContent=ph;}
 const HUMAN=1.65;
-function drawPerson(c,X,Y,hx,hy,col){const H=HUMAN,f=H/1.65,reach=0.72*f,grip=0.12;
-  const cx=-S.dist;let footX=Math.min(cx-0.5*f,-0.2);
-  let shY=FLOOR+1.40*f,hipY=FLOOR+0.86*f,drop=0,lean=0;
+function personPose(hx,hy){const H=HUMAN,f=H/1.65,L1=0.30*f,L2=0.36*f,grip=0.12;
+  const cx=-S.dist;const footX=Math.min(cx-0.45*f,-0.2);
+  const base=0.10*f;let drop=base,lean=0.04;
   const tx=hx-grip,ty=hy;
-  for(let i=0;i<40;i++){const sx=footX+0.06+lean,sy=shY-drop;if(Math.hypot(tx-sx,ty-sy)<=reach)break;drop=Math.min(0.5*f,drop+0.0125*f);lean=Math.min(0.35*f,drop*0.7);}
-  const shX=footX+0.06+lean,sY=shY-drop,hipX=footX+0.02-drop*0.25,hY=hipY-drop*0.85;
-  const kneeX=footX+0.18*f*(0.4+drop/(0.5*f)),kneeY=FLOOR+0.46*f-drop*0.35;
-  const headX=shX+0.05+lean*0.4,headY=sY+0.15*f;
-  let ax=tx-shX,ay=ty-sY;const al=Math.hypot(ax,ay);if(al>reach){ax*=reach/al;ay*=reach/al;}
-  const handX=shX+ax,handY=sY+ay,elX=shX+ax*0.5-ay*0.12,elY=sY+ay*0.5+ax*0.12;
+  for(let i=0;i<60;i++){const sx=footX+0.06+lean,sy=FLOOR+1.40*f-drop;if(Math.hypot(tx-sx,ty-sy)<=(L1+L2)*0.97)break;drop=Math.min(0.55*f,drop+0.0125*f);lean=Math.min(0.35*f,0.04+(drop-base)*0.7);}
+  const shX=footX+0.06+lean,sY=FLOOR+1.40*f-drop,hipX=footX+0.02-(drop-base)*0.25,hY=FLOOR+0.86*f-drop*0.85;
+  const kneeX=footX+0.18*f*(0.6+drop/(0.5*f)),kneeY=FLOOR+0.46*f-drop*0.3;
+  let dx=tx-shX,dy=ty-sY,d=Math.hypot(dx,dy);const ext=d/(L1+L2);const dd=Math.min(d,(L1+L2)*0.999);
+  const ang=Math.atan2(dy,dx),cosA=(L1*L1+dd*dd-L2*L2)/(2*L1*dd),a1=Math.acos(Math.max(-1,Math.min(1,cosA)));
+  const elX=shX+L1*Math.cos(ang-a1),elY=sY+L1*Math.sin(ang-a1);
+  const handX=shX+dd*Math.cos(ang),handY=sY+dd*Math.sin(ang);
+  const elbowDeg=180-Math.acos(Math.max(-1,Math.min(1,(L1*L1+L2*L2-dd*dd)/(2*L1*L2))))*180/Math.PI;
+  const lv=[[FLOOR+0.47*f-drop*0.3,"膝"],[hY,"腰"],[hY+0.14*f,"へそ"],[sY-0.12*f,"胸"],[sY,"肩"]];
+  let body="肩より上";for(const [y,n] of lv){if(hy<=y+0.04){body=n+"の高さ"+(hy<y-0.06?"より下":"");break;}}
+  return {f,footX,shX,sY,hipX,hY,kneeX,kneeY,elX,elY,handX,handY,ext,elbowDeg,drop,lean,body};}
+function armLabel(ext){return ext>0.95?["伸びきり（届くのがやっと）","--bad"]:ext>0.85?["かなり伸びている","--in"]:ext<0.45?["窮屈（体に近すぎ）","--in"]:["肘に余裕あり","--out"];}
+function drawPerson(c,X,Y,hx,hy,col){const P=personPose(hx,hy),f=P.f,H=HUMAN;
   c.save();c.globalAlpha=0.55;c.strokeStyle=col("--muted");c.lineCap="round";c.lineJoin="round";c.lineWidth=3;
-  c.beginPath();c.moveTo(X(footX+0.12),Y(FLOOR));c.lineTo(X(kneeX),Y(kneeY));c.lineTo(X(hipX),Y(hY));c.lineTo(X(shX),Y(sY));c.stroke();
-  c.beginPath();c.moveTo(X(footX-0.25*f),Y(FLOOR));c.lineTo(X(kneeX-0.22*f),Y(kneeY+0.02));c.lineTo(X(hipX),Y(hY));c.stroke();
-  c.beginPath();c.moveTo(X(shX),Y(sY));c.lineTo(X(elX),Y(elY));c.lineTo(X(handX),Y(handY));c.stroke();
-  const hr=Math.max(4,(X(0.11*f)-X(0)));c.beginPath();c.ellipse(X(headX),Y(headY),hr,Math.max(4,Y(0)-Y(0.11*f)),0,0,Math.PI*2);c.stroke();
-  c.globalAlpha=1;c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.textAlign="center";c.fillText(Math.round(H*100)+"cm",X(headX),Y(headY+0.14*f));c.textAlign="left";c.restore();}
+  c.beginPath();c.moveTo(X(P.footX+0.12),Y(FLOOR));c.lineTo(X(P.kneeX),Y(P.kneeY));c.lineTo(X(P.hipX),Y(P.hY));c.lineTo(X(P.shX),Y(P.sY));c.stroke();
+  c.beginPath();c.moveTo(X(P.footX-0.28*f),Y(FLOOR));c.lineTo(X(P.kneeX-0.24*f),Y(P.kneeY+0.02));c.lineTo(X(P.hipX),Y(P.hY));c.stroke();
+  c.beginPath();c.moveTo(X(P.shX),Y(P.sY));c.lineTo(X(P.elX),Y(P.elY));c.lineTo(X(P.handX),Y(P.handY));c.stroke();
+  const headX=P.shX+0.05+P.lean*0.4,headY=P.sY+0.15*f;const r=Math.max(4,X(0.11*f)-X(0));c.beginPath();c.arc(X(headX),Y(headY),r,0,Math.PI*2);c.stroke();
+  c.globalAlpha=1;const [lab,cv]=armLabel(P.ext);c.fillStyle=col(cv);c.beginPath();c.arc(X(P.elX),Y(P.elY),3.5,0,Math.PI*2);c.fill();
+  c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.textAlign="center";c.fillText(Math.round(H*100)+"cm",X(headX),Y(headY)-r-4);c.textAlign="left";c.restore();
+  const el=$("o-arm");if(el){const txt=lab+"（肘 "+Math.round(P.elbowDeg)+"°曲げ）";if(el.textContent!==txt)el.textContent=txt;const b=$("o-body");if(b&&b.textContent!==P.body)b.textContent=P.body;}}
 function curOm(){if(!S)return 0;const nIn=S.inc.pts.length,idx=Math.floor(anim.t/DT);
   if(idx<nIn)return S.inc.pts[idx][2];if(S.out&&idx-nIn<S.out.pts.length)return S.out.pts[idx-nIn][2];return 0;}
 function total(){return S?(S.inc.pts.length+(S.out?S.out.pts.length:0))*DT:0;}
