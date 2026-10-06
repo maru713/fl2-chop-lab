@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>FL2カット軌道ラボ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: phone-first — sticky stage (animated court + 4 key numbers) on top, thumb-sized controls below, details folded */
+:root{
+  --bg:#f3f5f4; --surface:#ffffff; --ink:#18221f; --muted:#5b6964; --line:#d5dcd9;
+  --table:#1f5a7a; --net:#18221f; --in:#d0611f; --out:#11806a; --bad:#b3362c; --swing:#7c8a85;
+  --chip-ok:#dff1ea; --chip-bad:#f8e1de; --ball:#fbfaf7; --ballmark:#18221f;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111715; --surface:#19211e; --ink:#e6ece9; --muted:#9aa8a3; --line:#2c3733;
+  --table:#3c86ad; --net:#e6ece9; --in:#f08a4b; --out:#3cc2a3; --bad:#ef7a6e; --swing:#8d9b96;
+  --chip-ok:#173a30; --chip-bad:#45211d; --ball:#f4f1ea; --ballmark:#111715; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111715; --surface:#19211e; --ink:#e6ece9; --muted:#9aa8a3; --line:#2c3733;
+  --table:#3c86ad; --net:#e6ece9; --in:#f08a4b; --out:#3cc2a3; --bad:#ef7a6e; --swing:#8d9b96;
+  --chip-ok:#173a30; --chip-bad:#45211d; --ball:#f4f1ea; --ballmark:#111715; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65}
+.wrap{max-width:820px;margin:0 auto;padding-inline:16px;padding-block:14px 48px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.wrap>*{min-width:0}
+h1{font-size:1.35rem;font-weight:700;margin:0;line-height:1.3}
+h2{font-size:1rem;font-weight:700;margin:0 0 4px}
+.lead{margin:2px 0 0;color:var(--muted);font-size:13px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.stage{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:6px 8px;margin-inline:-16px;padding-inline:16px;border-bottom:1px solid var(--line)}
+.stage .panel{padding:8px 10px}
+#court{display:block;touch-action:pan-x pan-y}
+.bar{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
+.btn{font:inherit;font-size:14px;font-weight:700;border:1px solid var(--table);background:var(--table);color:var(--surface);border-radius:999px;padding:6px 16px;min-height:36px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--table)}
+.btn:focus-visible,.seg label:has(input:focus-visible){outline:2px solid var(--table);outline-offset:2px}
+.speed{display:flex;gap:4px}
+.speed button{font:inherit;font-size:12px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:4px 10px;min-height:32px;cursor:pointer}
+.speed button[aria-pressed="true"]{border-color:var(--table);color:var(--table);font-weight:700}
+.phase{font-size:12px;color:var(--muted);margin-left:auto}
+.sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
+.sum div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:5px 8px;min-width:0}
+.sum small{display:block;font-size:11px;color:var(--muted);line-height:1.3}
+.sum b{display:block;font-family:var(--f-num);font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sum .ok b{color:var(--out)} .sum .bad b{color:var(--bad)}
+@media (max-width:520px){.sum{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.legend{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:11px;color:var(--muted);margin-top:4px}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px;border-radius:2px}
+.row{display:grid;grid-template-columns:1fr auto;gap:0 10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.row label{font-size:14px} .row output{font-family:var(--f-num);font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
+.row input[type=range]{grid-column:1/-1;width:100%;height:30px;margin:2px 0 0;accent-color:var(--table)}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:6px 0 4px}
+.seg label{position:relative;border:1px solid var(--line);border-radius:10px;padding:8px 4px;font-size:13px;text-align:center;cursor:pointer;min-height:40px;display:grid;place-items:center}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:520px){.seg4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.seg label:has(input:checked){border-color:var(--table);color:var(--table);font-weight:700}
+.note{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+details>summary{cursor:pointer;font-weight:700;padding:4px 0;min-height:32px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:14px;margin:6px 0 10px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums}
+#inset{width:100%;max-width:320px;display:block;margin:0 auto}
+ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
+.src a{color:var(--table);word-break:break-all}
+.warn{color:var(--bad);font-size:13px;margin:4px 0 0}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header>
+  <h1>FL2カット軌道ラボ</h1>
+  <p class="lead">相手のドライブや高い球を、フェイントロング2でカットしたときの軌道と回転をスローで再生します。下のスライダーを動かすと、すぐに計算し直します。</p>
+</header>
+
+<section class="stage" aria-label="軌道のアニメーションと結果">
+  <div class="panel">
+    <div id="courtWrap" style="overflow-x:auto;overscroll-behavior-x:contain"><canvas id="court" role="img" aria-label="卓球台を横から見た図。相手のドライブと自分のカットの軌道を再生する"></canvas></div>
+    <div class="legend">
+      <span><i style="background:var(--in)"></i>相手の打球</span>
+      <span><i style="background:var(--out)"></i>カット（入る）</span>
+      <span><i style="background:var(--bad)"></i>カット（入らない）</span>
+      <span>球の黒い線＝回る向き（見やすく遅くしています）</span>
+      <span>人の形＝身長165cmの目安。縦横とも実際の比率で描いています</span>
+    </div>
+    <div class="bar">
+      <button class="btn" id="play" type="button">一時停止</button>
+      <div class="speed" role="group" aria-label="表示の大きさ">
+        <button type="button" data-v="fit" aria-pressed="false">全体</button>
+        <button type="button" data-v="zoom" aria-pressed="true">拡大</button>
+      </div>
+      <div class="speed" role="group" aria-label="再生速度">
+        <button type="button" data-s="0.1" aria-pressed="false">1/10</button>
+        <button type="button" data-s="0.25" aria-pressed="true">1/4</button>
+        <button type="button" data-s="1" aria-pressed="false">実速</button>
+      </div>
+      <span class="phase" id="phase"></span>
+    </div>
+  </div>
+  <div class="sum">
+    <div id="s-res"><small>結果</small><b id="v-res">—</b></div>
+    <div><small>入る面の開き</small><b id="v-range">—</b></div>
+    <div><small>返球の回転</small><b id="v-spin">—</b></div>
+    <div><small>弾んだ後の頂点</small><b id="v-clr">—</b></div>
+  </div>
+  <p class="warn" id="a-warn" hidden></p>
+</section>
+
+<section class="panel">
+  <h2>自分のカット</h2>
+  <div class="seg" role="radiogroup" aria-label="ラバー">
+    <label><input type="radio" name="rub" id="r-ox" value="ox" checked>FL2 OX</label>
+    <label><input type="radio" name="rub" id="r-11" value="11">FL2 1.1mm</label>
+    <label><input type="radio" name="rub" id="r-inv" value="inv">裏ソフト<br>（比較）</label>
+  </div>
+  <div class="seg" style="grid-template-columns:1fr"><label><input type="checkbox" id="pip" checked>粒の倒れ方を考える（仮説）：強く当たると倒れて滑り、こすると引っかかる</label></div>
+  <div class="seg" role="group" aria-label="打ち方の例"><label><input type="radio" name="stroke" value="touch">触るだけ</label><label><input type="radio" name="stroke" value="brush">下を強くこする</label><label><input type="radio" name="stroke" value="chop">下へ振るカット</label></div>
+  <div class="row"><label for="face">面の開き（垂直＝0°）</label><output id="faceo"></output><input type="range" id="face" min="0" max="85" step="1" value="30"></div>
+  <div class="row"><label for="dist">打点（エンドラインの後ろ、マイナスは台の上）</label><output id="disto"></output><input type="range" id="dist" min="-0.6" max="4.5" step="0.1" value="2.5"></div>
+  <div class="row"><label for="sw">スイングの速さ</label><output id="swo"></output><input type="range" id="sw" min="0" max="10" step="0.5" value="5"></div>
+  <div class="row"><label for="sa">スイングの向き（水平から下へ、マイナスは上へ）</label><output id="sao"></output><input type="range" id="sa" min="-30" max="75" step="1" value="35"></div>
+</section>
+
+<section class="panel">
+  <h2>面の角度がぶれても入る振り方</h2>
+  <p class="note" style="margin-top:0">スイングの速さと向きを変えながら、相手コートに入る面の開きの幅（何度ぶれても入るか）を計算します。色が濃いほど幅が広く、ぶれに強い振り方です。マスをタップすると、その振り方に切り替わります。</p>
+  <div class="seg" role="radiogroup" aria-label="評価のしかた" style="grid-template-columns:repeat(2,minmax(0,1fr))"><label><input type="radio" name="crit" value="low" checked>入って浮かない</label><label><input type="radio" name="crit" value="target">狙った位置に落とす</label></div>
+  <div id="crit-target" hidden>
+  <p class="note" style="margin-top:6px">返球が相手コートで弾む位置と、弾んだ後の頂点の高さを指定すると、それを満たす振り方を逆算します。</p>
+  <div class="row"><label for="tg">狙う弾む位置（相手のエンドラインから手前へ）</label><output id="tgo"></output><input type="range" id="tg" min="0.05" max="1.3" step="0.05" value="0.3"></div>
+  <div class="row"><label for="tol">許す誤差（前後）</label><output id="tolo"></output><input type="range" id="tol" min="5" max="40" step="5" value="15"></div>
+  <div class="row"><label for="pmax">弾んだ後の頂点の上限</label><output id="pmaxo"></output><input type="range" id="pmax" min="10" max="80" step="5" value="35"></div>
+  </div>
+  <div id="crit-low">
+  <p class="note" style="margin-top:6px">低く返す条件：相手コートで弾んだ後の頂点が高いと強打されやすいため、頂点の高さに上限を設けます。頂点がエンドラインより後ろに来るほど相手は打ちにくいので、その分だけ高さを許します。</p>
+  <div class="row"><label for="hb">台の上で頂点になるときの高さの上限</label><output id="hbo"></output><input type="range" id="hb" min="10" max="100" step="5" value="100"></div>
+  <div class="row"><label for="hs">頂点がエンドラインの後ろ1mごとに許す高さ</label><output id="hso"></output><input type="range" id="hs" min="0" max="100" step="5" value="40"></div>
+  </div>
+  <div class="bar" style="margin:4px 0 8px"><button class="btn" id="search" type="button">ぶれに強い振り方を探す</button><span class="note" id="srch-msg"></span></div>
+  <canvas id="heat" role="img" aria-label="スイングの速さと向きごとの、入る面の開きの幅" style="width:100%;display:block;touch-action:manipulation"></canvas>
+  <p class="note" id="srch-best"></p>
+</section>
+
+<section class="panel">
+  <h2>相手の打球</h2>
+  <div class="seg seg4" role="radiogroup" aria-label="打球の種類">
+    <label><input type="radio" name="shot" value="drive" checked>強いドライブ</label>
+    <label><input type="radio" name="shot" value="loop">山なりループ</label>
+    <label><input type="radio" name="shot" value="high">高い球</label>
+    <label><input type="radio" name="shot" value="push">ツッツキ（下回転）</label>
+  </div>
+  <div class="seg" role="radiogroup" aria-label="コース">
+    <label><input type="radio" name="course" value="cross" checked>クロス（対角）</label>
+    <label><input type="radio" name="course" value="straight">ストレート</label>
+    <label><input type="checkbox" id="arc">弾道を高く</label>
+  </div>
+  <div class="row"><label for="v0">打ち出しの速さ</label><output id="v0o"></output><input type="range" id="v0" min="4" max="28" step="1" value="22"></div>
+  <div class="row"><label for="rps">回転（1秒あたり、＋上回転／−下回転）</label><output id="rpso"></output><input type="range" id="rps" min="-80" max="140" step="5" value="110"></div>
+  <div class="seg" role="radiogroup" aria-label="相手の打球の決め方" style="grid-template-columns:repeat(2,minmax(0,1fr))"><label><input type="radio" name="aim" value="bounce" checked>弾む位置で決める</label><label><input type="radio" name="aim" value="angle">打ち出し角度で決める</label></div>
+  <div class="row"><label for="bx">自分のコートで弾む位置（エンドラインから）</label><output id="bxo"></output><input type="range" id="bx" min="0.2" max="1.2" step="0.05" value="0.6"></div>
+  <div class="row"><label for="la">打ち出し角度（水平から上へ）</label><output id="lao"></output><input type="range" id="la" min="-10" max="50" step="0.5" value="5"></div>
+  <dl class="kv" aria-live="polite">
+    <dt>弾んだ後の最高点（台の面＝0）</dt><dd id="h-peak">—</dd>
+    <dt>台の高さまで落ちる位置</dt><dd id="h-0">—</dd>
+    <dt>台から30cm下まで落ちる位置</dt><dd id="h-30">—</dd>
+  </dl>
+  <p class="note">位置はすべてエンドラインからの距離です。クロスは台の対角線（約3.14m）に沿って計算し、返球も同じコースに返す想定です。上手な若手選手のフォアドライブは約23m/s・約117回転/秒という計測があります。</p>
+</section>
+
+<section class="panel">
+  <h2>試すと分かること</h2>
+  <ul class="find">
+    <li>再生すると、FL2のカットでも球の回る向きは来たときのままです。進む向きが逆になるので、相手から見ると下回転になります。</li>
+    <li>FL2で「スイングの速さ」を変えても、返球の下回転はほとんど変わりません。下回転の量は、ほぼ相手の上回転で決まります。</li>
+    <li>相手の上回転を下げると、FL2の返球は軽い回転になります。裏ソフトに切り替えると、スイングで回転を足せることが分かります。</li>
+    <li>「ツッツキ（下回転）」を選び、打ち方の例を「触るだけ」と「下を強くこする」で切り替えると、粒が倒れて滑るか、引っかかるかで返球の回転が変わります（粒の倒れ方を考える仮説モード）。</li>
+    <li>「ツッツキ（下回転）」をFL2で返すと、回る向きが残るので相手から見て上回転（ナックル気味）になります。裏ソフトと比べてみてください。</li>
+    <li>山なりのループや高い球は、選ぶと打点が「台の高さまで落ちる位置」に自動で合わせられます。打点を前後させると、面の開きの許容範囲がどう変わるか分かります。</li>
+  </ul>
+</section>
+
+<section class="panel">
+  <details>
+    <summary>詳しい数値と打点の速度</summary>
+    <dl class="kv">
+      <dt>返球のネット上の高さ</dt><dd id="o-clr"></dd>
+      <dt>弾んだ後の頂点の高さ・位置</dt><dd id="o-pk"></dd>
+      <dt>この位置で許される高さ</dt><dd id="o-allow"></dd>
+      <dt>返球が弾む位置（相手エンドラインまで）</dt><dd id="o-land"></dd>
+      <dt>届いた球の速さ</dt><dd id="a-v"></dd>
+      <dt>届いた球の角度</dt><dd id="a-ang"></dd>
+      <dt>届いた球の回転</dt><dd id="a-rps"></dd>
+      <dt>打点の高さ（台の面＝0）</dt><dd id="a-h"></dd>
+      <dt>返球の速さ</dt><dd id="o-v"></dd>
+      <dt>返球の角度（上＋）</dt><dd id="o-ang"></dd>
+      <dt>返球の回転</dt><dd id="o-rps"></dd>
+      <dt>面を押す速さ</dt><dd id="o-vn"></dd>
+      <dt>粒の状態</dt><dd id="o-pip"></dd>
+      <dt>つかむ強さ（今回）</dt><dd id="o-k"></dd>
+    </dl>
+    <canvas id="inset" role="img" aria-label="打点での速度ベクトル"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--in)"></i>来る球</span>
+      <span><i style="background:var(--swing)"></i>スイング</span>
+      <span><i style="background:var(--out)"></i>返球</span>
+      <span><i style="background:var(--ink)"></i>ラケット面</span>
+    </div>
+  </details>
+</section>
+
+<section class="panel">
+  <details>
+    <summary>計算の仮定と根拠</summary>
+    <p class="note">下の2つはFL2の実測値がないため仮定です。ラバーを選び直すと初期値に戻ります。</p>
+    <div class="row"><label for="k">粒がボールをつかむ強さ（仮説モードでは粒が倒れたときの値。回転が止まりきる強さ＝1）</label><output id="ko"></output><input type="range" id="k" min="0" max="1" step="0.01" value="0.15"></div>
+    <div class="row"><label for="e">反発（面に垂直な方向の跳ね返り率）</label><output id="eo"></output><input type="range" id="e" min="0.3" max="0.9" step="0.01" value="0.45"></div>
+    <div class="row"><label for="kmax">粒が立っているときのつかむ強さ（仮説モード）</label><output id="kmaxo"></output><input type="range" id="kmax" min="0" max="1" step="0.01" value="0.9"></div>
+    <div class="row"><label for="pv0">粒が倒れ始める、面を押す速さ</label><output id="pv0o"></output><input type="range" id="pv0" min="0.5" max="8" step="0.5" value="3"></div>
+    <div class="row"><label for="pv1">粒が完全に倒れる、面を押す速さ</label><output id="pv1o"></output><input type="range" id="pv1" min="2" max="15" step="0.5" value="9"></div>
+    <div class="row"><label for="pvb">しっかり引っかかる、こする速さ（面に沿ったスイングの速さ）</label><output id="pvbo"></output><input type="range" id="pvb" min="1" max="12" step="0.5" value="6"></div>
+    <div class="row"><label for="et">ゴムが横にたわんで戻る強さ（0＝戻らない）</label><output id="eto"></output><input type="range" id="et" min="0" max="0.6" step="0.01" value="0"></div>
+    <ul class="find note">
+      <li>裏ソフトは、表面のゴムが横にたわんでから戻ることで、ボールの回転を逆向きに弾き返します。これがないと、下回転をストップしても回転が止まるだけでナックルになります。裏ソフトは0.35、FL2は0と仮定しています（どちらも実測値ではありません）。</li>
+      <li>仮説モードでは、つかむ強さを「上の粒が倒れたときの値」から「粒が立っているときの値」の間で変えます。面を押す速さが速いほど粒が倒れて小さくなり、面に沿ってこするスイングが速いほど大きくなります。境目の数値は、強いドライブのカットでは回転がそのまま残り、ツッツキに触るだけだとナックル、下を強くこすると下回転、という体感に合うように決めたもので、測定値ではありません。</li>
+      <li>ロングピップスの「つかむ強さ」は裏ソフトよりずっと小さいと測定されています（Gossard 2026）。比率の数値は確認できず、FL2の測定もありません。</li>
+      <li>反発は同じ研究でアンチラバーが0.53でした。粒高OXはそれ以下と推定しています。ロングピップスは回転が速いほど反発が下がるとされていますが、このモデルでは一定です。</li>
+      <li>FL2は返球時に回転の20%を失う、裏ソフトは失わないと仮定しています。</li>
+      <li>空気抵抗係数0.5、回転による揚力は簡単な近似式、台での弾みは反発0.89・摩擦0.25。相手はエンドラインの後ろ0.5m・台から30cmの高さで打つ想定。図は縦横同じ比率で、球の大きさだけ実際より大きく描いています。</li>
+    </ul>
+    <p class="note src">出典：
+      <a href="https://arxiv.org/html/2604.11349" target="_blank" rel="noopener">Gossard 2026, Learning Racket-Ball Bounce Dynamics Across Diverse Rubbers</a> ／
+      <a href="https://www.iat.uni-leipzig.de/datenbanken/iks/dfb-fechten/Record/4084591" target="_blank" rel="noopener">A topspin rate exceeding 110 rps…（ドライブの速さと回転）</a> ／
+      <a href="https://shop.butterflyonline.com/feint-long-ii" target="_blank" rel="noopener">Butterfly Feint Long II</a></p>
+  </details>
+</section>
+</div>
+
+<p style="text-align:center;font-size:13px;margin:0 0 32px"><a href="grip.html">ラバーがつかむ仕組み（図解）</a></p>
+<script>
+const M=0.0027,R=0.02,AR=Math.PI*R*R,RHO=1.2,CD=0.5,G=9.8;
+const NETH=0.1525,FLOOR=-0.76,DT=5e-4,EX=1.5;
+const COURSE={straight:2.74,cross:Math.hypot(2.74,1.525)};
+let TL=2.74,NETX=1.37;
+const SHOTS={drive:{v0:22,rps:110,bx:0.6,arc:"low",sw:4.5,sa:10},loop:{v0:13,rps:120,bx:0.7,arc:"low",sw:4.5,sa:10},high:{v0:10,rps:70,bx:0.8,arc:"high",sw:6,sa:0},push:{v0:7,rps:-40,bx:0.5,arc:"low",dist:-0.2,sw:3.5,sa:0}};
+const PRE={ox:{k:0.15,e:0.45,keep:0.8,et:0},"11":{k:0.15,e:0.55,keep:0.8,et:0},inv:{k:0.8,e:0.75,keep:1.0,et:0.35}};
+let keep=0.8;
+const $=id=>document.getElementById(id);
+function acc(vx,vy,om){const v=Math.hypot(vx,vy)||1e-6;const q=0.5*RHO*AR*v*v/M;
+  let ax=-q*CD*vx/v, ay=-q*CD*vy/v-G;
+  if(om!==0){const CL=Math.min(0.6*R*Math.abs(om)/v,0.35),s=Math.sign(om);ax+=q*CL*s*(-vy/v);ay+=q*CL*s*(vx/v);}
+  return [ax,ay];}
+function stepS(s,dt){const [ax,ay]=acc(s.vx,s.vy,s.om);return {x:s.x+s.vx*dt,y:s.y+s.vy*dt,vx:s.vx+ax*dt,vy:s.vy+ay*dt,om:s.om*Math.exp(-0.15*dt)};}
+function bounceX(v0,rps,a){let s={x:TL+0.5,y:0.3,vx:-v0*Math.cos(a),vy:v0*Math.sin(a),om:rps*2*Math.PI},t=0;
+  while(t<3){const p=s;s=stepS(s,DT);t+=DT;
+    if(p.x>NETX&&s.x<=NETX&&s.y<NETH)return 99;
+    if(s.y<=0){if(s.x>NETX&&s.x<=TL)return 99;return s.x;}}
+  return 99;}
+function solveLoop(v0,rps,target,arc){
+  let best=-0.35,bestX=1e9;for(let a=-0.35;a<=1.35;a+=0.05){const bx=bounceX(v0,rps,a);if(bx<bestX){bestX=bx;best=a;}}
+  if(bestX>target)return null;
+  const dir=arc==="high"?1:-1;let hi=best,lo=null;
+  for(let a=best+dir*0.03;a>-0.6&&a<1.5;a+=dir*0.03){if(bounceX(v0,rps,a)>target){lo=a;break;}hi=a;}
+  if(lo===null)return null;
+  for(let i=0;i<40;i++){const mid=(lo+hi)/2;if(bounceX(v0,rps,mid)>target)lo=mid;else hi=mid;}
+  return (lo+hi)/2;}
+function incoming(v0,rps,target,dist,arc,angDeg){const a=angDeg!==undefined?angDeg*Math.PI/180:solveLoop(v0,rps,target,arc);
+  if(a===null)return {fail:"この速さでは、指定した位置まで届きません。速さを上げるか弾む位置を変えてください。",pts:[]};
+  let bxHit=null;let s={x:TL+0.5,y:0.3,vx:-v0*Math.cos(a),vy:v0*Math.sin(a),om:rps*2*Math.PI},pts=[[s.x,s.y,s.om]],t=0,bounced=false,hit=null,peak=-9,cross0=null,crossM=null;
+  while(t<4){const p=s;s=stepS(s,DT);t+=DT;
+    if(!bounced&&s.y<=0){bounced=true;bxHit=s.x;if(s.x<0||s.x>NETX)return {fail:s.x>NETX?"相手の打球が相手側のコートに落ちます（ネットを越えません）。角度を上げるか速さを上げてください。":"相手の打球が自分のコートを越えてオーバーします。角度を下げるか速さを下げてください。",pts};
+      const vy2=-0.89*s.vy,slip=s.vx+s.om*R;const J=-Math.min(0.25*1.89*Math.abs(s.vy),Math.abs(slip)/2.5)*Math.sign(slip);
+      s={x:s.x,y:1e-4,vx:s.vx+J,vy:vy2,om:s.om+1.5*J/R};}
+    if(!hit)pts.push([s.x,s.y,s.om]);
+    if(!bounced&&p.x>NETX&&s.x<=NETX&&s.y<NETH)return {fail:"相手の打球がネットにかかります。角度か速さを上げてください。",pts};
+    if(bounced){peak=Math.max(peak,s.y);
+      if(cross0===null&&p.y>0&&s.y<=0&&s.vy<0)cross0=-s.x;
+      if(crossM===null&&p.y>-0.3&&s.y<=-0.3&&s.vy<0)crossM=-s.x;
+      if(!hit&&s.x<=-dist)hit={...s};
+      if(s.y<=FLOOR)break;}}
+  if(!bounced)return {fail:"相手の打球が台に届きません。",pts};
+  const info={peak,cross0,crossM,ang:a*180/Math.PI,bx:pts.length?null:null};
+  if(!hit)return {fail:"この距離まで下がると、球が届く前に床に落ちます。台に近づいてください。",pts,info};
+  info.bx=bxHit;return {s:hit,pts,info};}
+function chop(s,face,k,e,kp,sw,sa){const th=face*Math.PI/180,b=sa*Math.PI/180;
+  const nx=Math.cos(th),ny=Math.sin(th),tx=-ny,ty=nx,Rx=sw*Math.cos(b),Ry=-sw*Math.sin(b);
+  const rx=s.vx-Rx,ry=s.vy-Ry,vn=rx*nx+ry*ny,vt=rx*tx+ry*ty,u=vt-s.om*R;
+  let B=1,D=0;if(pipOn()){const pv0=+$("pv0").value,pv1=Math.max(pv0+0.5,+$("pv1").value);B=Math.max(0,Math.min(1,1-(Math.abs(vn)-pv0)/(pv1-pv0)));D=Math.max(0,Math.min(1,Math.abs(Rx*tx+Ry*ty)/+$("pvb").value));k=k+(+$("kmax").value-k)*B*D;}
+  const dvt=-k*(1+(+$("et").value))*u/2.5;
+  const vt2=vt+dvt,vn2=-e*vn,om2=(s.om-1.5*dvt/R)*kp;
+  return {x:s.x,y:s.y,vx:vn2*nx+vt2*tx+Rx,vy:vn2*ny+vt2*ty+Ry,om:om2,Rx,Ry,nx,ny,tx,ty,kEff:k,B,D,vn:Math.abs(vn)};}
+function pipOn(){return $("pip").checked&&document.querySelector("input[name=rub]:checked").value!=="inv";}
+function flyOut(s0,rec,dt){dt=dt||DT;let s={...s0},pts=rec?[[s.x,s.y,s.om]]:null,t=0,clr=null;
+  while(t<3){const p=s;s=stepS(s,dt);t+=dt;if(rec)pts.push([s.x,s.y,s.om]);
+    if(p.x<NETX&&s.x>=NETX){const yy=p.y+(s.y-p.y)*(NETX-p.x)/(s.x-p.x);if(yy<NETH)return {res:"ネット",pts};clr=yy-NETH;}
+    if(s.x>=0&&s.y<=0){if(s.x<NETX||s.x>TL)return {res:s.x<NETX?"自コート":"オーバー",pts,clr,land:s.x};
+      const land=s.x,vy2=-0.89*s.vy,slip=s.vx+s.om*R,J=-Math.min(0.25*1.89*Math.abs(s.vy),Math.abs(slip)/2.5)*Math.sign(slip);
+      s={x:s.x,y:1e-4,vx:s.vx+J,vy:vy2,om:s.om+1.5*J/R};let pk={x:s.x,y:0},t2=0;
+      while(t2<1.5){s=stepS(s,dt);t2+=dt;if(rec)pts.push([s.x,s.y,s.om]);if(s.y>pk.y)pk={x:s.x,y:s.y};
+        if(s.vy<0&&(!rec||s.y<pk.y*0.4||s.x>TL+1.3))break;}
+      return {res:"入る",pts,clr,land,pk};}
+    if(s.y<=FLOOR)return {res:s.x<0?"届かない":"オーバー",pts};
+    if(s.x>6)return {res:"オーバー",pts};}
+  return {res:"オーバー",pts};}
+const fmt=(n,d=1)=>(Math.round(n*10**d)/10**d).toFixed(d);
+const css=()=>{const c=getComputedStyle(document.documentElement);return n=>c.getPropertyValue(n).trim();};
+
+let S=null,anim={t:0,speed:0.25,playing:!matchMedia("(prefers-reduced-motion: reduce)").matches,last:0,hold:0,ang:0};
+let VIEW=(window.innerWidth<700)?"zoom":"fit";
+function geom(){const cv=$("court"),wrap=$("courtWrap"),CW=wrap.clientWidth||340;
+  const dist=S.dist,xmin=Math.min(-dist-0.95,-0.9),xmax=TL+1.1;let ymax=Math.max(0.5,FLOOR+HUMAN+0.08);
+  [S.inc.pts,S.out?S.out.pts:[]].forEach(p=>{for(let i=0;i<p.length;i+=20){const q=p[i];if(q[0]>xmin&&q[0]<xmax)ymax=Math.max(ymax,q[1]);}});
+  ymax+=0.12;const xr=xmax-xmin,yr=ymax-FLOOR;let sc,W,H;
+  if(VIEW==="zoom"){H=240;sc=(H-18)/yr;W=Math.max(CW,Math.round(xr*sc));}else{W=CW;sc=W/xr;H=Math.round(yr*sc+18);}
+  return {cv,W,H,X:x=>(x-xmin)*sc,Y:y=>H-12-(y-FLOOR)*sc,xmin,xmax};}
+function drawCourt(){if(!S)return;const g=geom(),{cv,W,H,X,Y,xmin,xmax}=g,dpr=window.devicePixelRatio||1;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.height=H+"px";cv.style.width=W+"px";}
+  const c=cv.getContext("2d"),col=css();c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
+  c.font="11px "+col("--f-body");
+  c.strokeStyle=col("--line");c.lineWidth=1;c.beginPath();c.moveTo(0,Y(FLOOR));c.lineTo(W,Y(FLOOR));c.stroke();
+  c.fillStyle=col("--table");c.fillRect(X(0),Y(0),X(TL)-X(0),5);
+  c.strokeStyle=col("--table");c.lineWidth=2;[0.25,TL-0.25].forEach(x=>{c.beginPath();c.moveTo(X(x),Y(0));c.lineTo(X(x),Y(FLOOR));c.stroke();});
+  c.strokeStyle=col("--net");c.beginPath();c.moveTo(X(NETX),Y(0));c.lineTo(X(NETX),Y(NETH));c.stroke();
+  c.fillStyle=col("--muted");c.fillText("自分",X(0.35),Y(0)+16);c.fillText("相手",X(TL-0.65),Y(0)+16);
+  if(S.dist>0)c.fillText(fmt(S.dist,1)+"m後方",Math.max(2,X(-S.dist)+4),Y(FLOOR)+11);
+  const nIn=S.inc.pts.length,nOut=S.out?S.out.pts.length:0,idx=Math.floor(anim.t/DT);
+  const path=(pts,color,w,alpha,upto)=>{c.globalAlpha=alpha;c.strokeStyle=color;c.lineWidth=w;c.beginPath();let st=false;const end=Math.min(pts.length,upto);
+    for(let i=0;i<end;i+=6){const p=pts[i];if(p[0]<xmin-0.2||p[0]>xmax+0.4)continue;if(!st){c.moveTo(X(p[0]),Y(p[1]));st=true;}else c.lineTo(X(p[0]),Y(p[1]));}
+    if(end>0&&end<pts.length){const p=pts[end-1];c.lineTo(X(p[0]),Y(p[1]));}c.stroke();c.globalAlpha=1;};
+  const outCol=S.ok?col("--out"):col("--bad");
+  path(S.inc.pts,col("--in"),2,0.25,1e9);if(S.out)path(S.out.pts,outCol,2,0.25,1e9);
+  path(S.inc.pts,col("--in"),2.4,1,idx+1);if(S.out&&idx>=nIn)path(S.out.pts,outCol,2.8,1,idx-nIn+1);
+  if(S.o){const th=S.face*Math.PI/180,tx=-Math.sin(th),ty=Math.cos(th),L=0.16,cx=-S.dist,cy=S.inc.s.y;
+    let off=0;if(idx<nIn){const rem=(nIn-idx)*DT;off=Math.min(0.35,rem*S.sw);}
+    const bx=cx-Math.cos(S.sa*Math.PI/180)*off,by=cy+Math.sin(S.sa*Math.PI/180)*off;
+    drawPerson(c,X,Y,bx,by,col);
+    c.strokeStyle=col("--ink");c.lineWidth=4;c.lineCap="round";c.beginPath();c.moveTo(X(bx-tx*L),Y(by-ty*L));c.lineTo(X(bx+tx*L),Y(by+ty*L));c.stroke();c.lineCap="butt";}
+  let p=null;if(idx<nIn)p=S.inc.pts[idx];else if(S.out&&idx-nIn<nOut)p=S.out.pts[idx-nIn];else if(S.out)p=S.out.pts[nOut-1];else p=S.inc.pts[nIn-1];
+  if(p){const px=X(p[0]),py=Y(p[1]),r=7;c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(px,py,r,0,Math.PI*2);c.fill();c.stroke();
+    c.strokeStyle=col("--ballmark");c.lineWidth=2;c.beginPath();c.moveTo(px-Math.cos(anim.ang)*r,py-Math.sin(anim.ang)*r);c.lineTo(px+Math.cos(anim.ang)*r,py+Math.sin(anim.ang)*r);c.stroke();
+    c.beginPath();c.arc(px+Math.cos(anim.ang)*r*0.55,py+Math.sin(anim.ang)*r*0.55,1.8,0,Math.PI*2);c.fillStyle=col("--ballmark");c.fill();}
+  if(VIEW==="zoom"&&anim.playing&&p){const wrap=$("courtWrap");const target=X(p[0])-wrap.clientWidth*0.5;wrap.scrollLeft+=(target-wrap.scrollLeft)*0.15;}
+  const ia=S.inc.pts[0]?S.inc.pts[0][2]:0,oa=S.o?S.o.om:0;let ph="";if(idx<nIn)ph="相手の打球（"+(ia>=0?"上回転":"下回転")+"）";else if(S.out&&idx-nIn<nOut)ph="返球（相手から見て"+(oa>=0?"下回転":"上回転")+"）";else ph="着地";
+  $("phase").textContent=ph;}
+const HUMAN=1.65;
+function drawPerson(c,X,Y,hx,hy,col){const H=HUMAN,f=H/1.65,reach=0.72*f,grip=0.12;
+  const cx=-S.dist;let footX=Math.min(cx-0.5*f,-0.2);
+  let shY=FLOOR+1.40*f,hipY=FLOOR+0.86*f,drop=0,lean=0;
+  const tx=hx-grip,ty=hy;
+  for(let i=0;i<40;i++){const sx=footX+0.06+lean,sy=shY-drop;if(Math.hypot(tx-sx,ty-sy)<=reach)break;drop=Math.min(0.5*f,drop+0.0125*f);lean=Math.min(0.35*f,drop*0.7);}
+  const shX=footX+0.06+lean,sY=shY-drop,hipX=footX+0.02-drop*0.25,hY=hipY-drop*0.85;
+  const kneeX=footX+0.18*f*(0.4+drop/(0.5*f)),kneeY=FLOOR+0.46*f-drop*0.35;
+  const headX=shX+0.05+lean*0.4,headY=sY+0.15*f;
+  let ax=tx-shX,ay=ty-sY;const al=Math.hypot(ax,ay);if(al>reach){ax*=reach/al;ay*=reach/al;}
+  const handX=shX+ax,handY=sY+ay,elX=shX+ax*0.5-ay*0.12,elY=sY+ay*0.5+ax*0.12;
+  c.save();c.globalAlpha=0.55;c.strokeStyle=col("--muted");c.lineCap="round";c.lineJoin="round";c.lineWidth=3;
+  c.beginPath();c.moveTo(X(footX+0.12),Y(FLOOR));c.lineTo(X(kneeX),Y(kneeY));c.lineTo(X(hipX),Y(hY));c.lineTo(X(shX),Y(sY));c.stroke();
+  c.beginPath();c.moveTo(X(footX-0.25*f),Y(FLOOR));c.lineTo(X(kneeX-0.22*f),Y(kneeY+0.02));c.lineTo(X(hipX),Y(hY));c.stroke();
+  c.beginPath();c.moveTo(X(shX),Y(sY));c.lineTo(X(elX),Y(elY));c.lineTo(X(handX),Y(handY));c.stroke();
+  const hr=Math.max(4,(X(0.11*f)-X(0)));c.beginPath();c.ellipse(X(headX),Y(headY),hr,Math.max(4,Y(0)-Y(0.11*f)),0,0,Math.PI*2);c.stroke();
+  c.globalAlpha=1;c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.textAlign="center";c.fillText(Math.round(H*100)+"cm",X(headX),Y(headY+0.14*f));c.textAlign="left";c.restore();}
+function curOm(){if(!S)return 0;const nIn=S.inc.pts.length,idx=Math.floor(anim.t/DT);
+  if(idx<nIn)return S.inc.pts[idx][2];if(S.out&&idx-nIn<S.out.pts.length)return S.out.pts[idx-nIn][2];return 0;}
+function total(){return S?(S.inc.pts.length+(S.out?S.out.pts.length:0))*DT:0;}
+function tick(ts){const dt=anim.last?Math.min(0.05,(ts-anim.last)/1000):0;anim.last=ts;
+  if(anim.playing&&S){if(anim.t>=total()){anim.hold+=dt;if(anim.hold>0.9){anim.t=0;anim.hold=0;}}else anim.t+=dt*anim.speed;
+    const om=curOm();anim.ang-=Math.sign(om)*Math.min(Math.abs(om)/(2*Math.PI)/25,6)*2*Math.PI*dt;}
+  drawCourt();requestAnimationFrame(tick);}
+function arrow(c,x0,y0,x1,y1,color,w,dash){c.strokeStyle=color;c.fillStyle=color;c.lineWidth=w;c.setLineDash(dash||[]);c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke();c.setLineDash([]);
+  const a=Math.atan2(y1-y0,x1-x0),h=8;c.beginPath();c.moveTo(x1,y1);c.lineTo(x1-h*Math.cos(a-0.4),y1-h*Math.sin(a-0.4));c.lineTo(x1-h*Math.cos(a+0.4),y1-h*Math.sin(a+0.4));c.closePath();c.fill();}
+function drawInset(){if(!S||!S.o)return;const s=S.inc.s,o=S.o,cv=$("inset"),dpr=window.devicePixelRatio||1,W=cv.clientWidth||300,H=200;
+  cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+"px";const c=cv.getContext("2d"),col=css();c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
+  const cx=W*0.42,cy=H*0.5,mx=Math.max(Math.hypot(s.vx,s.vy),Math.hypot(o.vx,o.vy),Math.hypot(o.Rx,o.Ry),1),sc=Math.min(W*0.5,H*0.42)/mx;
+  c.strokeStyle=col("--ink");c.lineWidth=4;c.lineCap="round";c.beginPath();c.moveTo(cx-o.tx*55,cy+o.ty*55);c.lineTo(cx+o.tx*55,cy-o.ty*55);c.stroke();c.lineCap="butt";
+  arrow(c,cx-s.vx*sc,cy+s.vy*sc,cx,cy,col("--in"),2.5);arrow(c,cx,cy,cx+o.Rx*sc,cy-o.Ry*sc,col("--swing"),2,[5,4]);arrow(c,cx,cy,cx+o.vx*sc,cy-o.vy*sc,col("--out"),3);
+  c.fillStyle=col("--muted");c.font="11px "+col("--f-body");c.fillText("← 自分側",6,H-8);c.textAlign="right";c.fillText("相手側 →",W-6,H-8);c.textAlign="left";}
+function aimMode(){return document.querySelector("input[name=aim]:checked").value;}
+function getInc(dist){const arc=$("arc").checked?"high":"low";return aimMode()==="angle"?incoming(+$("v0").value,+$("rps").value,0,dist,arc,+$("la").value):incoming(+$("v0").value,+$("rps").value,+$("bx").value,dist,arc);}
+function allowH(x){const hb=+$("hb").value;if(hb>=100)return Infinity;return hb/100+(+$("hs").value/100)*Math.max(0,x-TL);}
+function critMode(){return document.querySelector("input[name=crit]:checked").value;}
+function okRes(r){if(r.res!=="入る")return false;if(critMode()==="target"){return Math.abs((TL-r.land)-(+$("tg").value))<=(+$("tol").value)/100&&(!r.pk||r.pk.y<=(+$("pmax").value)/100);}return !r.pk||r.pk.y<=allowH(r.pk.x);}
+function pkWhere(x){const d=x-TL;return d>=0?"エンド後方"+fmt(d,2)+"m":"台の上（エンドの"+fmt(-d,2)+"m手前）";}
+function faceRun(s,sw,sa,step,dt){const k=+$("k").value,e=+$("e").value;let best=[0,-1,-1],cur=0,st=-1;
+  for(let f=0;f<=85;f+=step){const ok=okRes(flyOut(chop(s,f,k,e,keep,sw,sa),false,dt));if(ok){if(cur===0)st=f;cur+=step;if(cur>best[0])best=[cur,st,f];}else cur=0;}
+  return best;}
+function update(){const v0=+$("v0").value,rps=+$("rps").value,bx=+$("bx").value,dist=+$("dist").value,face=+$("face").value,sw=+$("sw").value,sa=+$("sa").value,k=+$("k").value,e=+$("e").value;
+  $("v0o").textContent=v0+" m/s";$("rpso").textContent=(rps>=0?"上回転 ":"下回転 ")+Math.abs(rps);$("bxo").textContent=fmt(bx,2)+" m";$("disto").textContent=dist>=0?fmt(dist,1)+" m後方":"台の上 "+fmt(-dist,1)+" m";
+  $("faceo").textContent=face+"°";$("swo").textContent=fmt(sw,1)+" m/s";$("sao").textContent=sa+"°";$("ko").textContent=fmt(k,2);$("eo").textContent=fmt(e,2);$("kmaxo").textContent=fmt(+$("kmax").value,2);$("pv0o").textContent=fmt(+$("pv0").value,1)+" m/s";$("pv1o").textContent=fmt(+$("pv1").value,1)+" m/s";$("pvbo").textContent=fmt(+$("pvb").value,1)+" m/s";$("eto").textContent=fmt(+$("et").value,2);
+  TL=COURSE[document.querySelector("input[name=course]:checked").value];NETX=TL/2;
+  const arc=$("arc").checked?"high":"low";
+  const inc=getInc(dist);const w=$("a-warn");anim.t=0;anim.hold=0;
+  const am=aimMode();$("hbo").textContent=+$("hb").value>=100?"制限なし":$("hb").value+" cm";$("hso").textContent="+"+$("hs").value+" cm/m";
+  if(inc.info){if(am==="bounce")$("la").value=Math.round(inc.info.ang*2)/2;else if(inc.info.bx!==null&&inc.info.bx!==undefined)$("bx").value=Math.round(inc.info.bx*20)/20;}
+  $("lao").textContent=fmt(+$("la").value,1)+"°"+(am==="bounce"?"（自動）":"");$("bxo").textContent=fmt(+$("bx").value,2)+" m"+(am==="angle"?"（結果）":"");
+  const info=inc.info;
+  $("h-peak").textContent=info?("+"+fmt(info.peak*100,0)+" cm"):"—";
+  $("h-0").textContent=info&&info.cross0!==null?fmt(info.cross0,1)+" m後方":"—";
+  $("h-30").textContent=info&&info.crossM!==null?fmt(info.crossM,1)+" m後方":"—";
+  if(inc.fail){w.hidden=false;w.textContent=inc.fail;S={inc,out:null,o:null,dist,face,sw,sa,ok:false};
+    ["v-res","v-range","v-spin","v-clr","o-clr","o-land","o-pk","o-allow","a-v","a-ang","a-rps","a-h","o-v","o-ang","o-rps"].forEach(i=>$(i).textContent="—");$("s-res").className="";return;}
+  w.hidden=true;const s=inc.s,o=chop(s,face,k,e,keep,sw,sa),out=flyOut(o,true),ok=okRes(out);
+  S={inc,out,o,dist,face,sw,sa,ok};
+  const run=faceRun(s,sw,sa,1);
+  const rng=run[0]>0?(run[1]===run[2]?run[1]+"°":run[1]+"〜"+run[2]+"°（幅"+(run[2]-run[1])+"°）"):"入らない";
+  const sp=o.om/2/Math.PI,inSp=Math.hypot(s.vx,s.vy);
+  const hi=out.res==="入る"&&!ok;$("v-res").textContent=critMode()==="target"?(ok?"狙いどおり":(out.res==="入る"?"狙いから外れた":out.res)):(hi?"入るが浮いた":out.res);
+  $("tgo").textContent=fmt(+$("tg").value,2)+" m";$("tolo").textContent="±"+$("tol").value+" cm";$("pmaxo").textContent=$("pmax").value+" cm";$("s-res").className=ok?"ok":"bad";$("v-range").textContent=rng;
+  $("v-spin").textContent=(sp>=0?"下 ":"上 ")+fmt(Math.abs(sp),0)+"回転";const clrTxt=out.clr!==null&&out.clr!==undefined?fmt(out.clr*100,0)+" cm":"—";$("o-clr").textContent=clrTxt;if(out.pk){const d=out.pk.x-TL;$("v-clr").textContent=fmt(out.pk.y*100,0)+"cm·"+(d>=0?"後方"+fmt(d,1)+"m":"台上");$("o-pk").textContent=fmt(out.pk.y*100,0)+" cm・"+pkWhere(out.pk.x);const al=allowH(out.pk.x);$("o-allow").textContent=al===Infinity?"制限なし":fmt(al*100,0)+" cm";}else{$("v-clr").textContent="—";$("o-pk").textContent="—";$("o-allow").textContent="—";}$("o-land").textContent=out.land!==undefined?fmt(TL-out.land,2)+" m手前":"—";
+  $("a-v").textContent=fmt(inSp)+" m/s";$("a-ang").textContent=fmt(Math.atan2(-s.vy,-s.vx)*180/Math.PI,0)+"°"+(s.vy<0?" 下降中":" 上昇中");
+  $("a-rps").textContent=(s.om>=0?"上回転 ":"下回転 ")+fmt(Math.abs(s.om/2/Math.PI),0)+" 回転/秒";$("a-h").textContent=(s.y>=0?"+":"")+fmt(s.y*100,0)+" cm";
+  $("o-v").textContent=fmt(Math.hypot(o.vx,o.vy))+" m/s";$("o-ang").textContent=fmt(Math.atan2(o.vy,o.vx)*180/Math.PI,0)+"°";
+  $("o-rps").textContent=(sp>=0?"下回転 ":"上回転 ")+fmt(Math.abs(sp),0)+" 回転/秒";
+  $("o-vn").textContent=fmt(o.vn)+" m/s";$("o-k").textContent=fmt(o.kEff,2);
+  $("o-pip").textContent=!pipOn()?"考えない":(o.B<0.2?"倒れている":o.B<0.8?"半分倒れている":"立っている")+"・"+(o.D<0.3?"こすりは弱い":o.D<0.8?"こすりは中くらい":"強くこすっている");
+  drawInset();}
+let pend=0;function schedule(){cancelAnimationFrame(pend);pend=requestAnimationFrame(update);}
+function applyPreset(key){const p=PRE[key];$("k").value=p.k;$("e").value=p.e;$("et").value=p.et;keep=p.keep;}
+document.querySelectorAll("input[name=rub]").forEach(r=>r.addEventListener("change",()=>{applyPreset(r.value);schedule();}));
+document.querySelectorAll("input[name=course]").forEach(r=>r.addEventListener("change",schedule));
+$("arc").addEventListener("change",schedule);
+$("pip").addEventListener("change",()=>{bestFace();schedule();});
+const STROKES={touch:{sw:1.5,sa:0},brush:{sw:8,sa:0},chop:{sw:6,sa:30}};
+document.querySelectorAll("input[name=stroke]").forEach(r=>r.addEventListener("change",()=>{const p=STROKES[r.value];$("sw").value=p.sw;$("sa").value=p.sa;bestFace();schedule();}));
+["sw","sa"].forEach(id=>$(id).addEventListener("input",()=>document.querySelectorAll("input[name=stroke]").forEach(x=>x.checked=false)));
+function bestFace(){TL=COURSE[document.querySelector("input[name=course]:checked").value];NETX=TL/2;const inc=getInc(+$("dist").value);
+  if(inc.fail)return;const run=faceRun(inc.s,+$("sw").value,+$("sa").value,1);
+  if(run[0]>0)$("face").value=Math.round((run[1]+run[2])/2);}
+function fitDist(){const inc=getInc(0.01);
+  if(inc.info&&inc.info.cross0!==null)$("dist").value=Math.min(4.5,Math.max(1,Math.round(inc.info.cross0*10)/10));}
+document.querySelectorAll("input[name=aim]").forEach(r=>r.addEventListener("change",schedule));
+["hb","hs"].forEach(id=>$(id).addEventListener("change",()=>{bestFace();schedule();}));
+document.querySelectorAll("input[name=shot]").forEach(r=>r.addEventListener("change",()=>{const p=SHOTS[r.value];document.querySelector("input[name=aim][value=bounce]").checked=true;
+  $("v0").value=p.v0;$("rps").value=p.rps;$("bx").value=p.bx;$("arc").checked=p.arc==="high";
+  TL=COURSE[document.querySelector("input[name=course]:checked").value];NETX=TL/2;
+  $("sw").value=p.sw;$("sa").value=p.sa;if(p.dist!==undefined)$("dist").value=p.dist;else fitDist();
+  bestFace();schedule();}));
+document.querySelectorAll("input[type=range]").forEach(r=>r.addEventListener("input",()=>{schedule();if(!["sw","sa","face"].includes(r.id)&&HEAT){HEAT=null;drawHeat();$("srch-best").textContent="条件が変わったので、もう一度探してください。";$("srch-msg").textContent="";}else if(HEAT)requestAnimationFrame(drawHeat);}));
+$("play").addEventListener("click",()=>{anim.playing=!anim.playing;$("play").textContent=anim.playing?"一時停止":"再生";if(anim.playing&&anim.t>=total()){anim.t=0;anim.hold=0;}});
+document.querySelectorAll("[data-s]").forEach(b=>b.addEventListener("click",()=>{anim.speed=+b.dataset.s;document.querySelectorAll("[data-s]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));}));
+document.querySelector("details").addEventListener("toggle",drawInset);
+window.addEventListener("resize",()=>{drawInset();});
+
+const SW_STEPS=[];for(let v=0;v<=10;v+=1)SW_STEPS.push(v);
+const SA_STEPS=[];for(let v=-30;v<=75;v+=7.5)SA_STEPS.push(v);
+let HEAT=null;
+function drawHeat(){const cv=$("heat");if(!HEAT){cv.style.height="0px";return;}const dpr=window.devicePixelRatio||1,W=cv.clientWidth||320,ml=34,mb=30,mt=6,cw=(W-ml-6)/SA_STEPS.length,ch=Math.max(16,Math.min(24,cw*0.8)),H=mt+ch*SW_STEPS.length+mb;
+  cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+"px";const c=cv.getContext("2d"),col=css();c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
+  const mx=Math.max(1,...HEAT.cells.map(x=>x.w));c.font="10px "+col("--f-body");
+  HEAT.cells.forEach(x=>{const X=ml+x.i*cw,Y=mt+(SW_STEPS.length-1-x.j)*ch;c.fillStyle=x.w>0?col("--out"):col("--line");c.globalAlpha=x.w>0?0.15+0.85*x.w/mx:0.5;c.fillRect(X+1,Y+1,cw-2,ch-2);c.globalAlpha=1;
+    if(x.w>0&&cw>22){c.fillStyle=x.w/mx>0.55?col("--surface"):col("--ink");c.textAlign="center";c.fillText(x.w+"°",X+cw/2,Y+ch/2+3.5);}});
+  const cs=+$("sw").value,ca=+$("sa").value;const ci=SA_STEPS.reduce((b,v,i)=>Math.abs(v-ca)<Math.abs(SA_STEPS[b]-ca)?i:b,0),cj=SW_STEPS.reduce((b,v,i)=>Math.abs(v-cs)<Math.abs(SW_STEPS[b]-cs)?i:b,0);
+  c.strokeStyle=col("--ink");c.lineWidth=2;c.strokeRect(ml+ci*cw+1,mt+(SW_STEPS.length-1-cj)*ch+1,cw-2,ch-2);
+  c.fillStyle=col("--muted");c.textAlign="right";SW_STEPS.forEach((v,j)=>{if(j%2===0)c.fillText(v,ml-4,mt+(SW_STEPS.length-1-j)*ch+ch/2+3.5);});
+  c.textAlign="center";SA_STEPS.forEach((v,i)=>{if(i%2===0)c.fillText(v+"°",ml+i*cw+cw/2,mt+ch*SW_STEPS.length+13);});
+  c.textAlign="left";c.fillText("スイングの向き（下へ＋）→",ml,H-3);c.save();c.translate(10,mt+ch*SW_STEPS.length/2);c.rotate(-Math.PI/2);c.textAlign="center";c.fillText("速さ m/s",0,0);c.restore();
+  HEAT.geom={ml,mt,cw,ch};}
+function runSearch(){TL=COURSE[document.querySelector("input[name=course]:checked").value];NETX=TL/2;const inc=getInc(+$("dist").value);
+  if(inc.fail){$("srch-msg").textContent="相手の打球の条件を見直してください";return;}
+  $("srch-msg").textContent="計算中…";$("search").disabled=true;const cells=[];let i=0,j=0;
+  const stepFn=()=>{const t0=performance.now();while(j<SW_STEPS.length&&performance.now()-t0<40){const run=faceRun(inc.s,SW_STEPS[j],SA_STEPS[i],1,3e-3);cells.push({i,j,w:run[0]>0?run[2]-run[1]:0,c:run[0]>0?Math.round((run[1]+run[2])/2):null});i++;if(i>=SA_STEPS.length){i=0;j++;}}
+    if(j<SW_STEPS.length){$("srch-msg").textContent="計算中… "+Math.round(100*j/SW_STEPS.length)+"%";setTimeout(stepFn,0);return;}
+    HEAT={cells};$("search").disabled=false;const best=cells.reduce((b,x)=>x.w>(b?b.w:-1)?x:b,null);
+    if(!best||best.w<=0){$("srch-msg").textContent="";$("srch-best").textContent="この条件では入る振り方が見つかりませんでした。頂点の高さの上限を緩めるか、打点を変えてください。";drawHeat();return;}
+    $("srch-msg").textContent="完了";$("srch-best").textContent=(critMode()==="target"?"狙いどおりに落とせて、一番ぶれに強いのは":"一番ぶれに強いのは")+"、速さ "+SW_STEPS[best.j]+" m/s・向き "+SA_STEPS[best.i]+"° で、面の開きが "+best.w+"° の幅で"+(critMode()==="target"?"条件を満たします":"入ります")+"（中心 "+best.c+"°）。マスをタップすると切り替わります。";
+    drawHeat();};
+  stepFn();}
+$("search").addEventListener("click",runSearch);
+$("heat").addEventListener("click",ev=>{if(!HEAT||!HEAT.geom)return;const r=$("heat").getBoundingClientRect(),g=HEAT.geom,x=ev.clientX-r.left,y=ev.clientY-r.top;
+  const i=Math.floor((x-g.ml)/g.cw),jj=Math.floor((y-g.mt)/g.ch),j=SW_STEPS.length-1-jj;if(i<0||i>=SA_STEPS.length||j<0||j>=SW_STEPS.length)return;
+  const cell=HEAT.cells.find(q=>q.i===i&&q.j===j);$("sw").value=SW_STEPS[j];$("sa").value=SA_STEPS[i];if(cell&&cell.c!==null)$("face").value=cell.c;
+  document.querySelectorAll("input[name=stroke]").forEach(x=>x.checked=false);update();drawHeat();});
+window.addEventListener("resize",drawHeat);
+
+document.querySelectorAll("input[name=crit]").forEach(r=>r.addEventListener("change",()=>{const t=critMode()==="target";$("crit-target").hidden=!t;$("crit-low").hidden=t;HEAT=null;drawHeat();$("srch-best").textContent="";$("srch-msg").textContent="";bestFace();schedule();}));
+["tg","tol","pmax"].forEach(id=>$(id).addEventListener("change",()=>{bestFace();schedule();}));
+document.querySelectorAll("[data-v]").forEach(b=>{b.setAttribute("aria-pressed",b.dataset.v===VIEW?"true":"false");b.addEventListener("click",()=>{VIEW=b.dataset.v;document.querySelectorAll("[data-v]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));});});
+(function init(){applyPreset("ox");$("play").textContent=anim.playing?"一時停止":"再生";
+  TL=COURSE[document.querySelector("input[name=course]:checked").value];NETX=TL/2;
+  document.querySelector("input[name=shot]:checked").dispatchEvent(new Event("change"));update();if(!anim.playing){anim.t=total();}requestAnimationFrame(tick);})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>ラバーがつかむ仕組み</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* layout: phone-first stack — definition, sticky player, three tilted-racket contact panels, what the calculation says */
+:root{
+  --bg:#f3f5f4; --surface:#ffffff; --ink:#18221f; --muted:#5b6964; --line:#d5dcd9;
+  --pip:#b8423a; --sponge:#e8d9a8; --blade:#9a7b4f;
+  --in:#d0611f; --rub:#6b7a75; --force:#1f5a7a; --ball:#fbfaf7; --mark:#18221f; --hint:#eef3f1;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111715; --surface:#19211e; --ink:#e6ece9; --muted:#9aa8a3; --line:#2c3733;
+  --pip:#ef7a6e; --sponge:#6e6447; --blade:#8a6e48;
+  --in:#f08a4b; --rub:#a9b6b1; --force:#5fb3e0; --ball:#f4f1ea; --mark:#111715; --hint:#1d2925; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111715; --surface:#19211e; --ink:#e6ece9; --muted:#9aa8a3; --line:#2c3733;
+  --pip:#ef7a6e; --sponge:#6e6447; --blade:#8a6e48;
+  --in:#f08a4b; --rub:#a9b6b1; --force:#5fb3e0; --ball:#f4f1ea; --mark:#111715; --hint:#1d2925; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:16px 48px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.wrap>*{min-width:0}
+h1{font-size:1.4rem;margin:0;line-height:1.3}
+h2{font-size:1.05rem;margin:0 0 2px}
+p{margin:0}
+.lead{color:var(--muted);font-size:14px;margin-top:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.def{background:var(--hint);border-color:transparent}
+.def b{color:var(--force)}
+.player{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;background:var(--bg);padding-block:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.btn{font:inherit;font-size:14px;font-weight:700;border:1px solid var(--force);background:var(--force);color:var(--surface);border-radius:999px;padding:6px 16px;min-height:36px;cursor:pointer}
+.btn:focus-visible{outline:2px solid var(--force);outline-offset:2px}
+.player input{flex:1;min-width:120px;height:30px;accent-color:var(--force)}
+.player output{font-size:13px;color:var(--muted);min-width:7em}
+svg{width:100%;height:auto;display:block}
+.cap{font-size:14px;margin:4px 0 0;padding-left:1.2em}
+.cap li{margin:2px 0}
+.tag{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:1px 10px;margin-left:6px;vertical-align:2px;background:var(--hint)}
+.tag.b{color:var(--force)} .tag.t{color:var(--in)}
+.legend{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px}
+.calc{border-left:3px solid var(--force);border-radius:0;padding:4px 10px;margin-top:8px;font-size:13.5px;background:var(--hint)}
+.note{font-size:12.5px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header>
+  <h1>ラバーがつかむ仕組み</h1>
+  <p class="lead">FL2で、カット・ツッツキに触るだけ・ボールの下を前にこする、の3つの打ち方を、ラケット面の角度をつけて拡大スロー再生します。</p>
+</header>
+
+<section class="panel def">
+  <p>ここでの「<b>つかむ</b>」は、ボールとラバーの間で、<b>面に沿った向きの力（摩擦）が伝わること</b>です。</p>
+  <p class="note" style="margin-top:4px">タイヤと道路と同じで、乾いた道路ならタイヤが路面をつかんで力が伝わり、凍った道路なら滑って伝わりません。ボールの回転を変えられるのは、この面に沿った力だけです。力が伝わる量は「ボールの表面とラバーの表面が、どれだけずれて動いているか」と「粒が倒れずに引っかかっているか」で決まります。</p>
+</section>
+
+<div class="player">
+  <button class="btn" id="play" type="button">一時停止</button>
+  <input type="range" id="time" min="0" max="1000" step="1" value="0" aria-label="再生位置">
+  <output id="phase"></output>
+</div>
+<div class="legend">
+  <span><i style="background:var(--in)"></i>ボール表面の動き（接点）</span>
+  <span><i style="background:var(--rub)"></i>ラバー表面の動き（スイング）</span>
+  <span><i style="background:var(--force)"></i>ボールにかかる面に沿った力</span>
+  <span>球の黒い線＝回る向き</span>
+</div>
+
+<section class="panel">
+  <h2>① ドライブをカット<span class="tag b">下回転で返る</span></h2>
+  <svg id="p1" viewBox="0 0 340 230" role="img" aria-label="少し開いた面を下へ振ってドライブをカットする様子"></svg>
+  <ul class="cap">
+    <li>上回転のボールは、接点の表面が面に沿って下向きに動いて来ます。</li>
+    <li>ラケットも下へ振るので、ラバー表面も同じ下向きに動きます。両者のずれは小さく、伝わる力も小さめです。</li>
+    <li>回る向きはほぼ来たときのまま残ります。進む向きが逆になるので、相手から見ると下回転です。</li>
+  </ul>
+  <p class="calc">シミュレーターの計算では、相手の約100回転/秒のドライブに対して、返る下回転は約77〜82回転/秒でした。振り方や「つかむ強さ」を変えてもほとんど変わりません。FL2のカットの下回転は、大部分が<b>相手の上回転を残したもの</b>で、下へ振るのは主に高さと速さを合わせる役割だと考えられます。</p>
+</section>
+
+<section class="panel">
+  <h2>② ツッツキに面を開いて触るだけ<span class="tag t">ナックル〜軽い上回転</span></h2>
+  <svg id="p2" viewBox="0 0 340 230" role="img" aria-label="開いた面をほぼ動かさずにツッツキに当てる様子"></svg>
+  <ul class="cap">
+    <li>下回転のボールは、接点の表面が面に沿って上向き（自分側）に動いて来ます。</li>
+    <li>ラケットはほぼ止まっているので、ずれはボールの回転の分だけです。細長い粒はその力で倒れ、ボールが滑ります。</li>
+    <li>回る向きがそのまま残り、少し弱まって返ります。相手から見ると回転の少ないナックル〜軽い上回転です。</li>
+  </ul>
+  <p class="calc">計算では、届いた約23回転/秒の下回転が、約15回転/秒の上回転（相手から見て）で返りました。実際にはもう少し回転が減ってナックルに近くなると考えられます。</p>
+</section>
+
+<section class="panel">
+  <h2>③ ツッツキのボールの下を前に強くこする<span class="tag b">下回転がかかる</span></h2>
+  <svg id="p3" viewBox="0 0 340 230" role="img" aria-label="開いた面を前へ速く動かし、ボールの下をこする様子"></svg>
+  <ul class="cap">
+    <li>ボールの表面は面に沿って上向き（自分側）に動いて来ます。ラバー表面は、スイングで面に沿って前向き（相手側）に速く動きます。</li>
+    <li>2つが逆向きに動くので、ずれがとても大きくなります。面を押す力は小さいので、粒は倒れきらず、先がボールの下に引っかかります。</li>
+    <li>粒の先がボールの下を前へ引っぱり、回る向きが逆になります。相手から見ると下回転です。</li>
+  </ul>
+  <p class="calc">今のシミュレーターのように「つかむ強さ」を一定の小さな値（0.15）にすると、強くこすっても軽い上回転のままで、下回転になりません。下回転がしっかりかかるという体感と合わせるには、<b>こすったときは粒がほぼ滑らずにつかんでいる</b>必要があります。これは、粒が倒れるかどうかで摩擦が変わるという考えを裏づける材料になります。</p>
+</section>
+
+<p class="note">①〜③の粒の動きは、計算結果とプレーヤーの体感から考えた仮説で、直接測ったものではありません。図の角度や動きは分かりやすく誇張しています。</p>
+</div>
+
+<p style="text-align:center;font-size:13px;margin:0 0 32px"><a href="./">FL2カット軌道ラボに戻る</a></p>
+<script>
+const $=id=>document.getElementById(id);
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+let t=0,playing=!reduce,last=0;const DUR=5.5;
+// face: opening angle from vertical (deg). spin: screen rotation rate (+ = clockwise). rub: rubber surface speed along face (+ = toward top edge of racket). mode: pip behaviour
+const CASES={
+  p1:{face:25,inDir:150,outDir:-12,spinIn:-2.6,spinOut:-2.2,rub:-1,mode:"flex",swing:[0.35,1],swingLab:"下へ振る"},
+  p2:{face:58,inDir:176,outDir:-28,spinIn:2.6,spinOut:0.5,rub:0,mode:"buckle",swing:null,swingLab:""},
+  p3:{face:62,inDir:176,outDir:-22,spinIn:2.6,spinOut:-2.4,rub:-1.6,mode:"catch",swing:[1,-0.05],swingLab:"前へこする"}
+};
+const CX=110,CY=150,RB=30;
+function ease(x){return x<0?0:x>1?1:x*x*(3-2*x);}
+function phaseName(t){return t<0.32?"近づく":t<0.64?"当たっている":t<0.95?"離れていく":"—";}
+function arr(x0,y0,x1,y1,col,w){const a=Math.atan2(y1-y0,x1-x0),h=7;
+  return `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/><path d="M${x1.toFixed(1)},${y1.toFixed(1)} L${(x1-h*Math.cos(a-0.45)).toFixed(1)},${(y1-h*Math.sin(a-0.45)).toFixed(1)} L${(x1-h*Math.cos(a+0.45)).toFixed(1)},${(y1-h*Math.sin(a+0.45)).toFixed(1)}Z" fill="${col}"/>`;}
+const ang={};
+function draw(id,c,t,dt){
+  const cs=getComputedStyle(document.documentElement),v=n=>cs.getPropertyValue(n).trim();
+  const th=c.face*Math.PI/180,nx=Math.cos(th),ny=-Math.sin(th),tx=-ny*-1,ty=0;
+  const ux=Math.sin(th),uy=Math.cos(th);
+  const upx=-Math.sin(th),upy=-Math.cos(th);
+  const contact=t>=0.32&&t<0.64,ct=contact?(t-0.32)/0.32:(t<0.32?0:1);
+  let sx=0,sy=0;if(c.swing){const k=(ease((t-0.2)/0.6)-0.5)*40;sx=c.swing[0]*k;sy=c.swing[1]*k;}
+  const px=CX+sx,py=CY+sy;
+  let g=`<g transform="translate(${px.toFixed(1)},${py.toFixed(1)}) rotate(${(-c.face).toFixed(1)})">`;
+  g+=`<rect x="-40" y="-95" width="22" height="190" rx="3" fill="${v("--blade")}"/><rect x="-18" y="-95" width="8" height="190" fill="${v("--sponge")}"/>`;
+  const scroll=(-c.rub*t*60)%10;
+  for(let y=-90+((scroll%10)+10)%10;y<=90;y+=10){
+    const near=Math.max(0,1-Math.abs(y)/30);let tipx=10,tipy=y,qx=0,qy=y;
+    if(contact){const s=Math.sin(Math.PI*ct)*near;
+      if(c.mode==="buckle"){tipx=10-14*s;tipy=y+(y<=0?-12:12)*s-10*s;qx=2;qy=y-4*s;}
+      else if(c.mode==="catch"){tipy=y+9*s;qy=y+3*s;}
+      else{tipy=y+5*s;qy=y+2*s;}}
+    g+=`<path d="M-10,${y} Q${qx},${qy} ${tipx},${tipy}" fill="none" stroke="${v("--pip")}" stroke-width="3" stroke-linecap="round"/>`;}
+  g+=`</g>`;
+  const cpx=px+10*Math.cos(-th),cpy=py+10*Math.sin(-th);
+  const ccx=cpx+nx*RB,ccy=cpy+ny*RB;
+  let bx,by;const L=200;
+  if(t<0.32){const k=1-t/0.32,a=c.inDir*Math.PI/180;bx=ccx-Math.cos(a)*L*k;by=ccy-Math.sin(a)*L*k;}
+  else if(t<0.64){bx=ccx-nx*(c.mode==="buckle"?6:3)*Math.sin(Math.PI*ct);by=ccy-ny*(c.mode==="buckle"?6:3)*Math.sin(Math.PI*ct);}
+  else{const k=(t-0.64)/0.36,a=c.outDir*Math.PI/180;bx=ccx+Math.cos(a)*L*k;by=ccy+Math.sin(a)*L*k;}
+  let spin=t<0.32?c.spinIn:t<0.64?c.spinIn+(c.spinOut-c.spinIn)*ease(ct):c.spinOut;
+  ang[id]=(ang[id]||0)+spin*dt;const a=ang[id];
+  if(t<0.32){const a2=c.inDir*Math.PI/180;g+=`<line x1="${(ccx-Math.cos(a2)*L).toFixed(1)}" y1="${(ccy-Math.sin(a2)*L).toFixed(1)}" x2="${ccx.toFixed(1)}" y2="${ccy.toFixed(1)}" stroke="${v("--line")}" stroke-width="2" stroke-dasharray="4 4"/>`;}
+  g+=`<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${RB}" fill="${v("--ball")}" stroke="${v("--ink")}" stroke-width="1.2"/>`;
+  g+=`<line x1="${(bx-Math.cos(a)*RB).toFixed(1)}" y1="${(by-Math.sin(a)*RB).toFixed(1)}" x2="${(bx+Math.cos(a)*RB).toFixed(1)}" y2="${(by+Math.sin(a)*RB).toFixed(1)}" stroke="${v("--mark")}" stroke-width="2.5"/>`;
+  g+=`<circle cx="${(bx+Math.cos(a)*RB*0.6).toFixed(1)}" cy="${(by+Math.sin(a)*RB*0.6).toFixed(1)}" r="3.2" fill="${v("--mark")}"/>`;
+  if(t<0.95){const ex=bx-nx*(RB-8),ey=by-ny*(RB-8);
+    const sgn=Math.sign(spin),mag=Math.min(1,Math.abs(spin)/2.6);
+    if(mag>0.25)g+=arr(ex-upx*12*sgn*mag+nx*0,ey-upy*12*sgn*mag,ex+upx*12*sgn*mag,ey+upy*12*sgn*mag,v("--in"),2.5);}
+  if(c.rub!==0&&t>0.15&&t<0.8){const rx=cpx-nx*26,ry=cpy-ny*26,s=Math.sign(c.rub),m=Math.min(1,Math.abs(c.rub));
+    g+=arr(rx-upx*16*s*m,ry-upy*16*s*m,rx+upx*16*s*m,ry+upy*16*s*m,v("--rub"),2.5);}
+  if(contact){let F=0;if(c.mode==="catch")F=1;else if(c.mode==="flex")F=0.35;else F=0;
+    const fx=cpx+nx*6,fy=cpy+ny*6;
+    if(F>0)g+=arr(fx,fy,fx-upx*30*F,fy-upy*30*F,v("--force"),3);
+    else g+=`<text x="${(fx+10).toFixed(1)}" y="${(fy+34).toFixed(1)}" font-size="11" fill="${v("--force")}">粒が倒れて力が伝わらない</text>`;}
+  if(c.swingLab&&t>0.15&&t<0.8)g+=`<text x="8" y="16" font-size="11" fill="${v("--rub")}">ラケット：${c.swingLab}</text>`;
+  g+=`<text x="${334}" y="16" font-size="11" text-anchor="end" fill="${v("--muted")}">面の開き 約${c.face}°</text>`;
+  if(t>=0.64&&t<0.95)g+=`<text x="334" y="222" font-size="11" text-anchor="end" fill="${v("--muted")}">相手から見て${c.spinOut<-1?"下回転":"回転少なめ"} →</text>`;
+  if(t<0.32)g+=`<text x="334" y="222" font-size="11" text-anchor="end" fill="${v("--muted")}">← ${c.spinIn<0?"上回転":"下回転"}で来る</text>`;
+  $(id).innerHTML=g;}
+function render(dt){for(const id in CASES)draw(id,CASES[id],t,dt);$("phase").textContent=phaseName(t);$("time").value=Math.round(t*1000);}
+function loop(ts){const dt=last?Math.min(0.05,(ts-last)/1000):0;last=ts;if(playing){t+=dt/DUR;if(t>1)t=0;}render(playing?dt:0);requestAnimationFrame(loop);}
+$("play").textContent=playing?"一時停止":"再生";
+$("play").addEventListener("click",()=>{playing=!playing;$("play").textContent=playing?"一時停止":"再生";});
+$("time").addEventListener("input",e=>{t=+e.target.value/1000;playing=false;$("play").textContent="再生";render(0);});
+if(reduce)t=0.48;
+requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>
