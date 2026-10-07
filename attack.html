@@ -32,8 +32,20 @@ h1{font-size:1.35rem;font-weight:700;margin:0;line-height:1.3}
 h2{font-size:1rem;font-weight:700;margin:0 0 4px}
 .lead{margin:2px 0 0;color:var(--muted);font-size:13px}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
-.stage{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:6px 8px;margin-inline:-16px;padding-inline:16px;border-bottom:1px solid var(--line)}
-.stage .panel{padding:8px 10px}
+.stage{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:4px 6px;margin-inline:-16px;padding-inline:16px;border-bottom:1px solid var(--line)}
+.stage.unpinned{position:static}
+#courtWrap{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.mini{display:flex;align-items:stretch;gap:6px;margin-top:5px}
+.btn.sm{font-size:12px;padding:2px 10px;min-height:32px;white-space:nowrap}
+.pin{font:inherit;font-size:11px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:8px;padding:2px 6px;cursor:pointer;white-space:nowrap}
+.pin[aria-pressed="true"]{color:var(--table);border-color:var(--table)}
+.sum{flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;min-width:0}
+.sum div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px 6px;min-width:0}
+.sum small{display:block;font-size:10px;color:var(--muted);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sum b{display:block;font-family:var(--f-num);font-size:12px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+.sum .ok b{color:var(--out)} .sum .bad b{color:var(--bad)}
+.viewopts .legend{margin-top:6px}
+input[type=range]{touch-action:pan-y}
 #court{display:block;touch-action:pan-x pan-y}
 .bar{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
 .btn{font:inherit;font-size:14px;font-weight:700;border:1px solid var(--table);background:var(--table);color:var(--surface);border-radius:999px;padding:6px 16px;min-height:36px;cursor:pointer}
@@ -43,12 +55,6 @@ h2{font-size:1rem;font-weight:700;margin:0 0 4px}
 .speed button{font:inherit;font-size:12px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:4px 10px;min-height:32px;cursor:pointer}
 .speed button[aria-pressed="true"]{border-color:var(--table);color:var(--table);font-weight:700}
 .phase{font-size:12px;color:var(--muted);margin-left:auto}
-.sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
-.sum div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:5px 8px;min-width:0}
-.sum small{display:block;font-size:11px;color:var(--muted);line-height:1.3}
-.sum b{display:block;font-family:var(--f-num);font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sum .ok b{color:var(--out)} .sum .bad b{color:var(--bad)}
-@media (max-width:520px){.sum{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .legend{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:11px;color:var(--muted);margin-top:4px}
 .legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px;border-radius:2px}
 .row{display:grid;grid-template-columns:1fr auto;gap:0 10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
@@ -80,37 +86,41 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
   <p class="lead">相手のカット・ツッツキ・ナックル・高い球を、グレイザー09C（厚）でドライブやスマッシュしたときの軌道と回転をスローで再生します。下のスライダーを動かすと、すぐに計算し直します。</p>
 </header>
 
-<section class="stage" aria-label="軌道のアニメーションと結果">
-  <div class="panel">
-    <div id="courtWrap" style="overflow-x:auto;overscroll-behavior-x:contain"><canvas id="court" role="img" aria-label="卓球台を横から見た図。相手のドライブと自分の打球の軌道を再生する"></canvas></div>
-    <div class="legend">
+<section class="stage" id="stage" aria-label="軌道のアニメーションと結果">
+  <div id="courtWrap" style="overflow-x:auto;overscroll-behavior-x:contain"><canvas id="court" role="img" aria-label="卓球台を横から見た図。相手のドライブと自分の打球の軌道を再生する"></canvas></div>
+  <div class="mini">
+    <button class="btn sm" id="play" type="button">一時停止</button>
+    <div class="sum">
+      <div id="s-res"><small>結果</small><b id="v-res">—</b></div>
+      <div><small>入る面の角度</small><b id="v-range">—</b></div>
+      <div><small>返球の回転</small><b id="v-spin">—</b></div>
+      <div><small>弾んだ後の頂点</small><b id="v-clr">—</b></div>
+    </div>
+    <button class="pin" id="pin" type="button" aria-pressed="true" title="図を画面上部に固定する">固定</button>
+  </div>
+  <p class="warn" id="a-warn" hidden></p>
+</section>
+
+<section class="panel viewopts" aria-label="表示の設定">
+  <div class="bar" style="margin-top:0">
+    <div class="speed" role="group" aria-label="表示の大きさ">
+        <button type="button" data-v="fit" aria-pressed="false">全体</button>
+        <button type="button" data-v="zoom" aria-pressed="true">拡大</button>
+      </div>
+    <div class="speed" role="group" aria-label="再生速度">
+        <button type="button" data-s="0.1" aria-pressed="false">1/10</button>
+        <button type="button" data-s="0.25" aria-pressed="true">1/4</button>
+        <button type="button" data-s="1" aria-pressed="false">実速</button>
+      </div>
+    <span class="phase" id="phase"></span>
+  </div>
+  <div class="legend">
       <span><i style="background:var(--in)"></i>相手の打球</span>
       <span><i style="background:var(--out)"></i>返球（入る）</span>
       <span><i style="background:var(--bad)"></i>返球（入らない）</span>
       <span>球の黒い線＝回る向き（見やすく遅くしています）</span>
       <span>人の形＝身長165cm、膝を軽く曲げた構え。肘の点の色：緑＝余裕あり、橙＝伸びすぎ・窮屈、赤＝伸びきり</span>
     </div>
-    <div class="bar">
-      <button class="btn" id="play" type="button">一時停止</button>
-      <div class="speed" role="group" aria-label="表示の大きさ">
-        <button type="button" data-v="fit" aria-pressed="false">全体</button>
-        <button type="button" data-v="zoom" aria-pressed="true">拡大</button>
-      </div>
-      <div class="speed" role="group" aria-label="再生速度">
-        <button type="button" data-s="0.1" aria-pressed="false">1/10</button>
-        <button type="button" data-s="0.25" aria-pressed="true">1/4</button>
-        <button type="button" data-s="1" aria-pressed="false">実速</button>
-      </div>
-      <span class="phase" id="phase"></span>
-    </div>
-  </div>
-  <div class="sum">
-    <div id="s-res"><small>結果</small><b id="v-res">—</b></div>
-    <div><small>入る面の開き</small><b id="v-range">—</b></div>
-    <div><small>返球の回転</small><b id="v-spin">—</b></div>
-    <div><small>弾んだ後の頂点</small><b id="v-clr">—</b></div>
-  </div>
-  <p class="warn" id="a-warn" hidden></p>
 </section>
 
 <section class="panel">
@@ -320,7 +330,7 @@ function geom(){const cv=$("court"),wrap=$("courtWrap"),CW=wrap.clientWidth||340
   const dist=S.dist,xmin=Math.min(-dist-0.95,-0.9),xmax=TL+Math.max(1.1,+$("oppd").value+0.3);let ymax=Math.max(0.5,FLOOR+HUMAN+0.08);
   [S.inc.pts,S.out?S.out.pts:[]].forEach(p=>{for(let i=0;i<p.length;i+=20){const q=p[i];if(q[0]>xmin&&q[0]<xmax)ymax=Math.max(ymax,q[1]);}});
   ymax+=0.12;const xr=xmax-xmin,yr=ymax-FLOOR;let sc,W,H;
-  if(VIEW==="zoom"){H=240;sc=(H-18)/yr;W=Math.max(CW,Math.round(xr*sc));}else{W=CW;sc=W/xr;H=Math.round(yr*sc+18);}
+  if(VIEW==="zoom"){H=Math.round(Math.min(240,Math.max(130,window.innerHeight*0.22)));sc=(H-18)/yr;W=Math.max(CW,Math.round(xr*sc));}else{W=CW;sc=W/xr;H=Math.round(yr*sc+18);}
   return {cv,W,H,X:x=>(x-xmin)*sc,Y:y=>H-12-(y-FLOOR)*sc,xmin,xmax};}
 function drawCourt(){if(!S)return;const g=geom(),{cv,W,H,X,Y,xmin,xmax}=g,dpr=window.devicePixelRatio||1;
   if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.height=H+"px";cv.style.width=W+"px";}
@@ -419,7 +429,7 @@ function update(){const v0=+$("v0").value,rps=+$("rps").value,bx=+$("bx").value,
   w.hidden=true;const s=inc.s,o=chop(s,face,k,e,keep,sw,sa),out=flyOut(o,true),ok=okRes(out);
   S={inc,out,o,dist,face,sw,sa,ok};
   const run=faceRun(s,sw,sa,1);
-  const rng=run[0]>0?(run[1]===run[2]?run[1]+"°":run[1]+"〜"+run[2]+"°（幅"+(run[2]-run[1])+"°）"):"入らない";
+  const rng=run[0]>0?(run[1]===run[2]?run[1]+"°":"幅"+(run[2]-run[1])+"° "+run[1]+"〜"+run[2]):"入らない";
   const sp=o.om/2/Math.PI,inSp=Math.hypot(s.vx,s.vy);
   const hi=out.res==="入る"&&!ok;$("v-res").textContent=critMode()==="target"?(ok?"狙いどおり":(out.res==="入る"?"狙いから外れた":out.res)):(hi?"入るが浮いた":out.res);
   $("tgo").textContent=fmt(+$("tg").value,2)+" m";$("tolo").textContent="±"+$("tol").value+" cm";$("pmaxo").textContent=$("pmax").value+" cm";$("s-res").className=ok?"ok":"bad";$("v-range").textContent=rng;
@@ -492,6 +502,15 @@ window.addEventListener("resize",drawHeat);
 document.querySelectorAll("input[name=crit]").forEach(r=>r.addEventListener("change",()=>{const t=critMode()==="target";$("crit-target").hidden=!t;$("crit-low").hidden=t;HEAT=null;drawHeat();$("srch-best").textContent="";$("srch-msg").textContent="";bestFace();schedule();}));
 ["tg","tol","pmax"].forEach(id=>$(id).addEventListener("change",()=>{bestFace();schedule();}));
 document.querySelectorAll("[data-v]").forEach(b=>{b.setAttribute("aria-pressed",b.dataset.v===VIEW?"true":"false");b.addEventListener("click",()=>{VIEW=b.dataset.v;document.querySelectorAll("[data-v]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));});});
+
+(function(){const st=$("stage"),pin=$("pin");let pinned=true;try{pinned=localStorage.getItem("stagePinned")!=="0";}catch(e){}
+  const apply=()=>{st.classList.toggle("unpinned",!pinned);pin.setAttribute("aria-pressed",pinned?"true":"false");pin.textContent=pinned?"固定":"固定しない";};apply();
+  pin.addEventListener("click",()=>{pinned=!pinned;try{localStorage.setItem("stagePinned",pinned?"1":"0");}catch(e){}apply();});})();
+document.querySelectorAll('input[type=range]').forEach(r=>{let sx=0,sy=0,v0=null;
+  const revert=()=>{if(v0!==null&&r.value!==v0){r.value=v0;r.dispatchEvent(new Event("input"));}};
+  r.addEventListener("touchstart",e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;v0=r.value;},{passive:true});
+  r.addEventListener("touchmove",e=>{const t=e.touches[0],dx=Math.abs(t.clientX-sx),dy=Math.abs(t.clientY-sy);if(dy>8&&dy>dx*1.2)revert();},{passive:true});
+  r.addEventListener("touchend",e=>{const t=e.changedTouches[0],dx=Math.abs(t.clientX-sx),dy=Math.abs(t.clientY-sy);if(dy>8&&dy>dx*1.2)revert();v0=null;},{passive:true});});
 (function init(){applyPreset("g9");$("play").textContent=anim.playing?"一時停止":"再生";
   TL=COURSE[document.querySelector("input[name=course]:checked").value];NETX=TL/2;
   document.querySelector("input[name=shot]:checked").dispatchEvent(new Event("change"));update();if(!anim.playing){anim.t=total();}requestAnimationFrame(tick);})();
