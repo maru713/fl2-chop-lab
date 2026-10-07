@@ -218,7 +218,7 @@ const M=0.0027,R=0.02,AR=Math.PI*R*R,RHO=1.2,CD=0.5,G=9.8;
 const TL=2.74,HW=0.7625,NETX=1.37,NETH=0.1525,DT=1e-3;
 const PRE={g9:{k:0.95,e:0.84,es:0.021,et:0.35,keep:1,pip:false},inv:{k:0.8,e:0.88,es:0.021,et:0.45,keep:1,pip:false},ox:{k:0.15,e:0.45,es:0,et:0,keep:0.8,pip:true},"11":{k:0.15,e:0.55,es:0,et:0,keep:0.8,pip:true}};
 const SERVES={back:{sbk:-65,ssd:0,sv0:5.5,sel:-22,saz:2.5,sy:0.3},sideback:{sbk:-55,ssd:40,sv0:5.75,sel:-23,saz:8.5,sy:0.3},side:{sbk:-25,ssd:45,sv0:5.75,sel:-18,saz:11,sy:0.3},sidetop:{sbk:20,ssd:40,sv0:6,sel:-18,saz:11.5,sy:0.3},rsideback:{sbk:-55,ssd:-40,sv0:5.75,sel:-23,saz:-3.5,sy:0.3},knuckle:{sbk:-25,ssd:0,sv0:5.25,sel:-19,saz:2.5,sy:0.3},tilt:{sbk:-55,ssd:40,sv0:5.75,sel:-24,saz:11.5,sy:0.3,sgx:25}};
-const STROKES={stop:{th:45,sw:1.75,be:15,al:0},push:{th:40,sw:2.5,be:5,al:0},pushfw:{th:20,sw:3.5,be:0,al:0},flick:{th:-5,sw:6,be:30,al:0}};
+const STROKES={stop:{th:45,sw:1.75,be:15,al:0},push:{th:65,sw:4,be:0,al:0},pushfw:{th:20,sw:3.5,be:0,al:0},flick:{th:-5,sw:6,be:30,al:0}};
 const P=()=>PRE[document.querySelector("input[name=rub]:checked").value];
 const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],mul=(a,k)=>[a[0]*k,a[1]*k,a[2]*k],dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],nrm=a=>Math.hypot(a[0],a[1],a[2]);
 function aero(S){if(LIFT==="iso"){const s=Math.min(Math.max(S,0),2);const CMm=(((0.2313*s-1.2055)*s+2.2813)*s-1.9501)*s+0.8254;return [(-0.0747*s+0.3591)*s+0.3682,(8/3)*CMm*s];}
