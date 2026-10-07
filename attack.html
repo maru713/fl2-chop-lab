@@ -241,6 +241,8 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <div class="row"><label for="pv1">粒が完全に倒れる、面を押す速さ</label><output id="pv1o"></output><input type="range" id="pv1" min="2" max="15" step="0.5" value="9"></div>
     <div class="row"><label for="pvb">しっかり引っかかる、こする速さ（面に沿ったスイングの速さ）</label><output id="pvbo"></output><input type="range" id="pvb" min="1" max="12" step="0.5" value="6"></div>
     <div class="row"><label for="et">ゴムが横にたわんで戻る強さ（0＝戻らない）</label><output id="eto"></output><input type="range" id="et" min="0" max="0.6" step="0.01" value="0"></div>
+    <div class="seg" role="radiogroup" aria-label="空気の力の式" style="grid-template-columns:repeat(3,minmax(0,1fr))"><label><input type="radio" name="lift" value="iso" checked>卓球ボールのCFD式<br>（磯村ら2016）</label><label><input type="radio" name="lift" value="cap">旧：上限0.35</label><label><input type="radio" name="lift" value="sat">野球ボールの式</label></div>
+    <p class="note">空気の力（抗力・回転で曲がる力）は、卓球ボールの流体計算（CFD）から作られた式（磯村ら 2016、回転の強さの割合0.1〜2.0、速さ0.5〜10m/sで計算）を使っています。抗力係数＝−0.0747S²＋0.3591S＋0.3682、曲がる力の係数＝(8/3)×S×(0.2313S⁴−1.2055S³＋2.2813S²−1.9501S＋0.8254)（Sは回転の強さの割合）。10m/sより速い球や、回転の強さの割合が2を超える球は、式の範囲外を延長して使っています。実測ではなく計算による値で、実験では回転の割合によって揚力が落ち込む（負のマグヌス効果）という報告もあります。</p>
     <ul class="find note">
       <li>裏ソフトは、表面のゴムが横にたわんでから戻ることで、ボールの回転を逆向きに弾き返します。これがないと、下回転をストップしても回転が止まるだけでナックルになります。裏ソフトは0.35、FL2は0と仮定しています（どちらも実測値ではありません）。</li>
       <li>仮説モードでは、つかむ強さを「上の粒が倒れたときの値」から「粒が立っているときの値」の間で変えます。面を押す速さが速いほど粒が倒れて小さくなり、面に沿ってこするスイングが速いほど大きくなります。境目の数値は、強いドライブのカットでは回転がそのまま残り、ツッツキに触るだけだとナックル、下を強くこすると下回転、という体感に合うように決めたもので、測定値ではありません。</li>
@@ -248,7 +250,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
       <li>反発は同じ研究でアンチラバーが0.53でした。粒高OXはそれ以下と推定しています。ロングピップスは回転が速いほど反発が下がるとされていますが、このモデルでは一定です。</li>
       <li>FL2は返球時に回転の20%を失う、裏ソフトは失わないと仮定しています。</li>
       <li>グレイザー09C（厚）の値はすべて仮定です（実測値ではありません）。微粘着シートは低い押し付けでもボールをつかむと考えてつかむ強さ0.95、テンションスポンジの弾き（横にたわんで戻る）は非粘着テンション系より控えめとして0.35、反発はゆっくり当たったとき0.84で、強く当たるほど1m/sごとに0.021下がる（Gossard 2026で攻撃用裏ソフトの平均的な下がり方）としています。比較用の「テンション系（非粘着）」は、つかむ強さ0.8・弾き0.45・反発0.88です。メーカー公表値はスポンジ硬度42度・スピード75・スピン87。スポンジの厚さ・硬さ、ラケット本体の違いは、反発の値にまとめて含めたつもりで、個別には計算していません。</li>
-      <li>空気抵抗係数0.5、回転による揚力は簡単な近似式、台での弾みは反発0.89・摩擦0.25。相手はエンドラインの後ろ0.5m・台から30cmの高さで打つ想定。図は縦横同じ比率で、球の大きさだけ実際より大きく描いています。</li>
+      <li>空気の力は上の式（切り替え可）。台での弾みは反発0.89・摩擦0.25。相手はエンドラインの後ろ0.5m・台から30cmの高さで打つ想定。図は縦横同じ比率で、球の大きさだけ実際より大きく描いています。</li>
     </ul>
     <p class="note src">出典：
       <a href="https://arxiv.org/html/2604.11349" target="_blank" rel="noopener">Gossard 2026, Learning Racket-Ball Bounce Dynamics Across Diverse Rubbers</a> ／
@@ -268,9 +270,12 @@ const SHOTS={chop:{v0:12,rps:-70,bx:0.35,arc:"low",od:2.5,oh:0,sw:15,sa:-65},knu
 const PRE={g9:{k:0.95,e:0.84,es:0.021,keep:1.0,et:0.35},ox:{k:0.15,e:0.45,es:0,keep:0.8,et:0},"11":{k:0.15,e:0.55,es:0,keep:0.8,et:0},inv:{k:0.8,e:0.88,es:0.021,keep:1.0,et:0.45}};
 let keep=0.8;
 const $=id=>document.getElementById(id);
-function acc(vx,vy,om){const v=Math.hypot(vx,vy)||1e-6;const q=0.5*RHO*AR*v*v/M;
-  let ax=-q*CD*vx/v, ay=-q*CD*vy/v-G;
-  if(om!==0){const CL=Math.min(0.6*R*Math.abs(om)/v,0.35),s=Math.sign(om);ax+=q*CL*s*(-vy/v);ay+=q*CL*s*(vx/v);}
+let LIFT="iso";
+function aero(S){if(LIFT==="iso"){const s=Math.min(Math.max(S,0),2);const CMm=(((0.2313*s-1.2055)*s+2.2813)*s-1.9501)*s+0.8254;return [(-0.0747*s+0.3591)*s+0.3682,(8/3)*CMm*s];}
+  if(LIFT==="sat")return [0.5,S>1e-6?1/(2.022+0.981/S):0];return [0.5,Math.min(0.6*S,0.35)];}
+function acc(vx,vy,om){const v=Math.hypot(vx,vy)||1e-6;const q=0.5*RHO*AR*v*v/M;const [cd,cl]=aero(R*Math.abs(om)/v);
+  let ax=-q*cd*vx/v, ay=-q*cd*vy/v-G;
+  if(om!==0){const s=Math.sign(om);ax+=q*cl*s*(-vy/v);ay+=q*cl*s*(vx/v);}
   return [ax,ay];}
 function stepS(s,dt){const [ax,ay]=acc(s.vx,s.vy,s.om);return {x:s.x+s.vx*dt,y:s.y+s.vy*dt,vx:s.vx+ax*dt,vy:s.vy+ay*dt,om:s.om*Math.exp(-0.15*dt)};}
 function bounceX(v0,rps,a){let s={x:TL+(+$("oppd").value),y:+$("opph").value,vx:-v0*Math.cos(a),vy:v0*Math.sin(a),om:rps*2*Math.PI},t=0;
@@ -523,6 +528,7 @@ document.querySelectorAll('input[type=range]').forEach(r=>{let sx=0,sy=0,v0=null
   r.addEventListener("touchstart",e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;v0=r.value;},{passive:true});
   r.addEventListener("touchmove",e=>{const t=e.touches[0],dx=Math.abs(t.clientX-sx),dy=Math.abs(t.clientY-sy);if(dy>8&&dy>dx*1.2)revert();},{passive:true});
   r.addEventListener("touchend",e=>{const t=e.changedTouches[0],dx=Math.abs(t.clientX-sx),dy=Math.abs(t.clientY-sy);if(dy>8&&dy>dx*1.2)revert();v0=null;},{passive:true});});
+document.querySelectorAll("input[name=lift]").forEach(r=>r.addEventListener("change",()=>{LIFT=r.value;if(typeof HEAT!=="undefined"&&HEAT){HEAT=null;drawHeat();}bestFace();schedule();}));
 (function init(){applyPreset("g9");$("play").textContent=anim.playing?"一時停止":"再生";
   TL=COURSE[document.querySelector("input[name=course]:checked").value];NETX=TL/2;
   document.querySelector("input[name=shot]:checked").dispatchEvent(new Event("change"));update();if(!anim.playing){anim.t=total();}requestAnimationFrame(tick);})();

@@ -151,12 +151,12 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <label><input type="radio" name="sv" value="tilt">右横下<br>（軸傾き）</label>
   </div>
   <p class="note">回転のスライダーは打ち出したときの値です。台で2回弾むあいだに回転は減ったり変わったりするので、自分が打つ瞬間の回転は下の「打つ瞬間の回転」を見てください。「右横」は、自分に向いているボールの面が、自分から見て右へ動く回転です（ボールは自分から見て右へ曲がります）。</p>
-  <div class="row"><label for="sbk">上下の回転（＋上回転／−下回転、1秒あたり）</label><output id="sbko"></output><input type="range" id="sbk" min="-80" max="60" step="5" value="-60"></div>
+  <div class="row"><label for="sbk">上下の回転（＋上回転／−下回転、1秒あたり）</label><output id="sbko"></output><input type="range" id="sbk" min="-80" max="60" step="5" value="-65"></div>
   <div class="row"><label for="ssd">横回転（＋右横／−左横、1秒あたり）</label><output id="ssdo"></output><input type="range" id="ssd" min="-80" max="80" step="5" value="0"></div>
   <div class="row"><label for="sgx">回転軸の傾き（進む向きを軸にした回転。＋バウンドで右へ跳ねる）</label><output id="sgxo"></output><input type="range" id="sgx" min="-60" max="60" step="5" value="0"></div>
   <div class="seg" style="grid-template-columns:1fr"><label><input type="checkbox" id="aimfix">テンプレートを選ぶとき、曲がりを補正せずまっすぐ狙う</label></div>
-  <div class="row"><label for="sv0">打ち出しの速さ</label><output id="sv0o"></output><input type="range" id="sv0" min="2" max="12" step="0.25" value="5"></div>
-  <div class="row"><label for="sel">打ち出しの上下の角度（−下向き）</label><output id="selo"></output><input type="range" id="sel" min="-40" max="20" step="0.5" value="-11"></div>
+  <div class="row"><label for="sv0">打ち出しの速さ</label><output id="sv0o"></output><input type="range" id="sv0" min="2" max="12" step="0.25" value="5.5"></div>
+  <div class="row"><label for="sel">打ち出しの上下の角度（−下向き）</label><output id="selo"></output><input type="range" id="sel" min="-40" max="20" step="0.5" value="-22"></div>
   <div class="row"><label for="saz">打ち出しの左右の向き（＋自分から見て右へ）</label><output id="sazo"></output><input type="range" id="saz" min="-25" max="25" step="0.5" value="2.5"></div>
   <div class="row"><label for="sy">相手の打点の左右（＋自分から見て右、台の中心から）</label><output id="syo"></output><input type="range" id="sy" min="-0.7" max="0.7" step="0.05" value="0.3"></div>
   <dl class="kv">
@@ -170,19 +170,19 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 <section class="panel">
   <h2>試すと分かること</h2>
   <ul class="find">
-    <li>09C（フォア）は、横回転の向きで面の左右の向きを変える必要があります。「右横」系のサーブは面を右へ（9〜36°）、「左横下」は左へ（約20〜27°）向けると入ります。ボールが曲がってくる側に面を向ける、と覚えると分かりやすいです。</li>
-    <li>FL2（バック）は、どのサーブでも面の左右の向きはほぼまっすぐ（0〜6°）、開きも20〜30°でほぼ同じです。横回転の影響をほとんど受けません。</li>
+    <li>09C（フォア）は、横回転の向きで面の左右の向きを変える必要があります。「右横」系のサーブは面を右へ（12〜36°）、「左横下」は左へ（15〜24°）向けると入ります。ボールが曲がってくる側に面を向ける、と覚えると分かりやすいです。</li>
+    <li>FL2（バック）は、どのサーブでも面の左右の向きはほぼまっすぐ（0〜3°）、開きも20〜35°でほぼ同じです。横回転の影響をほとんど受けません。</li>
     <li>返球の回転を見ると、FL2は相手のかけた横回転を同じ向きのまま返し、下回転のサーブは上回転（軽め）にして返します。09Cは自分のスイングで下回転をかけて返し、横回転は弱まります。</li>
-    <li>マップの緑の範囲の広さ（余裕）は、FL2のツッツキで±14〜17°、09Cでは横回転が強いサーブほど狭くなります（右横上で±5°）。</li>
+    <li>マップの緑の範囲の広さ（余裕）は、FL2のツッツキで±14〜17°、09Cでは横回転が強いサーブほど狭くなります（右横上で±8°）。</li>
   </ul>
 </section>
 
 <section class="panel">
   <details>
     <summary>計算の仮定と根拠</summary>
-    <div class="seg" role="radiogroup" aria-label="回転で曲がる力の式" style="grid-template-columns:repeat(2,minmax(0,1fr))"><label><input type="radio" name="lift" value="cap" checked>上限0.35で頭打ち（カット編と同じ）</label><label><input type="radio" name="lift" value="sat">なだらかに頭打ち（野球ボールの実測式）</label></div>
+    <div class="seg" role="radiogroup" aria-label="空気の力の式" style="grid-template-columns:repeat(3,minmax(0,1fr))"><label><input type="radio" name="lift" value="iso" checked>卓球ボールのCFD式<br>（磯村ら2016）</label><label><input type="radio" name="lift" value="cap">旧：上限0.35</label><label><input type="radio" name="lift" value="sat">野球ボールの式</label></div>
+    <p class="note">空気の力（抗力・回転で曲がる力）は、卓球ボールの流体計算（CFD）から作られた式（磯村ら 2016、回転の強さの割合0.1〜2.0、速さ0.5〜10m/sで計算）を使っています。抗力係数＝−0.0747S²＋0.3591S＋0.3682、曲がる力の係数＝(8/3)×S×(0.2313S⁴−1.2055S³＋2.2813S²−1.9501S＋0.8254)（Sは回転の強さの割合）。10m/sより速い球や、回転の強さの割合が2を超える球は、式の範囲外を延長して使っています。実測ではなく計算による値で、実験では回転の割合によって揚力が落ち込む（負のマグヌス効果）という報告もあります。</p>
     <ul class="find note">
-      <li>回転で曲がる力（揚力係数）は、回転の強さの割合Sに比例する近似（0.6×S）を使い、遅い球に強い回転がかかったときに大きくなりすぎないよう0.35で頭打ちにしています。0.35はゴルフ・テニスボールなどの一般的な測定値を参考にした推定で、卓球ボールの実測ではありません。「なだらかに頭打ち」は野球ボールの実測から作られた式（1÷(2.022＋0.981÷S)、最大で約0.5）です。卓球ボールでは回転の割合によって揚力が落ち込むという報告もあり、どちらが正しいかは分かっていません。</li>
       <li>回転軸の傾き（進む向きを軸にした回転）がないと、台に当たる一番下の点が横に動かないので、バウンドで横には跳ねません。実際のサーブでバウンド後に横へ跳ねるのは、この成分があるためです。</li>
       <li>カット編・攻撃編と同じ計算を3次元に広げたものです。空気抵抗係数0.5、回転による揚力は簡単な近似式、台での弾みは反発0.89・摩擦0.25。</li>
       <li>09C：つかむ強さ0.95・弾き0.35・反発0.84（強く当たるほど1m/sごとに0.021下がる）。テンション系：0.8・0.45・0.88。FL2 OX：つかむ強さ0.15（こすると最大0.9、強く押すと粒が倒れて小さくなる仮説モード）・反発0.45・回転の20%を失う。どれも実測値ではありません。</li>
@@ -196,16 +196,18 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 <p style="text-align:center;font-size:13px;margin:0 0 32px"><a href="./">カット編</a> ／ <a href="attack.html">攻撃編</a> ／ <a href="grip.html">ラバーがつかむ仕組み</a></p>
 <script>
 const $=id=>document.getElementById(id);
-let LIFT="cap";
+let LIFT="iso";
 const M=0.0027,R=0.02,AR=Math.PI*R*R,RHO=1.2,CD=0.5,G=9.8;
 const TL=2.74,HW=0.7625,NETX=1.37,NETH=0.1525,DT=1e-3;
 const PRE={g9:{k:0.95,e:0.84,es:0.021,et:0.35,keep:1,pip:false},inv:{k:0.8,e:0.88,es:0.021,et:0.45,keep:1,pip:false},ox:{k:0.15,e:0.45,es:0,et:0,keep:0.8,pip:true},"11":{k:0.15,e:0.55,es:0,et:0,keep:0.8,pip:true}};
-const SERVES={back:{sbk:-60,ssd:0,sv0:5,sel:-11,saz:2.5,sy:0.3},sideback:{sbk:-55,ssd:40,sv0:5.25,sel:-20,saz:6.5,sy:0.3},side:{sbk:-25,ssd:45,sv0:5.25,sel:-16,saz:8,sy:0.3},sidetop:{sbk:25,ssd:40,sv0:5,sel:-20,saz:10,sy:0.3},rsideback:{sbk:-55,ssd:-40,sv0:5.25,sel:-20,saz:-1,sy:0.3},knuckle:{sbk:-25,ssd:0,sv0:5.25,sel:-18,saz:2.5,sy:0.3},tilt:{sbk:-55,ssd:40,sgx:25,sv0:5.25,sel:-20,saz:9,sy:0.3}};
+const SERVES={back:{sbk:-65,ssd:0,sv0:5.5,sel:-22,saz:2.5,sy:0.3},sideback:{sbk:-55,ssd:40,sv0:5.75,sel:-23,saz:8.5,sy:0.3},side:{sbk:-25,ssd:45,sv0:5.75,sel:-18,saz:11,sy:0.3},sidetop:{sbk:20,ssd:40,sv0:6,sel:-18,saz:11.5,sy:0.3},rsideback:{sbk:-55,ssd:-40,sv0:5.75,sel:-23,saz:-3.5,sy:0.3},knuckle:{sbk:-25,ssd:0,sv0:5.25,sel:-19,saz:2.5,sy:0.3},tilt:{sbk:-55,ssd:40,sv0:5.75,sel:-24,saz:11.5,sy:0.3,sgx:25}};
 const STROKES={stop:{th:45,sw:1.75,be:15,al:0},push:{th:40,sw:2.5,be:5,al:0},pushfw:{th:20,sw:3.5,be:0,al:0},flick:{th:-5,sw:6,be:30,al:0}};
 const P=()=>PRE[document.querySelector("input[name=rub]:checked").value];
 const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],mul=(a,k)=>[a[0]*k,a[1]*k,a[2]*k],dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],nrm=a=>Math.hypot(a[0],a[1],a[2]);
-function acc(v,w){const sp=nrm(v)||1e-6,q=0.5*RHO*AR*sp*sp/M;let a=mul(v,-q*CD/sp);a[2]-=G;const wn=nrm(w);
-  if(wn>1e-6){const c=cross(w,v),cn=nrm(c);if(cn>1e-9){const Sp=R*(cn/sp)/sp;const CL=LIFT==="sat"?1/(2.022+0.981/Math.max(Sp,1e-6)):Math.min(0.6*Sp,0.35);a=add(a,mul(c,q*CL/cn));}}return a;}
+function aero(S){if(LIFT==="iso"){const s=Math.min(Math.max(S,0),2);const CMm=(((0.2313*s-1.2055)*s+2.2813)*s-1.9501)*s+0.8254;return [(-0.0747*s+0.3591)*s+0.3682,(8/3)*CMm*s];}
+  if(LIFT==="sat")return [0.5,S>1e-6?1/(2.022+0.981/S):0];return [0.5,Math.min(0.6*S,0.35)];}
+function acc(v,w){const sp=nrm(v)||1e-6,q=0.5*RHO*AR*sp*sp/M;const c=cross(w,v),cn=nrm(c),Sp=R*(cn/sp)/sp;const [cd,cl]=aero(Sp);let a=mul(v,-q*cd/sp);a[2]-=G;
+  if(cn>1e-9)a=add(a,mul(c,q*cl/cn));return a;}
 function step(s,dt){const a=acc(s.v,s.w);return {p:add(s.p,mul(s.v,dt)),v:add(s.v,mul(a,dt)),w:mul(s.w,Math.exp(-0.15*dt))};}
 function bounce(s){const vz=s.v[2],v2=[s.v[0],s.v[1],-0.89*vz];const u=add([s.v[0],s.v[1],0],cross(s.w,[0,0,-R]));const un=Math.hypot(u[0],u[1]);
   let J=[0,0,0];if(un>1e-9){const j=Math.min(0.25*1.89*Math.abs(vz),un/2.5);J=[-u[0]/un*j,-u[1]/un*j,0];}
