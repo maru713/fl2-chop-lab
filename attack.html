@@ -119,6 +119,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
       <span><i style="background:var(--out)"></i>返球（入る）</span>
       <span><i style="background:var(--bad)"></i>返球（入らない）</span>
       <span>球の黒い線＝回る向き（見やすく遅くしています）</span>
+      <span><i style="background:var(--swing)"></i>ラケットの軌跡（薄いラケット＝通過する位置）</span>
       <span>人の形＝身長165cm、膝を軽く曲げた構え。肘の点の色：緑＝余裕あり、橙＝伸びすぎ・窮屈、赤＝伸びきり</span>
     </div>
 </section>
@@ -176,7 +177,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
   <div class="row"><label for="oppd">相手の打点（相手エンドラインの後ろ）</label><output id="oppdo"></output><input type="range" id="oppd" min="0" max="4" step="0.1" value="2.5"></div>
   <div class="row"><label for="opph">相手の打点の高さ（台の面＝0）</label><output id="opph_o"></output><input type="range" id="opph" min="-0.5" max="1.5" step="0.05" value="0"></div>
   <div class="row"><label for="v0">打ち出しの速さ</label><output id="v0o"></output><input type="range" id="v0" min="3" max="28" step="0.5" value="12"></div>
-  <div class="row"><label for="rps">回転（1秒あたり、＋上回転／−下回転）</label><output id="rpso"></output><input type="range" id="rps" min="-100" max="140" step="5" value="-70"></div>
+  <div class="row"><label for="rps">回転（1秒あたり、＋上回転／−下回転）</label><output id="rpso"></output><input type="range" id="rps" min="-150" max="200" step="5" value="-70"></div>
   <div class="seg" role="radiogroup" aria-label="相手の打球の決め方" style="grid-template-columns:repeat(2,minmax(0,1fr))"><label><input type="radio" name="aim" value="bounce" checked>弾む位置で決める</label><label><input type="radio" name="aim" value="angle">打ち出し角度で決める</label></div>
   <div class="row"><label for="bx">自分のコートで弾む位置（エンドラインから）</label><output id="bxo"></output><input type="range" id="bx" min="0.1" max="1.2" step="0.05" value="0.35"></div>
   <div class="row"><label for="la">打ち出し角度（水平から上へ）</label><output id="lao"></output><input type="range" id="la" min="-10" max="50" step="0.5" value="5"></div>
@@ -357,6 +358,11 @@ function drawCourt(){if(!S)return;const g=geom(),{cv,W,H,X,Y,xmin,xmax}=g,dpr=wi
     const bx=cx-Math.cos(S.sa*Math.PI/180)*off,by=cy+Math.sin(S.sa*Math.PI/180)*off;
     drawPerson(c,X,Y,bx,by,col);
     const ox=-Math.cos(th)*9,oy=Math.sin(th)*9;
+    {const ca=Math.cos(S.sa*Math.PI/180),sa_=Math.sin(S.sa*Math.PI/180),P=o=>[cx-ca*o,cy+sa_*o],A=P(0.35),Bp=P(-0.3);
+     c.save();c.strokeStyle=col("--swing");c.lineWidth=2;c.setLineDash([5,4]);c.beginPath();c.moveTo(X(A[0])+ox,Y(A[1])+oy);c.lineTo(X(Bp[0])+ox,Y(Bp[1])+oy);c.stroke();c.setLineDash([]);
+     const ang=Math.atan2((Y(Bp[1])-Y(A[1])),(X(Bp[0])-X(A[0]))),ex=X(Bp[0])+ox,ey=Y(Bp[1])+oy;c.fillStyle=col("--swing");c.beginPath();c.moveTo(ex,ey);c.lineTo(ex-9*Math.cos(ang-0.45),ey-9*Math.sin(ang-0.45));c.lineTo(ex-9*Math.cos(ang+0.45),ey-9*Math.sin(ang+0.45));c.closePath();c.fill();
+     c.globalAlpha=0.22;c.strokeStyle=col("--ink");c.lineWidth=3;c.lineCap="round";for(const o of [0.35,0.2,0,-0.15,-0.3]){const q=P(o);c.beginPath();c.moveTo(X(q[0]-tx*L)+ox,Y(q[1]-ty*L)+oy);c.lineTo(X(q[0]+tx*L)+ox,Y(q[1]+ty*L)+oy);c.stroke();}
+     c.restore();}
     c.strokeStyle=col("--ink");c.lineWidth=4;c.lineCap="round";c.beginPath();c.moveTo(X(bx-tx*L)+ox,Y(by-ty*L)+oy);c.lineTo(X(bx+tx*L)+ox,Y(by+ty*L)+oy);c.stroke();c.lineCap="butt";
     c.strokeStyle=col("--table");c.lineWidth=1.5;c.beginPath();c.moveTo(X(bx-tx*L)+ox*0.6,Y(by-ty*L)+oy*0.6);c.lineTo(X(bx+tx*L)+ox*0.6,Y(by+ty*L)+oy*0.6);c.stroke();}
   let p=null;if(idx<nIn)p=S.inc.pts[idx];else if(S.out&&idx-nIn<nOut)p=S.out.pts[idx-nIn];else if(S.out)p=S.out.pts[nOut-1];else p=S.inc.pts[nIn-1];
