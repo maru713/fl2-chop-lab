@@ -132,7 +132,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <label><input type="radio" name="stroke" value="pushfw">プッシュ</label>
     <label><input type="radio" name="stroke" value="flick">フリック</label>
   </div>
-  <div class="seg" role="radiogroup" aria-label="粒の性質の計算方法" style="grid-template-columns:repeat(3,minmax(0,1fr))"><label><input type="radio" name="pipmode" value="phys" checked>粒の物理モデル<br>（推奨）</label><label><input type="radio" name="pipmode" value="hyp">旧：仮説モード</label><label><input type="radio" name="pipmode" value="const">つかむ強さ一定</label></div>
+  <div class="seg" role="radiogroup" aria-label="ラバーの計算方法" style="grid-template-columns:repeat(3,minmax(0,1fr))"><label><input type="radio" name="pipmode" value="phys" checked>物理モデル<br>（推奨）</label><label><input type="radio" name="pipmode" value="hyp">旧：仮説モード<br>（粒のみ）</label><label><input type="radio" name="pipmode" value="const">つかむ強さ一定</label></div><p class="note" id="modeNote" style="margin:2px 0 6px"></p>
   <div class="row"><label for="th">面の開き（＋上に開く／−かぶせる）</label><output id="tho"></output><input type="range" id="th" min="-40" max="80" step="1" value="40"></div>
   <div class="row"><label for="ps">面の左右の向き（＋自分から見て右へ向ける）</label><output id="pso"></output><input type="range" id="ps" min="-45" max="45" step="1" value="0"></div>
   <div class="row"><label for="sw">スイングの速さ</label><output id="swo"></output><input type="range" id="sw" min="0" max="12" step="0.25" value="2.5"></div>
@@ -329,7 +329,7 @@ let VIEWMODE="eye";let MARK=[0,0,1],MARK2=[0,1,0];
 function rotV(v,ax,a){const c=Math.cos(a),sn=Math.sin(a),d=dot(ax,v);return add(add(mul(v,c),mul(cross(ax,v),sn)),mul(ax,d*(1-c)));}
 function curW(){if(!S)return [0,0,0];const sp=S.sv.pts,rp=S.ret?S.ret.pts:[],n1=sp.length,idx=Math.floor(anim.t/DT);const q=idx<n1?sp[idx]:(idx-n1<rp.length?rp[idx-n1]:null);return q&&q.length>5?[q[3],q[4],q[5]]:[0,0,0];}
 function eyeCam(){const h=S&&S.sv&&S.sv.hit?S.sv.hit.p:[0.3,-0.2,0.15];const rb=document.querySelector("input[name=rub]:checked").value,fh=(rb==="g9"||rb==="inv");
-  const eye=[Math.min(h[0]-0.45,-0.25),h[1]+(fh?0.32:0.06),0.62],tgt=[h[0]+1.4,h[1]*0.4,-0.02];
+  const eye=[Math.min(h[0]-0.6,0.05),h[1]+(fh?0.30:-0.08),0.68],tgt=[h[0]+0.9,h[1]*0.5,-0.22];
   const f=sub(tgt,eye),fl=nrm(f),fw=mul(f,1/fl);let r=cross(fw,[0,0,1]);r=mul(r,1/nrm(r));const u=cross(r,fw);return {eye,fw,r,u};}
 function drawEye(idx,n1,sp,rp,col){const cv=$("eye"),W=cv.parentElement.clientWidth||340,H=Math.round(Math.min(320,Math.max(200,W*0.62)));
   const c=prep(cv,W,H),cam=eyeCam(),F=(W/2)/Math.tan(38*deg);
@@ -348,11 +348,18 @@ function drawEye(idx,n1,sp,rp,col){const cv=$("eye"),W=cv.parentElement.clientWi
   let bp=null;if(idx<n1)bp=sp[idx];else if(rp.length&&idx-n1<rp.length)bp=rp[idx-n1];else bp=rp.length?rp[rp.length-1]:sp[n1-1];
   if(S.sv.hit&&S.rk){const h=S.sv.hit.p,rk=S.rk,dir=rk.sw>0?mul(rk.V,1/rk.sw):[1,0,0];let off=0;if(idx<n1)off=Math.min(0.25,(n1-idx)*DT*rk.sw);else off=-Math.min(0.2,(idx-n1)*DT*rk.sw);
     const a0=sub(h,mul(dir,0.25)),a1=add(h,mul(dir,0.2));c.setLineDash([4,3]);line([a0,a1],col("--swing"),1.5,1,1e9);c.setLineDash([]);
-    const n=rk.n;let t1=cross(n,[0,0,1]);if(nrm(t1)<1e-6)t1=[0,1,0];t1=mul(t1,1/nrm(t1));const t2=cross(t1,n);
-    const cc=add(sub(h,mul(dir,off)),mul(n,-R*1.3)),ring=[];for(let k=0;k<24;k++){const a=k/24*2*Math.PI;ring.push(add(cc,add(mul(t1,0.075*Math.cos(a)),mul(t2,0.08*Math.sin(a)))));}
-    const rb=document.querySelector("input[name=rub]:checked").value,useInv=rb==="g9"||rb==="inv",front=useInv?"#c0392b":"#2b2b2b",back=useInv?"#2b2b2b":"#c0392b";
-    const seeFront=dot(n,sub(cam.eye,cc))>0;poly(ring,seeFront?front:back,col("--ink"),2.5);
-    const hd0=add(cc,mul(t2,-0.08)),hd1=add(cc,mul(t2,-0.18)),q0=P(hd0),q1=P(hd1);if(q0&&q1){c.strokeStyle="#9a7b4f";c.lineWidth=7;c.lineCap="round";c.beginPath();c.moveTo(q0[0],q0[1]);c.lineTo(q1[0],q1[1]);c.stroke();c.lineCap="butt";}
+    const n=rk.n,rb=document.querySelector("input[name=rub]:checked").value,bh=(rb==="11"||rb==="ox");
+    const RED="#c0392b",BLK="#262626",WOOD="#c9a46a",front=bh?BLK:RED,back=bh?RED:BLK;
+    const T=0.012,HL=0.080,HWd=0.0765,GL=0.100;
+    let a=bh?[-0.35,-0.85,-0.40]:[-0.45,0.75,-0.45];a=sub(a,mul(n,dot(a,n)));a=mul(a,1/nrm(a));const b=cross(n,a);
+    const cc=add(sub(h,mul(dir,off)),mul(n,-(R+T/2)));
+    const rim=sd=>{const r=[];for(let k=0;k<32;k++){const t=k/32*2*Math.PI;r.push(add(add(cc,mul(n,sd*T/2)),add(mul(a,HL*Math.cos(t)),mul(b,HWd*Math.sin(t)))));}return r;};
+    const fr=rim(1),bk=rim(-1),seeFront=dot(n,sub(cam.eye,cc))>0,TF=bh?0.0029:0.0038,TB=bh?0.0038:0.0029,m1=rim(1-2*TF/T),m2=rim(-1+2*TB/T);
+    {const g0=P(add(cc,mul(a,HL*0.9))),g1=P(add(cc,mul(a,HL+GL)));if(g0&&g1){c.strokeStyle=WOOD;c.lineCap="round";c.lineWidth=Math.max(4,0.026/g1[2]*F);c.beginPath();c.moveTo(g0[0],g0[1]);c.lineTo(g1[0],g1[1]);c.stroke();c.strokeStyle=col("--ink");c.lineWidth=1;c.globalAlpha=0.5;c.stroke();c.globalAlpha=1;c.lineCap="butt";}}
+    const far=seeFront?bk:fr,near=seeFront?fr:bk;
+    poly(far,seeFront?back:front,null);
+    for(const [A,B,C] of [[fr,m1,front],[m1,m2,WOOD],[m2,bk,back]])for(let k=0;k<32;k++){const k2=(k+1)%32;poly([A[k],A[k2],B[k2],B[k]],C,null);}
+    poly(near,seeFront?front:back,col("--ink"),1.5);
     const nq0=P(cc),nq1=P(add(cc,mul(n,0.09)));if(nq0&&nq1){c.strokeStyle=col("--out");c.lineWidth=2;c.beginPath();c.moveTo(nq0[0],nq0[1]);c.lineTo(nq1[0],nq1[1]);c.stroke();}}
   if(bp&&!hid(bp)){const sh=P([bp[0],bp[1],0]);if(sh&&bp[2]>0){c.globalAlpha=0.25;c.fillStyle=col("--ink");c.beginPath();c.ellipse(sh[0],sh[1],Math.max(2,R/sh[2]*F),Math.max(1,R/sh[2]*F*0.35),0,0,Math.PI*2);c.fill();c.globalAlpha=1;}
     const q=P(bp);if(q){const rr=Math.max(1.5,R/q[2]*F);c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(q[0],q[1],rr,0,Math.PI*2);c.fill();c.stroke();
@@ -364,7 +371,7 @@ function drawEye(idx,n1,sp,rp,col){const cv=$("eye"),W=cv.parentElement.clientWi
       c.lineWidth=3;for(let k=0;k<36;k++){const a=ring[k],b=ring[k+1];const front=(a[2]+b[2])<0;c.strokeStyle=front?col("--ink"):col("--muted");c.globalAlpha=front?1:0.3;c.beginPath();c.moveTo(zx+a[0]*zr,zy+a[1]*zr);c.lineTo(zx+b[0]*zr,zy+b[1]*zr);c.stroke();}c.globalAlpha=1;
       const wn=nrm(w);if(wn>2*Math.PI*3){const ax=proj(mul(w,1/wn));c.strokeStyle=col("--in");c.lineWidth=2;c.beginPath();c.moveTo(zx-ax[0]*zr*1.25,zy-ax[1]*zr*1.25);c.lineTo(zx+ax[0]*zr*1.25,zy+ax[1]*zr*1.25);c.stroke();}
       c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.textAlign="center";c.fillText("回転（拡大）",zx,zy+zr+12);c.textAlign="left";}}
-  c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.font="10px "+col("--f-body");c.fillStyle=col("--muted");c.fillText("右上の球：黒い輪＝回転の様子（遅くしています）・オレンジ＝回転軸　緑＝打球面の向き・点線＝ラケットの動き",6,H-6);}
+  c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.font="10px "+col("--f-body");c.fillStyle=col("--muted");c.fillText("右上の球：黒い輪＝回転の様子（遅くしています）・オレンジ＝回転軸　緑＝打球面の向き・点線＝ラケットの動き",6,H-6);{const rb=document.querySelector("input[name=rub]:checked").value,bh=(rb==="11"||rb==="ox");c.fillStyle=col("--ink");c.font="11px "+col("--f-body");c.textAlign="right";c.fillText(bh?"バックで打つ（黒＝FL2の面）":"フォアで打つ（赤＝裏ソフトの面）",W-8,H-20);c.textAlign="left";}}
 function drawViews(){const cs0=getComputedStyle(document.documentElement),col0=n=>cs0.getPropertyValue(n).trim();if(VIEWMODE==="eye"){if(!S)return;const sp=S.sv.pts,rp=S.ret?S.ret.pts:[];drawEye(Math.floor(anim.t/DT),sp.length,sp,rp,col0);return;}
   const g=views(),cs=cs0,col=col0;
   const ct=prep($("top"),g.W,g.Ht),cs2=prep($("side"),g.W,g.Hs);
@@ -411,6 +418,9 @@ window.addEventListener("resize",()=>{drawMap();});
 document.querySelectorAll("[data-s]").forEach(b=>b.addEventListener("click",()=>{anim.speed=+b.dataset.s;document.querySelectorAll("[data-s]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));}));
 document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>{VIEWMODE=b.dataset.view;document.querySelectorAll("[data-view]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));$("v-eye").hidden=VIEWMODE!=="eye";$("v-map").hidden=VIEWMODE!=="map";}));
 $("play").textContent=anim.playing?"一時停止":"再生";outputs();compute();if(!anim.playing)anim.t=total();requestAnimationFrame(tick);
+
+function modeNote(){const el=document.getElementById("modeNote");if(!el)return;const v=document.querySelector("input[name=rub]:checked").value,m=pipMode();const inv=(v==="g9"||v==="inv");el.textContent=m==="phys"?(inv?"いまの計算：シートとスポンジを細かく分けて計算（実測で校正）":"いまの計算：粒を1本ずつ計算"):(m==="hyp"&&!inv?"いまの計算：旧仮説（粒の倒れ方で切り替え）":"いまの計算：つかむ強さ・反発を固定値で計算");}
+document.querySelectorAll("input[name=rub],input[name=pipmode]").forEach(r=>r.addEventListener("change",modeNote));modeNote();
 </script>
 
 </body>

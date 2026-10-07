@@ -368,7 +368,7 @@ function drawCourt(){if(!S)return;const g=geom(),{cv,W,H,X,Y,xmin,xmax}=g,dpr=wi
   const outCol=S.ok?col("--out"):col("--bad");
   path(S.inc.pts,col("--in"),2,0.25,1e9);if(S.out)path(S.out.pts,outCol,2,0.25,1e9);
   path(S.inc.pts,col("--in"),2.4,1,idx+1);if(S.out&&idx>=nIn)path(S.out.pts,outCol,2.8,1,idx-nIn+1);
-  if(S.o){const th=S.face*Math.PI/180,tx=-Math.sin(th),ty=Math.cos(th),L=0.16,cx=-S.dist,cy=S.inc.s.y;
+  if(S.o){const th=S.face*Math.PI/180,tx=-Math.sin(th),ty=Math.cos(th),L=0.08,cx=-S.dist,cy=S.inc.s.y;
     let off=0;if(idx<nIn){const rem=(nIn-idx)*DT;off=Math.min(0.35,rem*S.sw);}else{off=-Math.min(0.3,(idx-nIn)*DT*S.sw);}
     const bx=cx-Math.cos(S.sa*Math.PI/180)*off,by=cy+Math.sin(S.sa*Math.PI/180)*off;
     drawPerson(c,X,Y,bx,by,col);
@@ -378,8 +378,10 @@ function drawCourt(){if(!S)return;const g=geom(),{cv,W,H,X,Y,xmin,xmax}=g,dpr=wi
      const ang=Math.atan2((Y(Bp[1])-Y(A[1])),(X(Bp[0])-X(A[0]))),ex=X(Bp[0])+ox,ey=Y(Bp[1])+oy;c.fillStyle=col("--swing");c.beginPath();c.moveTo(ex,ey);c.lineTo(ex-9*Math.cos(ang-0.45),ey-9*Math.sin(ang-0.45));c.lineTo(ex-9*Math.cos(ang+0.45),ey-9*Math.sin(ang+0.45));c.closePath();c.fill();
      c.globalAlpha=0.22;c.strokeStyle=col("--ink");c.lineWidth=3;c.lineCap="round";for(const o of [0.35,0.2,0,-0.15,-0.3]){const q=P(o);c.beginPath();c.moveTo(X(q[0]-tx*L)+ox,Y(q[1]-ty*L)+oy);c.lineTo(X(q[0]+tx*L)+ox,Y(q[1]+ty*L)+oy);c.stroke();}
      c.restore();}
-    c.strokeStyle=col("--ink");c.lineWidth=4;c.lineCap="round";c.beginPath();c.moveTo(X(bx-tx*L)+ox,Y(by-ty*L)+oy);c.lineTo(X(bx+tx*L)+ox,Y(by+ty*L)+oy);c.stroke();c.lineCap="butt";
-    c.strokeStyle=col("--table");c.lineWidth=1.5;c.beginPath();c.moveTo(X(bx-tx*L)+ox*0.6,Y(by-ty*L)+oy*0.6);c.lineTo(X(bx+tx*L)+ox*0.6,Y(by+ty*L)+oy*0.6);c.stroke();}
+    {const rb=document.querySelector("input[name=rub]:checked").value,bh=(rb==="11"||rb==="ox"),FR=bh?"#262626":"#c0392b",BK=bh?"#c0392b":"#262626",WD="#c9a46a",GL=0.10;
+     const seg=(k,colr,w,a0,a1)=>{c.strokeStyle=colr;c.lineWidth=w;c.beginPath();c.moveTo(X(bx+tx*a0)+ox*k,Y(by+ty*a0)+oy*k);c.lineTo(X(bx+tx*a1)+ox*k,Y(by+ty*a1)+oy*k);c.stroke();};
+     c.lineCap="round";seg(1,WD,5,-L-GL,-L*0.9);c.lineCap="butt";seg(1.17,BK,2.4,-L,L);seg(1,WD,2.4,-L,L);seg(0.83,FR,2.4,-L,L);
+     if(bh){c.strokeStyle=col("--muted");c.lineWidth=0.8;seg(0.74,col("--muted"),0.8,-L,L);}}}
   let p=null;if(idx<nIn)p=S.inc.pts[idx];else if(S.out&&idx-nIn<nOut)p=S.out.pts[idx-nIn];else if(S.out)p=S.out.pts[nOut-1];else p=S.inc.pts[nIn-1];
   if(p){const px=X(p[0]),py=Y(p[1]),r=7;c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(px,py,r,0,Math.PI*2);c.fill();c.stroke();
     c.strokeStyle=col("--ballmark");c.lineWidth=2;c.beginPath();c.moveTo(px-Math.cos(anim.ang)*r,py-Math.sin(anim.ang)*r);c.lineTo(px+Math.cos(anim.ang)*r,py+Math.sin(anim.ang)*r);c.stroke();
