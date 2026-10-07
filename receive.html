@@ -141,17 +141,20 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 
 <section class="panel">
   <h2>相手のサーブ</h2>
-  <div class="seg" role="radiogroup" aria-label="サーブの種類">
+  <div class="seg" role="radiogroup" aria-label="サーブの種類" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <label><input type="radio" name="sv" value="back" checked>下回転</label>
     <label><input type="radio" name="sv" value="sideback">右横下</label>
     <label><input type="radio" name="sv" value="side">右横</label>
     <label><input type="radio" name="sv" value="sidetop">右横上</label>
     <label><input type="radio" name="sv" value="rsideback">左横下</label>
     <label><input type="radio" name="sv" value="knuckle">ナックル</label>
+    <label><input type="radio" name="sv" value="tilt">右横下<br>（軸傾き）</label>
   </div>
   <p class="note">回転のスライダーは打ち出したときの値です。台で2回弾むあいだに回転は減ったり変わったりするので、自分が打つ瞬間の回転は下の「打つ瞬間の回転」を見てください。「右横」は、自分に向いているボールの面が、自分から見て右へ動く回転です（ボールは自分から見て右へ曲がります）。</p>
   <div class="row"><label for="sbk">上下の回転（＋上回転／−下回転、1秒あたり）</label><output id="sbko"></output><input type="range" id="sbk" min="-80" max="60" step="5" value="-60"></div>
   <div class="row"><label for="ssd">横回転（＋右横／−左横、1秒あたり）</label><output id="ssdo"></output><input type="range" id="ssd" min="-80" max="80" step="5" value="0"></div>
+  <div class="row"><label for="sgx">回転軸の傾き（進む向きを軸にした回転。＋バウンドで右へ跳ねる）</label><output id="sgxo"></output><input type="range" id="sgx" min="-60" max="60" step="5" value="0"></div>
+  <div class="seg" style="grid-template-columns:1fr"><label><input type="checkbox" id="aimfix">テンプレートを選ぶとき、曲がりを補正せずまっすぐ狙う</label></div>
   <div class="row"><label for="sv0">打ち出しの速さ</label><output id="sv0o"></output><input type="range" id="sv0" min="2" max="12" step="0.25" value="5"></div>
   <div class="row"><label for="sel">打ち出しの上下の角度（−下向き）</label><output id="selo"></output><input type="range" id="sel" min="-40" max="20" step="0.5" value="-11"></div>
   <div class="row"><label for="saz">打ち出しの左右の向き（＋自分から見て右へ）</label><output id="sazo"></output><input type="range" id="saz" min="-25" max="25" step="0.5" value="2.5"></div>
@@ -160,6 +163,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <dt>1バウンド目（相手コート）</dt><dd id="s-b1"></dd>
     <dt>2バウンド目（自分のコート）</dt><dd id="s-b2"></dd>
     <dt>打つ瞬間の回転</dt><dd id="s-spin"></dd>
+    <dt>回転による横ずれ（打点で、回転なしと比べて）</dt><dd id="s-curve"></dd>
   </dl>
 </section>
 
@@ -176,7 +180,10 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 <section class="panel">
   <details>
     <summary>計算の仮定と根拠</summary>
+    <div class="seg" role="radiogroup" aria-label="回転で曲がる力の式" style="grid-template-columns:repeat(2,minmax(0,1fr))"><label><input type="radio" name="lift" value="cap" checked>上限0.35で頭打ち（カット編と同じ）</label><label><input type="radio" name="lift" value="sat">なだらかに頭打ち（野球ボールの実測式）</label></div>
     <ul class="find note">
+      <li>回転で曲がる力（揚力係数）は、回転の強さの割合Sに比例する近似（0.6×S）を使い、遅い球に強い回転がかかったときに大きくなりすぎないよう0.35で頭打ちにしています。0.35はゴルフ・テニスボールなどの一般的な測定値を参考にした推定で、卓球ボールの実測ではありません。「なだらかに頭打ち」は野球ボールの実測から作られた式（1÷(2.022＋0.981÷S)、最大で約0.5）です。卓球ボールでは回転の割合によって揚力が落ち込むという報告もあり、どちらが正しいかは分かっていません。</li>
+      <li>回転軸の傾き（進む向きを軸にした回転）がないと、台に当たる一番下の点が横に動かないので、バウンドで横には跳ねません。実際のサーブでバウンド後に横へ跳ねるのは、この成分があるためです。</li>
       <li>カット編・攻撃編と同じ計算を3次元に広げたものです。空気抵抗係数0.5、回転による揚力は簡単な近似式、台での弾みは反発0.89・摩擦0.25。</li>
       <li>09C：つかむ強さ0.95・弾き0.35・反発0.84（強く当たるほど1m/sごとに0.021下がる）。テンション系：0.8・0.45・0.88。FL2 OX：つかむ強さ0.15（こすると最大0.9、強く押すと粒が倒れて小さくなる仮説モード）・反発0.45・回転の20%を失う。どれも実測値ではありません。</li>
       <li>面と平行に動く方向の力（摩擦）は2方向に広げただけで、横回転専用の測定データはありません。</li>
@@ -189,15 +196,16 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 <p style="text-align:center;font-size:13px;margin:0 0 32px"><a href="./">カット編</a> ／ <a href="attack.html">攻撃編</a> ／ <a href="grip.html">ラバーがつかむ仕組み</a></p>
 <script>
 const $=id=>document.getElementById(id);
+let LIFT="cap";
 const M=0.0027,R=0.02,AR=Math.PI*R*R,RHO=1.2,CD=0.5,G=9.8;
 const TL=2.74,HW=0.7625,NETX=1.37,NETH=0.1525,DT=1e-3;
 const PRE={g9:{k:0.95,e:0.84,es:0.021,et:0.35,keep:1,pip:false},inv:{k:0.8,e:0.88,es:0.021,et:0.45,keep:1,pip:false},ox:{k:0.15,e:0.45,es:0,et:0,keep:0.8,pip:true},"11":{k:0.15,e:0.55,es:0,et:0,keep:0.8,pip:true}};
-const SERVES={back:{sbk:-60,ssd:0,sv0:5,sel:-11,saz:2.5,sy:0.3},sideback:{sbk:-55,ssd:40,sv0:5.25,sel:-20,saz:6.5,sy:0.3},side:{sbk:-25,ssd:45,sv0:5.25,sel:-16,saz:8,sy:0.3},sidetop:{sbk:25,ssd:40,sv0:5,sel:-20,saz:10,sy:0.3},rsideback:{sbk:-55,ssd:-40,sv0:5.25,sel:-20,saz:-1,sy:0.3},knuckle:{sbk:-25,ssd:0,sv0:5.25,sel:-18,saz:2.5,sy:0.3}};
+const SERVES={back:{sbk:-60,ssd:0,sv0:5,sel:-11,saz:2.5,sy:0.3},sideback:{sbk:-55,ssd:40,sv0:5.25,sel:-20,saz:6.5,sy:0.3},side:{sbk:-25,ssd:45,sv0:5.25,sel:-16,saz:8,sy:0.3},sidetop:{sbk:25,ssd:40,sv0:5,sel:-20,saz:10,sy:0.3},rsideback:{sbk:-55,ssd:-40,sv0:5.25,sel:-20,saz:-1,sy:0.3},knuckle:{sbk:-25,ssd:0,sv0:5.25,sel:-18,saz:2.5,sy:0.3},tilt:{sbk:-55,ssd:40,sgx:25,sv0:5.25,sel:-20,saz:9,sy:0.3}};
 const STROKES={stop:{th:45,sw:1.75,be:15,al:0},push:{th:40,sw:2.5,be:5,al:0},pushfw:{th:20,sw:3.5,be:0,al:0},flick:{th:-5,sw:6,be:30,al:0}};
 const P=()=>PRE[document.querySelector("input[name=rub]:checked").value];
 const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],mul=(a,k)=>[a[0]*k,a[1]*k,a[2]*k],dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],nrm=a=>Math.hypot(a[0],a[1],a[2]);
 function acc(v,w){const sp=nrm(v)||1e-6,q=0.5*RHO*AR*sp*sp/M;let a=mul(v,-q*CD/sp);a[2]-=G;const wn=nrm(w);
-  if(wn>1e-6){const c=cross(w,v),cn=nrm(c);if(cn>1e-9){const CL=Math.min(0.6*R*wn/sp,0.35);a=add(a,mul(c,q*CL/cn));}}return a;}
+  if(wn>1e-6){const c=cross(w,v),cn=nrm(c);if(cn>1e-9){const Sp=R*(cn/sp)/sp;const CL=LIFT==="sat"?1/(2.022+0.981/Math.max(Sp,1e-6)):Math.min(0.6*Sp,0.35);a=add(a,mul(c,q*CL/cn));}}return a;}
 function step(s,dt){const a=acc(s.v,s.w);return {p:add(s.p,mul(s.v,dt)),v:add(s.v,mul(a,dt)),w:mul(s.w,Math.exp(-0.15*dt))};}
 function bounce(s){const vz=s.v[2],v2=[s.v[0],s.v[1],-0.89*vz];const u=add([s.v[0],s.v[1],0],cross(s.w,[0,0,-R]));const un=Math.hypot(u[0],u[1]);
   let J=[0,0,0];if(un>1e-9){const j=Math.min(0.25*1.89*Math.abs(vz),un/2.5);J=[-u[0]/un*j,-u[1]/un*j,0];}
@@ -205,8 +213,8 @@ function bounce(s){const vz=s.v[2],v2=[s.v[0],s.v[1],-0.89*vz];const u=add([s.v[
 const deg=Math.PI/180;
 function serveState(){const v0=+$("sv0").value,el=+$("sel").value*deg,az=+$("saz").value*deg,y=-(+$("sy").value);
   const v=[-v0*Math.cos(el)*Math.cos(az),v0*Math.cos(el)*Math.sin(az),v0*Math.sin(el)];
-  const wy=-(+$("sbk").value)*2*Math.PI,wz=(+$("ssd").value)*2*Math.PI;
-  return {p:[TL+0.15,y,0.22],v,w:[0,wy,wz]};}
+  const wy=-(+$("sbk").value)*2*Math.PI,wz=(+$("ssd").value)*2*Math.PI,wx=(+$("sgx").value)*2*Math.PI;
+  return {p:[TL+0.15,y,0.22],v,w:[wx,wy,wz]};}
 function simServe(tcMs){let s=serveState(),pts=[[...s.p]],t=0,b=0,b1=null,b2=null,peak=null,post=[];
   while(t<3){const pr=s;s=step(s,DT);t+=DT;pts.push([...s.p]);
     if(pr.p[0]>NETX&&s.p[0]<=NETX&&s.p[2]<NETH)return {fail:"サーブがネットにかかります",pts};
@@ -240,7 +248,7 @@ function spinTxt(w,dirX){const top=dirX>0?w[1]:-w[1],side=w[2];const a=top/(2*Ma
 
 let SNAP=true,S=null,MAP=null,anim={t:0,playing:!matchMedia("(prefers-reduced-motion: reduce)").matches,last:0,hold:0,speed:0.25};
 function compute(){const sv=simServe(+$("tc").value);const w=$("warn");
-  if(sv.fail){w.hidden=false;w.textContent=sv.fail;S={sv,ret:null};MAP=null;["v-res","v-land","v-spin","v-margin","o-h","o-pos","o-v","o-spin","o-land","s-b1","s-b2","s-spin"].forEach(i=>$(i).textContent="—");drawMap();return;}
+  if(sv.fail){w.hidden=false;w.textContent=sv.fail;S={sv,ret:null};MAP=null;["v-res","v-land","v-spin","v-margin","o-h","o-pos","o-v","o-spin","o-land","s-b1","s-b2","s-spin","s-curve"].forEach(i=>$(i).textContent="—");drawMap();return;}
   w.hidden=true;const rk=racket(),pr=P(),o=hitBall(sv.hit,rk.n,rk.V,pr),ret=flyBack(o,true);
   S={sv,o,ret,rk};
   const ok=ret.res==="入る";$("s-res").className=ok?"ok":"bad";$("v-res").textContent=ret.res;
@@ -250,7 +258,8 @@ function compute(){const sv=simServe(+$("tc").value);const w=$("warn");
   $("o-v").textContent=o.miss?"—":fmt(nrm(o.v),1)+" m/s";$("o-spin").textContent=o.miss?"—":spinTxt(o.w,1);
   $("o-land").textContent=ret.land?("エンドの"+fmt((TL-ret.land[0])*100)+"cm手前・"+lr(ret.land[1])):"—";
   $("s-b1").textContent="エンドから"+fmt((TL-sv.b1[0])*100)+"cm・"+lr(sv.b1[1]);$("s-b2").textContent="エンドから"+fmt(sv.b2[0]*100)+"cm・"+lr(sv.b2[1]);
-  $("s-spin").textContent=spinTxt(h.w,-1);
+  $("s-spin").textContent=spinTxt(h.w,-1)+(Math.abs(h.w[0])>2*Math.PI*3?"・軸傾き"+fmt(Math.abs(h.w[0])/(2*Math.PI)):"");
+  {const keep_={ssd:$("ssd").value,sgx:$("sgx").value};$("ssd").value=0;$("sgx").value=0;const b=simServe(+$("tc").value);$("ssd").value=keep_.ssd;$("sgx").value=keep_.sgx;$("s-curve").textContent=b.fail||!b.hit?"—":(h.p[1]-b.hit.p[1]>=0?"左へ":"右へ")+fmt(Math.abs(h.p[1]-b.hit.p[1])*100)+" cm";}
   computeMap();}
 const TH0=-40,TH1=80,PS0=-45,PS1=45,STEP=3;
 function computeMap(){if(!S||!S.sv.hit)return;const rk=racket(),pr=P(),h=S.sv.hit,rows=[];
@@ -307,7 +316,7 @@ function tick(ts){const dt=anim.last?Math.min(0.05,(ts-anim.last)/1000):0;anim.l
 function outputs(){const L=(id,t)=>$(id).textContent=t;const v=id=>+$(id).value;
   L("tho",v("th")+"°");L("pso",v("ps")===0?"まっすぐ":(v("ps")>0?"右へ"+v("ps")+"°":"左へ"+(-v("ps"))+"°"));L("swo",v("sw").toFixed(2)+" m/s");L("beo",v("be")===0?"水平":(v("be")>0?"上へ"+v("be")+"°":"下へ"+(-v("be"))+"°"));L("alo",v("al")===0?"まっすぐ":(v("al")>0?"右へ"+v("al")+"°":"左へ"+(-v("al"))+"°"));
   L("tco",v("tc")===0?"頂点":(v("tc")>0?"頂点の"+v("tc")+"ms後":"頂点の"+(-v("tc"))+"ms前"));
-  L("sbko",v("sbk")===0?"なし":(v("sbk")>0?"上回転 "+v("sbk"):"下回転 "+(-v("sbk"))));L("ssdo",v("ssd")===0?"なし":(v("ssd")>0?"右横 "+v("ssd"):"左横 "+(-v("ssd"))));
+  L("sbko",v("sbk")===0?"なし":(v("sbk")>0?"上回転 "+v("sbk"):"下回転 "+(-v("sbk"))));L("sgxo",v("sgx")===0?"なし":(v("sgx")>0?"右へ跳ねる "+v("sgx"):"左へ跳ねる "+(-v("sgx"))));L("ssdo",v("ssd")===0?"なし":(v("ssd")>0?"右横 "+v("ssd"):"左横 "+(-v("ssd"))));
   L("sv0o",v("sv0").toFixed(2)+" m/s");L("selo",v("sel")+"°");L("sazo",v("saz")===0?"まっすぐ":(v("saz")>0?"右へ"+v("saz")+"°":"左へ"+(-v("saz"))+"°"));L("syo",v("sy")===0?"中央":(v("sy")>0?"右"+fmt(v("sy")*100)+"cm":"左"+fmt(-v("sy")*100)+"cm"));}
 let pend=0;function schedule(){outputs();cancelAnimationFrame(pend);pend=requestAnimationFrame(()=>{anim.t=0;anim.hold=0;compute();});}
 document.querySelectorAll("input[type=range]").forEach(r=>{r.addEventListener("input",schedule);let sx=0,sy=0,v0=null;const rv=()=>{if(v0!==null&&r.value!==v0){r.value=v0;schedule();}};
@@ -315,7 +324,8 @@ document.querySelectorAll("input[type=range]").forEach(r=>{r.addEventListener("i
   r.addEventListener("touchmove",e=>{const t=e.touches[0];if(Math.abs(t.clientY-sy)>8&&Math.abs(t.clientY-sy)>Math.abs(t.clientX-sx)*1.2)rv();},{passive:true});
   r.addEventListener("touchend",e=>{const t=e.changedTouches[0];if(Math.abs(t.clientY-sy)>8&&Math.abs(t.clientY-sy)>Math.abs(t.clientX-sx)*1.2)rv();v0=null;},{passive:true});});
 document.querySelectorAll("input[name=rub]").forEach(r=>r.addEventListener("change",()=>{SNAP=true;schedule();}));
-document.querySelectorAll("input[name=sv]").forEach(r=>r.addEventListener("change",()=>{const s=SERVES[r.value];for(const k in s)$(k).value=s[k];SNAP=true;schedule();}));
+document.querySelectorAll("input[name=sv]").forEach(r=>r.addEventListener("change",()=>{const s=SERVES[r.value];for(const k in s)$(k).value=s[k];$("sgx").value=s.sgx||0;if($("aimfix").checked)$("saz").value=0;SNAP=true;schedule();}));
+document.querySelectorAll("input[name=lift]").forEach(r=>r.addEventListener("change",()=>{LIFT=r.value;SNAP=true;schedule();}));
 document.querySelectorAll("input[name=stroke]").forEach(r=>r.addEventListener("change",()=>{const s=STROKES[r.value];for(const k in s)$(k).value=s[k];SNAP=true;schedule();}));
 ["th","ps","sw","be","al"].forEach(id=>$(id).addEventListener("input",()=>document.querySelectorAll("input[name=stroke]").forEach(x=>x.checked=false)));
 $("play").addEventListener("click",()=>{anim.playing=!anim.playing;$("play").textContent=anim.playing?"一時停止":"再生";if(anim.playing&&anim.t>=total()){anim.t=0;anim.hold=0;}});
