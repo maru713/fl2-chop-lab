@@ -127,7 +127,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
   <h2>自分の打球</h2>
   <div class="seg" role="radiogroup" aria-label="ラバー">
     <label><input type="radio" name="rub" id="r-g9" value="g9" checked>グレイザー<br>09C 厚</label>
-    <label><input type="radio" name="rub" id="r-inv" value="inv">一般的な<br>裏ソフト</label>
+    <label><input type="radio" name="rub" id="r-inv" value="inv">テンション系<br>（非粘着）</label>
     <label><input type="radio" name="rub" id="r-ox" value="ox">FL2 OX<br>（比較）</label>
   </div>
   <div class="seg" style="display:none"><label><input type="checkbox" id="pip" checked>粒の倒れ方を考える（仮説）：強く当たると倒れて滑り、こすると引っかかる</label></div>
@@ -154,7 +154,8 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
   <div class="row"><label for="hb">台の上で頂点になるときの高さの上限</label><output id="hbo"></output><input type="range" id="hb" min="10" max="100" step="5" value="100"></div>
   <div class="row"><label for="hs">頂点がエンドラインの後ろ1mごとに許す高さ</label><output id="hso"></output><input type="range" id="hs" min="0" max="100" step="5" value="40"></div>
   </div>
-  <div class="bar" style="margin:4px 0 8px"><button class="btn" id="search" type="button">ぶれに強い振り方を探す</button><span class="note" id="srch-msg"></span></div>
+  <div class="seg" role="radiogroup" aria-label="探し方" style="grid-template-columns:repeat(2,minmax(0,1fr))"><label><input type="radio" name="metric" value="attack" checked>総合（入る＞速さ＞回転）</label><label><input type="radio" name="metric" value="robust">入りやすさだけ</label></div>
+  <div class="bar" style="margin:4px 0 8px"><button class="btn" id="search" type="button">振り方を探す</button><span class="note" id="srch-msg"></span></div>
   <canvas id="heat" role="img" aria-label="スイングの速さと向きごとの、入る面の開きの幅" style="width:100%;display:block;touch-action:manipulation"></canvas>
   <p class="note" id="srch-best"></p>
 </section>
@@ -232,7 +233,8 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <summary>計算の仮定と根拠</summary>
     <p class="note">下の2つはFL2の実測値がないため仮定です。ラバーを選び直すと初期値に戻ります。</p>
     <div class="row"><label for="k">粒がボールをつかむ強さ（仮説モードでは粒が倒れたときの値。回転が止まりきる強さ＝1）</label><output id="ko"></output><input type="range" id="k" min="0" max="1" step="0.01" value="0.15"></div>
-    <div class="row"><label for="e">反発（面に垂直な方向の跳ね返り率）</label><output id="eo"></output><input type="range" id="e" min="0.3" max="0.9" step="0.01" value="0.45"></div>
+    <div class="row"><label for="e">反発（ゆっくり当たったとき、面に垂直な方向の跳ね返り率）</label><output id="eo"></output><input type="range" id="e" min="0.3" max="0.95" step="0.01" value="0.84"></div>
+    <div class="row"><label for="eslope">強く当たるほど反発が下がる量（1m/sごと）</label><output id="esloper"></output><input type="range" id="eslope" min="0" max="0.04" step="0.001" value="0.021"></div>
     <div class="row"><label for="kmax">粒が立っているときのつかむ強さ（仮説モード）</label><output id="kmaxo"></output><input type="range" id="kmax" min="0" max="1" step="0.01" value="0.9"></div>
     <div class="row"><label for="pv0">粒が倒れ始める、面を押す速さ</label><output id="pv0o"></output><input type="range" id="pv0" min="0.5" max="8" step="0.5" value="3"></div>
     <div class="row"><label for="pv1">粒が完全に倒れる、面を押す速さ</label><output id="pv1o"></output><input type="range" id="pv1" min="2" max="15" step="0.5" value="9"></div>
@@ -244,7 +246,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
       <li>ロングピップスの「つかむ強さ」は裏ソフトよりずっと小さいと測定されています（Gossard 2026）。比率の数値は確認できず、FL2の測定もありません。</li>
       <li>反発は同じ研究でアンチラバーが0.53でした。粒高OXはそれ以下と推定しています。ロングピップスは回転が速いほど反発が下がるとされていますが、このモデルでは一定です。</li>
       <li>FL2は返球時に回転の20%を失う、裏ソフトは失わないと仮定しています。</li>
-      <li>グレイザー09C（厚）は、粘着性のある表面で強くつかむと考え、つかむ強さ0.95・横にたわんで戻る強さ0.4・反発0.7と仮定しています（実測値ではありません）。メーカー公表値はスポンジ硬度42度・スピード75・スピン87です。</li>
+      <li>グレイザー09C（厚）の値はすべて仮定です（実測値ではありません）。微粘着シートは低い押し付けでもボールをつかむと考えてつかむ強さ0.95、テンションスポンジの弾き（横にたわんで戻る）は非粘着テンション系より控えめとして0.35、反発はゆっくり当たったとき0.84で、強く当たるほど1m/sごとに0.021下がる（Gossard 2026で攻撃用裏ソフトの平均的な下がり方）としています。比較用の「テンション系（非粘着）」は、つかむ強さ0.8・弾き0.45・反発0.88です。メーカー公表値はスポンジ硬度42度・スピード75・スピン87。スポンジの厚さ・硬さ、ラケット本体の違いは、反発の値にまとめて含めたつもりで、個別には計算していません。</li>
       <li>空気抵抗係数0.5、回転による揚力は簡単な近似式、台での弾みは反発0.89・摩擦0.25。相手はエンドラインの後ろ0.5m・台から30cmの高さで打つ想定。図は縦横同じ比率で、球の大きさだけ実際より大きく描いています。</li>
     </ul>
     <p class="note src">出典：
@@ -262,7 +264,7 @@ const NETH=0.1525,FLOOR=-0.76,DT=5e-4,EX=1.5;
 const COURSE={straight:2.74,cross:Math.hypot(2.74,1.525)};
 let TL=2.74,NETX=1.37;
 const SHOTS={chop:{v0:12,rps:-70,bx:0.35,arc:"low",od:2.5,oh:0,sw:15,sa:-65},knuckle:{v0:12,rps:-5,bx:0.35,arc:"low",od:2.5,oh:0,sw:13,sa:-45},push:{v0:6,rps:-40,bx:0.5,arc:"low",od:0.2,oh:0.15,sw:12,sa:-45},lob:{v0:14,rps:40,bx:0.6,arc:"high",od:3,oh:0,sw:15,sa:0}};
-const PRE={g9:{k:0.95,e:0.7,keep:1.0,et:0.4},ox:{k:0.15,e:0.45,keep:0.8,et:0},"11":{k:0.15,e:0.55,keep:0.8,et:0},inv:{k:0.8,e:0.75,keep:1.0,et:0.35}};
+const PRE={g9:{k:0.95,e:0.84,es:0.021,keep:1.0,et:0.35},ox:{k:0.15,e:0.45,es:0,keep:0.8,et:0},"11":{k:0.15,e:0.55,es:0,keep:0.8,et:0},inv:{k:0.8,e:0.88,es:0.021,keep:1.0,et:0.45}};
 let keep=0.8;
 const $=id=>document.getElementById(id);
 function acc(vx,vy,om){const v=Math.hypot(vx,vy)||1e-6;const q=0.5*RHO*AR*v*v/M;
@@ -306,7 +308,8 @@ function chop(s,face,k,e,kp,sw,sa){const th=face*Math.PI/180,b=sa*Math.PI/180;
   const rx=s.vx-Rx,ry=s.vy-Ry,vn=rx*nx+ry*ny,vt=rx*tx+ry*ty,u=vt-s.om*R;
   let B=1,D=0;if(pipOn()){const pv0=+$("pv0").value,pv1=Math.max(pv0+0.5,+$("pv1").value);B=Math.max(0,Math.min(1,1-(Math.abs(vn)-pv0)/(pv1-pv0)));D=Math.max(0,Math.min(1,Math.abs(Rx*tx+Ry*ty)/+$("pvb").value));k=k+(+$("kmax").value-k)*B*D;}
   const dvt=-k*(1+(+$("et").value))*u/2.5;
-  const vt2=vt+dvt,vn2=-e*vn,om2=(s.om-1.5*dvt/R)*kp;
+  const esEl=document.getElementById("eslope"),es=esEl?+esEl.value:0,eEff=Math.max(0.3,e-es*Math.max(0,Math.abs(vn)-2));
+  const vt2=vt+dvt,vn2=-eEff*vn,om2=(s.om-1.5*dvt/R)*kp;
   return {x:s.x,y:s.y,vx:vn2*nx+vt2*tx+Rx,vy:vn2*ny+vt2*ty+Ry,om:om2,Rx,Ry,nx,ny,tx,ty,kEff:k,B,D,vn:Math.abs(vn)};}
 function pipOn(){const v=document.querySelector("input[name=rub]:checked").value;return $("pip").checked&&(v==="ox"||v==="11");}
 function flyOut(s0,rec,dt){dt=dt||DT;let s={...s0},pts=rec?[[s.x,s.y,s.om]]:null,t=0,clr=null;
@@ -413,7 +416,7 @@ function faceRun(s,sw,sa,step,dt){const k=+$("k").value,e=+$("e").value;let best
   return best;}
 function update(){const v0=+$("v0").value,rps=+$("rps").value,bx=+$("bx").value,dist=+$("dist").value,face=+$("face").value,sw=+$("sw").value,sa=+$("sa").value,k=+$("k").value,e=+$("e").value;
   $("v0o").textContent=v0+" m/s";$("rpso").textContent=(rps>=0?"上回転 ":"下回転 ")+Math.abs(rps);$("bxo").textContent=fmt(bx,2)+" m";$("disto").textContent=dist>=0?fmt(dist,1)+" m後方":"台の上 "+fmt(-dist,1)+" m";
-  $("faceo").textContent=face+"°";$("swo").textContent=fmt(sw,1)+" m/s";$("sao").textContent=sa+"°";$("ko").textContent=fmt(k,2);$("eo").textContent=fmt(e,2);$("oppdo").textContent=fmt(+$("oppd").value,1)+" m";$("opph_o").textContent=(+$("opph").value>=0?"+":"")+Math.round(+$("opph").value*100)+" cm";$("kmaxo").textContent=fmt(+$("kmax").value,2);$("pv0o").textContent=fmt(+$("pv0").value,1)+" m/s";$("pv1o").textContent=fmt(+$("pv1").value,1)+" m/s";$("pvbo").textContent=fmt(+$("pvb").value,1)+" m/s";$("eto").textContent=fmt(+$("et").value,2);
+  $("faceo").textContent=face+"°";$("swo").textContent=fmt(sw,1)+" m/s";$("sao").textContent=sa+"°";$("ko").textContent=fmt(k,2);$("eo").textContent=fmt(e,2);$("esloper").textContent="−"+fmt(+$("eslope").value,3);$("oppdo").textContent=fmt(+$("oppd").value,1)+" m";$("opph_o").textContent=(+$("opph").value>=0?"+":"")+Math.round(+$("opph").value*100)+" cm";$("kmaxo").textContent=fmt(+$("kmax").value,2);$("pv0o").textContent=fmt(+$("pv0").value,1)+" m/s";$("pv1o").textContent=fmt(+$("pv1").value,1)+" m/s";$("pvbo").textContent=fmt(+$("pvb").value,1)+" m/s";$("eto").textContent=fmt(+$("et").value,2);
   TL=COURSE[document.querySelector("input[name=course]:checked").value];NETX=TL/2;
   const arc=$("arc").checked?"high":"low";
   const inc=getInc(dist);const w=$("a-warn");anim.t=0;anim.hold=0;
@@ -442,7 +445,7 @@ function update(){const v0=+$("v0").value,rps=+$("rps").value,bx=+$("bx").value,
   $("o-pip").textContent=!pipOn()?"考えない":(o.B<0.2?"倒れている":o.B<0.8?"半分倒れている":"立っている")+"・"+(o.D<0.3?"こすりは弱い":o.D<0.8?"こすりは中くらい":"強くこすっている");
   drawInset();}
 let pend=0;function schedule(){cancelAnimationFrame(pend);pend=requestAnimationFrame(update);}
-function applyPreset(key){const p=PRE[key];$("k").value=p.k;$("e").value=p.e;$("et").value=p.et;keep=p.keep;}
+function applyPreset(key){const p=PRE[key];$("k").value=p.k;$("e").value=p.e;$("et").value=p.et;$("eslope").value=p.es;keep=p.keep;}
 document.querySelectorAll("input[name=rub]").forEach(r=>r.addEventListener("change",()=>{applyPreset(r.value);schedule();}));
 document.querySelectorAll("input[name=course]").forEach(r=>r.addEventListener("change",schedule));
 $("arc").addEventListener("change",schedule);
@@ -473,9 +476,9 @@ const SA_STEPS=[];for(let v=-75;v<=15;v+=7.5)SA_STEPS.push(v);
 let HEAT=null;
 function drawHeat(){const cv=$("heat");if(!HEAT){cv.style.height="0px";return;}const dpr=window.devicePixelRatio||1,W=cv.clientWidth||320,ml=34,mb=30,mt=6,cw=(W-ml-6)/SA_STEPS.length,ch=Math.max(16,Math.min(24,cw*0.8)),H=mt+ch*SW_STEPS.length+mb;
   cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+"px";const c=cv.getContext("2d"),col=css();c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
-  const mx=Math.max(1,...HEAT.cells.map(x=>x.w));c.font="10px "+col("--f-body");
-  HEAT.cells.forEach(x=>{const X=ml+x.i*cw,Y=mt+(SW_STEPS.length-1-x.j)*ch;c.fillStyle=x.w>0?col("--out"):col("--line");c.globalAlpha=x.w>0?0.15+0.85*x.w/mx:0.5;c.fillRect(X+1,Y+1,cw-2,ch-2);c.globalAlpha=1;
-    if(x.w>0&&cw>22){c.fillStyle=x.w/mx>0.55?col("--surface"):col("--ink");c.textAlign="center";c.fillText(x.w+"°",X+cw/2,Y+ch/2+3.5);}});
+  const KEY=x=>HEAT.useA?x.sc:x.w;const mx=Math.max(1e-6,...HEAT.cells.map(KEY));c.font="10px "+col("--f-body");
+  HEAT.cells.forEach(x=>{const X=ml+x.i*cw,Y=mt+(SW_STEPS.length-1-x.j)*ch;c.fillStyle=x.w>0?col("--out"):col("--line");c.globalAlpha=x.w>0?0.15+0.85*KEY(x)/mx:0.5;c.fillRect(X+1,Y+1,cw-2,ch-2);c.globalAlpha=1;
+    if(x.w>0&&cw>22){c.fillStyle=KEY(x)/mx>0.55?col("--surface"):col("--ink");c.textAlign="center";c.fillText(HEAT.useA?Math.round(x.v)+"":x.w+"°",X+cw/2,Y+ch/2+3.5);}});
   const cs=+$("sw").value,ca=+$("sa").value;const ci=SA_STEPS.reduce((b,v,i)=>Math.abs(v-ca)<Math.abs(SA_STEPS[b]-ca)?i:b,0),cj=SW_STEPS.reduce((b,v,i)=>Math.abs(v-cs)<Math.abs(SW_STEPS[b]-cs)?i:b,0);
   c.strokeStyle=col("--ink");c.lineWidth=2;c.strokeRect(ml+ci*cw+1,mt+(SW_STEPS.length-1-cj)*ch+1,cw-2,ch-2);
   c.fillStyle=col("--muted");c.textAlign="right";SW_STEPS.forEach((v,j)=>{if(j%2===0)c.fillText(v,ml-4,mt+(SW_STEPS.length-1-j)*ch+ch/2+3.5);});
@@ -485,11 +488,11 @@ function drawHeat(){const cv=$("heat");if(!HEAT){cv.style.height="0px";return;}c
 function runSearch(){TL=COURSE[document.querySelector("input[name=course]:checked").value];NETX=TL/2;const inc=getInc(+$("dist").value);
   if(inc.fail){$("srch-msg").textContent="相手の打球の条件を見直してください";return;}
   $("srch-msg").textContent="計算中…";$("search").disabled=true;const cells=[];let i=0,j=0;
-  const stepFn=()=>{const t0=performance.now();while(j<SW_STEPS.length&&performance.now()-t0<40){const run=faceRun(inc.s,SW_STEPS[j],SA_STEPS[i],2,3e-3);cells.push({i,j,w:run[0]>0?run[2]-run[1]:0,c:run[0]>0?Math.round((run[1]+run[2])/2):null});i++;if(i>=SA_STEPS.length){i=0;j++;}}
+  const stepFn=()=>{const t0=performance.now();while(j<SW_STEPS.length&&performance.now()-t0<40){const run=faceRun(inc.s,SW_STEPS[j],SA_STEPS[i],2,3e-3);const w=run[0]>0?run[2]-run[1]:0,c=run[0]>0?Math.round((run[1]+run[2])/2):null;let v=0,sp=0,sc=0;if(c!==null){const o=chop(inc.s,c,+$("k").value,+$("e").value,keep,SW_STEPS[j],SA_STEPS[i]);v=Math.hypot(o.vx,o.vy);sp=-o.om/2/Math.PI;const Rb=Math.min(1,w/12),Sv=Math.max(0,Math.min(1,(v-8)/17)),Ss=Math.max(0,Math.min(1,sp/150));sc=Rb<0.5?3*Rb:3*Rb+2*Sv+Ss;}cells.push({i,j,w,c,v,sp,sc});i++;if(i>=SA_STEPS.length){i=0;j++;}}
     if(j<SW_STEPS.length){$("srch-msg").textContent="計算中… "+Math.round(100*j/SW_STEPS.length)+"%";setTimeout(stepFn,0);return;}
-    HEAT={cells};$("search").disabled=false;const best=cells.reduce((b,x)=>x.w>(b?b.w:-1)?x:b,null);
+    HEAT={cells};$("search").disabled=false;const useA=document.querySelector("input[name=metric]:checked").value==="attack";HEAT.useA=useA;const key=x=>useA?x.sc:x.w;const best=cells.reduce((b,x)=>key(x)>(b?key(b):-1)?x:b,null);
     if(!best||best.w<=0){$("srch-msg").textContent="";$("srch-best").textContent="この条件では入る振り方が見つかりませんでした。頂点の高さの上限を緩めるか、打点を変えてください。";drawHeat();return;}
-    $("srch-msg").textContent="完了";$("srch-best").textContent=(critMode()==="target"?"狙いどおりに落とせて、一番ぶれに強いのは":"一番ぶれに強いのは")+"、速さ "+SW_STEPS[best.j]+" m/s・向き "+SA_STEPS[best.i]+"° で、面の開きが "+best.w+"° の幅で"+(critMode()==="target"?"条件を満たします":"入ります")+"（中心 "+best.c+"°）。マスをタップすると切り替わります。";
+    $("srch-msg").textContent="完了";$("srch-best").textContent=(useA?"入りやすさ・速さ・回転の総合で一番良いのは":"一番ぶれに強いのは")+"、スイング "+SW_STEPS[best.j]+" m/s・向き "+SA_STEPS[best.i]+"° で、面の角度 "+best.c+"°（入る幅 "+best.w+"°）、打球の速さ "+fmt(best.v,1)+" m/s・上回転 "+Math.round(best.sp)+" 回転/秒です。"+(useA?"マスの数字は打球の速さ（m/s）です。":"")+"マスをタップすると切り替わります。";
     drawHeat();};
   stepFn();}
 $("search").addEventListener("click",runSearch);
@@ -499,6 +502,7 @@ $("heat").addEventListener("click",ev=>{if(!HEAT||!HEAT.geom)return;const r=$("h
   document.querySelectorAll("input[name=stroke]").forEach(x=>x.checked=false);update();drawHeat();});
 window.addEventListener("resize",drawHeat);
 
+document.querySelectorAll("input[name=metric]").forEach(r=>r.addEventListener("change",()=>{HEAT=null;drawHeat();$("srch-best").textContent="";}));
 document.querySelectorAll("input[name=crit]").forEach(r=>r.addEventListener("change",()=>{const t=critMode()==="target";$("crit-target").hidden=!t;$("crit-low").hidden=t;HEAT=null;drawHeat();$("srch-best").textContent="";$("srch-msg").textContent="";bestFace();schedule();}));
 ["tg","tol","pmax"].forEach(id=>$(id).addEventListener("change",()=>{bestFace();schedule();}));
 document.querySelectorAll("[data-v]").forEach(b=>{b.setAttribute("aria-pressed",b.dataset.v===VIEW?"true":"false");b.addEventListener("click",()=>{VIEW=b.dataset.v;document.querySelectorAll("[data-v]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));});});
