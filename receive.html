@@ -35,8 +35,8 @@ h2{font-size:1rem;font-weight:700;margin:0 0 4px}
 .views{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .views canvas{display:block;width:100%}
 .vlab{font-size:10px;color:var(--muted);padding:2px 8px 0}
-.vtabs{display:flex;gap:4px;margin-bottom:4px}
-.vtabs button{font:inherit;font-size:12px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:3px 12px;min-height:30px;cursor:pointer}
+.vtabs{display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap}
+.vtabs button,.vtabs span button{font:inherit;font-size:12px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:3px 12px;min-height:30px;cursor:pointer}
 .vtabs button[aria-pressed="true"]{border-color:var(--table);color:var(--table);font-weight:700}
 #eye{display:block;width:100%}
 .mini{display:flex;align-items:stretch;gap:6px;margin-top:5px}
@@ -79,7 +79,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 </header>
 
 <section class="stage" id="stage" aria-label="軌道のアニメーション">
-  <div class="vtabs" role="group" aria-label="図の種類"><button type="button" data-view="eye" aria-pressed="true">自分の目線</button><button type="button" data-view="map" aria-pressed="false">上から・横から</button></div>
+  <div class="vtabs" role="group" aria-label="図の種類"><button type="button" data-view="eye" aria-pressed="true">自分の目線</button><button type="button" data-view="map" aria-pressed="false">上から・横から</button><span style="margin-left:auto;display:flex;gap:4px" role="group" aria-label="再生速度"><button type="button" data-s="0.1" aria-pressed="false">1/10</button><button type="button" data-s="0.25" aria-pressed="true">1/4</button><button type="button" data-s="1" aria-pressed="false">実速</button></span></div>
   <div class="views">
     <div id="v-eye"><canvas id="eye" role="img" aria-label="自分の目の位置から見た台・ボール・ラケット"></canvas></div>
     <div id="v-map" hidden>
@@ -390,6 +390,7 @@ $("play").addEventListener("click",()=>{anim.playing=!anim.playing;$("play").tex
 (function(){const st=$("stage"),pin=$("pin");let pinned=true;try{pinned=localStorage.getItem("rcvPinned")!=="0";}catch(e){}const ap=()=>{st.classList.toggle("unpinned",!pinned);pin.setAttribute("aria-pressed",pinned?"true":"false");pin.textContent=pinned?"固定":"固定しない";};ap();
   pin.addEventListener("click",()=>{pinned=!pinned;try{localStorage.setItem("rcvPinned",pinned?"1":"0");}catch(e){}ap();});})();
 window.addEventListener("resize",()=>{drawMap();});
+document.querySelectorAll("[data-s]").forEach(b=>b.addEventListener("click",()=>{anim.speed=+b.dataset.s;document.querySelectorAll("[data-s]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));}));
 document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>{VIEWMODE=b.dataset.view;document.querySelectorAll("[data-view]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));$("v-eye").hidden=VIEWMODE!=="eye";$("v-map").hidden=VIEWMODE!=="map";}));
 $("play").textContent=anim.playing?"一時停止":"再生";outputs();compute();if(!anim.playing)anim.t=total();requestAnimationFrame(tick);
 </script>
