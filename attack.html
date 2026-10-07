@@ -310,9 +310,9 @@ function chop(s,face,k,e,kp,sw,sa){const th=face*Math.PI/180,b=sa*Math.PI/180;
   const dvt=-k*(1+(+$("et").value))*u/2.5;
   const esEl=document.getElementById("eslope"),es=esEl?+esEl.value:0,eEff=Math.max(0.3,e-es*Math.max(0,Math.abs(vn)-2));
   const vt2=vt+dvt,vn2=-eEff*vn,om2=(s.om-1.5*dvt/R)*kp;
-  return {x:s.x,y:s.y,vx:vn2*nx+vt2*tx+Rx,vy:vn2*ny+vt2*ty+Ry,om:om2,Rx,Ry,nx,ny,tx,ty,kEff:k,B,D,vn:Math.abs(vn)};}
+  return {x:s.x,y:s.y,vx:vn2*nx+vt2*tx+Rx,vy:vn2*ny+vt2*ty+Ry,om:om2,Rx,Ry,nx,ny,tx,ty,kEff:k,B,D,vn:Math.abs(vn),miss:vn>-0.3};}
 function pipOn(){const v=document.querySelector("input[name=rub]:checked").value;return $("pip").checked&&(v==="ox"||v==="11");}
-function flyOut(s0,rec,dt){dt=dt||DT;let s={...s0},pts=rec?[[s.x,s.y,s.om]]:null,t=0,clr=null;
+function flyOut(s0,rec,dt){dt=dt||DT;if(s0.miss)return {res:"面の裏に当たる",pts:rec?[[s0.x,s0.y,s0.om]]:null};let s={...s0},pts=rec?[[s.x,s.y,s.om]]:null,t=0,clr=null;
   while(t<3){const p=s;s=stepS(s,dt);t+=dt;if(rec)pts.push([s.x,s.y,s.om]);
     if(p.x<NETX&&s.x>=NETX){const yy=p.y+(s.y-p.y)*(NETX-p.x)/(s.x-p.x);if(yy<NETH)return {res:"ネット",pts};clr=yy-NETH;}
     if(s.x>=0&&s.y<=0){if(s.x<NETX||s.x>TL)return {res:s.x<NETX?"自コート":"オーバー",pts,clr,land:s.x};
@@ -353,10 +353,12 @@ function drawCourt(){if(!S)return;const g=geom(),{cv,W,H,X,Y,xmin,xmax}=g,dpr=wi
   path(S.inc.pts,col("--in"),2,0.25,1e9);if(S.out)path(S.out.pts,outCol,2,0.25,1e9);
   path(S.inc.pts,col("--in"),2.4,1,idx+1);if(S.out&&idx>=nIn)path(S.out.pts,outCol,2.8,1,idx-nIn+1);
   if(S.o){const th=S.face*Math.PI/180,tx=-Math.sin(th),ty=Math.cos(th),L=0.16,cx=-S.dist,cy=S.inc.s.y;
-    let off=0;if(idx<nIn){const rem=(nIn-idx)*DT;off=Math.min(0.35,rem*S.sw);}
+    let off=0;if(idx<nIn){const rem=(nIn-idx)*DT;off=Math.min(0.35,rem*S.sw);}else{off=-Math.min(0.3,(idx-nIn)*DT*S.sw);}
     const bx=cx-Math.cos(S.sa*Math.PI/180)*off,by=cy+Math.sin(S.sa*Math.PI/180)*off;
     drawPerson(c,X,Y,bx,by,col);
-    c.strokeStyle=col("--ink");c.lineWidth=4;c.lineCap="round";c.beginPath();c.moveTo(X(bx-tx*L),Y(by-ty*L));c.lineTo(X(bx+tx*L),Y(by+ty*L));c.stroke();c.lineCap="butt";}
+    const ox=-Math.cos(th)*9,oy=Math.sin(th)*9;
+    c.strokeStyle=col("--ink");c.lineWidth=4;c.lineCap="round";c.beginPath();c.moveTo(X(bx-tx*L)+ox,Y(by-ty*L)+oy);c.lineTo(X(bx+tx*L)+ox,Y(by+ty*L)+oy);c.stroke();c.lineCap="butt";
+    c.strokeStyle=col("--table");c.lineWidth=1.5;c.beginPath();c.moveTo(X(bx-tx*L)+ox*0.6,Y(by-ty*L)+oy*0.6);c.lineTo(X(bx+tx*L)+ox*0.6,Y(by+ty*L)+oy*0.6);c.stroke();}
   let p=null;if(idx<nIn)p=S.inc.pts[idx];else if(S.out&&idx-nIn<nOut)p=S.out.pts[idx-nIn];else if(S.out)p=S.out.pts[nOut-1];else p=S.inc.pts[nIn-1];
   if(p){const px=X(p[0]),py=Y(p[1]),r=7;c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(px,py,r,0,Math.PI*2);c.fill();c.stroke();
     c.strokeStyle=col("--ballmark");c.lineWidth=2;c.beginPath();c.moveTo(px-Math.cos(anim.ang)*r,py-Math.sin(anim.ang)*r);c.lineTo(px+Math.cos(anim.ang)*r,py+Math.sin(anim.ang)*r);c.stroke();
