@@ -35,6 +35,10 @@ h2{font-size:1rem;font-weight:700;margin:0 0 4px}
 .views{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .views canvas{display:block;width:100%}
 .vlab{font-size:10px;color:var(--muted);padding:2px 8px 0}
+.vtabs{display:flex;gap:4px;margin-bottom:4px}
+.vtabs button{font:inherit;font-size:12px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:3px 12px;min-height:30px;cursor:pointer}
+.vtabs button[aria-pressed="true"]{border-color:var(--table);color:var(--table);font-weight:700}
+#eye{display:block;width:100%}
 .mini{display:flex;align-items:stretch;gap:6px;margin-top:5px}
 .btn{font:inherit;font-size:14px;font-weight:700;border:1px solid var(--table);background:var(--table);color:var(--surface);border-radius:999px;padding:6px 16px;min-height:36px;cursor:pointer}
 .btn.sm{font-size:12px;padding:2px 10px;min-height:32px;white-space:nowrap}
@@ -75,11 +79,15 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 </header>
 
 <section class="stage" id="stage" aria-label="軌道のアニメーション">
+  <div class="vtabs" role="group" aria-label="図の種類"><button type="button" data-view="eye" aria-pressed="true">自分の目線</button><button type="button" data-view="map" aria-pressed="false">上から・横から</button></div>
   <div class="views">
+    <div id="v-eye"><canvas id="eye" role="img" aria-label="自分の目の位置から見た台・ボール・ラケット"></canvas></div>
+    <div id="v-map" hidden>
     <div class="vlab">上から見た図（上＝自分から見て左）</div>
     <canvas id="top" role="img" aria-label="上から見た台と軌道"></canvas>
     <div class="vlab">横から見た図</div>
     <canvas id="side" role="img" aria-label="横から見た台と軌道"></canvas>
+    </div>
   </div>
   <div class="mini">
     <button class="btn sm" id="play" type="button">一時停止</button>
@@ -309,7 +317,38 @@ $("map").addEventListener("click",ev=>{if(!MAP||!MAP.geom)return;const r=$("map"
 function views(){const top=$("top"),side=$("side"),W=top.parentElement.clientWidth||340,xmin=-0.9,xmax=TL+0.4,sc=W/(xmax-xmin);
   const Ht=Math.round(1.72*sc),Hs=Math.round(0.78*sc);return {W,Ht,Hs,sc,X:x=>(x-xmin)*sc,Yt:y=>Ht/2-y*sc,Ys:z=>Hs-0.14*sc-z*sc};}
 function prep(cv,W,H){const dpr=window.devicePixelRatio||1;if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.height=H+"px";}const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);return c;}
-function drawViews(){const g=views(),cs=getComputedStyle(document.documentElement),col=n=>cs.getPropertyValue(n).trim();
+
+let VIEWMODE="eye";
+function eyeCam(){const h=S&&S.sv&&S.sv.hit?S.sv.hit.p:[0.3,-0.2,0.15];const rb=document.querySelector("input[name=rub]:checked").value,fh=(rb==="g9"||rb==="inv");
+  const eye=[Math.min(h[0]-0.45,-0.25),h[1]+(fh?0.32:0.06),0.62],tgt=[h[0]+1.4,h[1]*0.4,-0.02];
+  const f=sub(tgt,eye),fl=nrm(f),fw=mul(f,1/fl);let r=cross(fw,[0,0,1]);r=mul(r,1/nrm(r));const u=cross(r,fw);return {eye,fw,r,u};}
+function drawEye(idx,n1,sp,rp,col){const cv=$("eye"),W=cv.parentElement.clientWidth||340,H=Math.round(Math.min(320,Math.max(200,W*0.62)));
+  const c=prep(cv,W,H),cam=eyeCam(),F=(W/2)/Math.tan(38*deg);
+  const P=q=>{const d=sub(q,cam.eye),zc=dot(d,cam.fw);if(zc<0.03)return null;return [W/2+dot(d,cam.r)/zc*F,H*0.42-dot(d,cam.u)/zc*F,zc];};
+  const poly=(pts,fill,stroke,lw)=>{const pp=pts.map(P);if(pp.some(x=>!x))return;c.beginPath();pp.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.lineWidth=lw||1;c.stroke();}};
+  c.fillStyle=col("--surface");c.fillRect(0,0,W,H);
+  poly([[0,HW,0],[TL,HW,0],[TL,-HW,0],[0,-HW,0]],null,col("--table"),2);
+  c.globalAlpha=0.28;poly([[0,HW,0],[TL,HW,0],[TL,-HW,0],[0,-HW,0]],col("--table"));c.globalAlpha=1;
+  const cl=[P([0,0,0]),P([TL,0,0])];if(cl[0]&&cl[1]){c.strokeStyle=col("--table");c.lineWidth=1;c.beginPath();c.moveTo(cl[0][0],cl[0][1]);c.lineTo(cl[1][0],cl[1][1]);c.stroke();}
+  c.globalAlpha=0.35;poly([[NETX,HW+0.15,0],[NETX,HW+0.15,NETH],[NETX,-HW-0.15,NETH],[NETX,-HW-0.15,0]],col("--muted"));c.globalAlpha=1;
+  poly([[NETX,HW+0.15,NETH],[NETX,-HW-0.15,NETH],[NETX,-HW-0.15,NETH],[NETX,HW+0.15,NETH]],null,col("--net"),2);
+  const line=(pts,colr,w,a,upto)=>{c.globalAlpha=a;c.strokeStyle=colr;c.lineWidth=w;c.beginPath();let st=false;const e=Math.min(pts.length,upto);for(let i=0;i<e;i+=3){const q=P(pts[i]);if(!q){st=false;continue;}if(!st){c.moveTo(q[0],q[1]);st=true;}else c.lineTo(q[0],q[1]);}c.stroke();c.globalAlpha=1;};
+  const ok=S.ret&&S.ret.res==="入る",oc=ok?col("--out"):col("--bad");
+  line(sp,col("--in"),2,0.3,1e9);if(rp.length)line(rp,oc,2,0.3,1e9);line(sp,col("--in"),2.5,1,idx+1);if(rp.length&&idx>=n1)line(rp,oc,2.8,1,idx-n1+1);
+  let bp=null;if(idx<n1)bp=sp[idx];else if(rp.length&&idx-n1<rp.length)bp=rp[idx-n1];else bp=rp.length?rp[rp.length-1]:sp[n1-1];
+  if(S.sv.hit&&S.rk){const h=S.sv.hit.p,rk=S.rk,dir=rk.sw>0?mul(rk.V,1/rk.sw):[1,0,0];let off=0;if(idx<n1)off=Math.min(0.25,(n1-idx)*DT*rk.sw);else off=-Math.min(0.2,(idx-n1)*DT*rk.sw);
+    const a0=sub(h,mul(dir,0.25)),a1=add(h,mul(dir,0.2));c.setLineDash([4,3]);line([a0,a1],col("--swing"),1.5,1,1e9);c.setLineDash([]);
+    const n=rk.n;let t1=cross(n,[0,0,1]);if(nrm(t1)<1e-6)t1=[0,1,0];t1=mul(t1,1/nrm(t1));const t2=cross(t1,n);
+    const cc=add(sub(h,mul(dir,off)),mul(n,-R*1.3)),ring=[];for(let k=0;k<24;k++){const a=k/24*2*Math.PI;ring.push(add(cc,add(mul(t1,0.075*Math.cos(a)),mul(t2,0.08*Math.sin(a)))));}
+    const rb=document.querySelector("input[name=rub]:checked").value,useInv=rb==="g9"||rb==="inv",front=useInv?"#c0392b":"#2b2b2b",back=useInv?"#2b2b2b":"#c0392b";
+    const seeFront=dot(n,sub(cam.eye,cc))>0;poly(ring,seeFront?front:back,col("--ink"),2.5);
+    const hd0=add(cc,mul(t2,-0.08)),hd1=add(cc,mul(t2,-0.18)),q0=P(hd0),q1=P(hd1);if(q0&&q1){c.strokeStyle="#9a7b4f";c.lineWidth=7;c.lineCap="round";c.beginPath();c.moveTo(q0[0],q0[1]);c.lineTo(q1[0],q1[1]);c.stroke();c.lineCap="butt";}
+    const nq0=P(cc),nq1=P(add(cc,mul(n,0.09)));if(nq0&&nq1){c.strokeStyle=col("--out");c.lineWidth=2;c.beginPath();c.moveTo(nq0[0],nq0[1]);c.lineTo(nq1[0],nq1[1]);c.stroke();}}
+  if(bp){const sh=P([bp[0],bp[1],0]);if(sh&&bp[2]>0){c.globalAlpha=0.25;c.fillStyle=col("--ink");c.beginPath();c.ellipse(sh[0],sh[1],Math.max(2,R/sh[2]*F),Math.max(1,R/sh[2]*F*0.35),0,0,Math.PI*2);c.fill();c.globalAlpha=1;}
+    const q=P(bp);if(q){c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(q[0],q[1],Math.max(3,R/q[2]*F),0,Math.PI*2);c.fill();c.stroke();}}
+  c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.fillText("緑の線＝打球面の向き・点線＝ラケットの動き・赤＝09C面／黒＝FL2面",6,H-6);}
+function drawViews(){const cs0=getComputedStyle(document.documentElement),col0=n=>cs0.getPropertyValue(n).trim();if(VIEWMODE==="eye"){if(!S)return;const sp=S.sv.pts,rp=S.ret?S.ret.pts:[];drawEye(Math.floor(anim.t/DT),sp.length,sp,rp,col0);return;}
+  const g=views(),cs=cs0,col=col0;
   const ct=prep($("top"),g.W,g.Ht),cs2=prep($("side"),g.W,g.Hs);
   ct.fillStyle=col("--table");ct.globalAlpha=0.25;ct.fillRect(g.X(0),g.Yt(HW),g.X(TL)-g.X(0),g.Yt(-HW)-g.Yt(HW));ct.globalAlpha=1;ct.strokeStyle=col("--table");ct.lineWidth=2;ct.strokeRect(g.X(0),g.Yt(HW),g.X(TL)-g.X(0),g.Yt(-HW)-g.Yt(HW));
   ct.lineWidth=1;ct.beginPath();ct.moveTo(g.X(0),g.Yt(0));ct.lineTo(g.X(TL),g.Yt(0));ct.stroke();ct.strokeStyle=col("--net");ct.lineWidth=2;ct.beginPath();ct.moveTo(g.X(NETX),g.Yt(HW+0.15));ct.lineTo(g.X(NETX),g.Yt(-HW-0.15));ct.stroke();
@@ -351,6 +390,7 @@ $("play").addEventListener("click",()=>{anim.playing=!anim.playing;$("play").tex
 (function(){const st=$("stage"),pin=$("pin");let pinned=true;try{pinned=localStorage.getItem("rcvPinned")!=="0";}catch(e){}const ap=()=>{st.classList.toggle("unpinned",!pinned);pin.setAttribute("aria-pressed",pinned?"true":"false");pin.textContent=pinned?"固定":"固定しない";};ap();
   pin.addEventListener("click",()=>{pinned=!pinned;try{localStorage.setItem("rcvPinned",pinned?"1":"0");}catch(e){}ap();});})();
 window.addEventListener("resize",()=>{drawMap();});
+document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>{VIEWMODE=b.dataset.view;document.querySelectorAll("[data-view]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));$("v-eye").hidden=VIEWMODE!=="eye";$("v-map").hidden=VIEWMODE!=="map";}));
 $("play").textContent=anim.playing?"一時停止":"再生";outputs();compute();if(!anim.playing)anim.t=total();requestAnimationFrame(tick);
 </script>
 
