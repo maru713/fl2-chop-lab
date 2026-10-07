@@ -234,8 +234,8 @@ function serveState(){const v0=+$("sv0").value,el=+$("sel").value*deg,az=+$("saz
   const v=[-v0*Math.cos(el)*Math.cos(az),v0*Math.cos(el)*Math.sin(az),v0*Math.sin(el)];
   const wy=-(+$("sbk").value)*2*Math.PI,wz=(+$("ssd").value)*2*Math.PI,wx=(+$("sgx").value)*2*Math.PI;
   return {p:[TL+0.15,y,0.22],v,w:[wx,wy,wz]};}
-function simServe(tcMs){let s=serveState(),pts=[[...s.p]],t=0,b=0,b1=null,b2=null,tb=0,post=[],peakT=null,endT=null,endWhy="";
-  while(t<3.5){const pr=s;s=step(s,DT);t+=DT;pts.push([...s.p]);
+function simServe(tcMs){let s=serveState(),pts=[[...s.p,...s.w]],t=0,b=0,b1=null,b2=null,tb=0,post=[],peakT=null,endT=null,endWhy="";
+  while(t<3.5){const pr=s;s=step(s,DT);t+=DT;pts.push([...s.p,...s.w]);
     if(b<2&&pr.p[0]>NETX&&s.p[0]<=NETX&&s.p[2]<NETH)return {fail:"サーブがネットにかかります",pts};
     if(b<2&&s.p[2]<=0){if(Math.abs(s.p[1])>HW)return {fail:"サーブが台の横に外れます",pts};
       if(b===0){if(s.p[0]<NETX)return {fail:"サーブが相手コートで弾まずに直接こちらへ来ます",pts};b1=[...s.p];b=1;s=bounce(s);continue;}
@@ -259,12 +259,17 @@ function hitBall(s,n,V,pr){const rv=sub(s.v,V),vn=dot(rv,n);if(vn>-0.3)return {m
   const dvt=mul(u,-k*(1+pr.et)/2.5),e=Math.max(0.3,pr.e-pr.es*Math.max(0,Math.abs(vn)-2));
   const v2=add(add(mul(n,-e*vn),add(vt,dvt)),V),w2=mul(add(s.w,mul(cross(n,dvt),-1.5/R)),keepX);
   return {p:[...s.p],v:v2,w:w2};}
-function flyBack(s0,rec,dt){dt=dt||DT;if(s0.miss)return {res:"面の裏に当たる",pts:[]};let s={p:[...s0.p],v:[...s0.v],w:[...s0.w]},pts=rec?[[...s.p]]:null,t=0;
-  while(t<2.5){const pr=s;s=step(s,dt);t+=dt;if(rec)pts.push([...s.p]);
-    if(pr.p[0]<NETX&&s.p[0]>=NETX){const f=(NETX-pr.p[0])/(s.p[0]-pr.p[0]),z=pr.p[2]+(s.p[2]-pr.p[2])*f,y=pr.p[1]+(s.p[1]-pr.p[1])*f;if(z<NETH&&Math.abs(y)<HW+0.15)return {res:"ネット",pts};}
-    if(s.p[2]<=0){const x=s.p[0],y=s.p[1];if(x<NETX)return {res:x<0?"届かない":"自コート",pts};if(x>TL)return {res:"オーバー",pts,land:[x,y]};if(Math.abs(y)>HW)return {res:"サイドアウト",pts,land:[x,y]};return {res:"入る",pts,land:[x,y]};}
-    if(s.p[2]<-0.8||s.p[0]>TL+2)return {res:"オーバー",pts};}
-  return {res:"オーバー",pts};}
+function flyBack(s0,rec,dt){dt=dt||DT;if(s0.miss)return {res:"面の裏に当たる",pts:[]};let s={p:[...s0.p],v:[...s0.v],w:[...s0.w]},pts=rec?[[...s.p,...s.w]]:null,t=0,out=null;
+  const tail=()=>{let bounced=false,t2=0;while(t2<2.5){s=step(s,dt);t2+=dt;pts.push([...s.p,...s.w]);
+      if(s.p[2]<=0&&!bounced&&s.p[0]>=0&&s.p[0]<=TL&&Math.abs(s.p[1])<=HW){s=bounce(s);bounced=true;continue;}
+      if(s.p[2]<-0.76||s.p[0]>TL+3.5||s.p[0]<-3)break;}};
+  while(t<2.5){const pr=s;s=step(s,dt);t+=dt;if(rec)pts.push([...s.p,...s.w]);
+    if(pr.p[0]<NETX&&s.p[0]>=NETX){const f=(NETX-pr.p[0])/(s.p[0]-pr.p[0]),z=pr.p[2]+(s.p[2]-pr.p[2])*f,y=pr.p[1]+(s.p[1]-pr.p[1])*f;if(z<NETH&&Math.abs(y)<HW+0.15){out={res:"ネット",pts};break;}}
+    if(s.p[2]<=0){const x=s.p[0],y=s.p[1];if(x<NETX)out={res:x<0?"届かない":"自コート",pts};else if(x>TL)out={res:"オーバー",pts,land:[x,y]};else if(Math.abs(y)>HW)out={res:"サイドアウト",pts,land:[x,y]};else out={res:"入る",pts,land:[x,y]};break;}
+    if(s.p[2]<-0.8||s.p[0]>TL+2){out={res:"オーバー",pts};break;}}
+  if(!out)out={res:"オーバー",pts};
+  if(rec&&out.res!=="ネット"&&out.res!=="面の裏に当たる"){if(out.res==="入る"&&s.p[2]<=0)s=bounce(s);tail();}
+  return out;}
 const fmt=(n,d=0)=>(Math.round(n*10**d)/10**d).toFixed(d);
 function lr(y){return y>=0?"左"+fmt(y*100)+"cm":"右"+fmt(-y*100)+"cm";}
 function spinTxt(w,dirX){const top=dirX>0?w[1]:-w[1],side=w[2];const a=top/(2*Math.PI),b=side/(2*Math.PI);
@@ -318,7 +323,9 @@ function views(){const top=$("top"),side=$("side"),W=top.parentElement.clientWid
   const Ht=Math.round(1.72*sc),Hs=Math.round(0.78*sc);return {W,Ht,Hs,sc,X:x=>(x-xmin)*sc,Yt:y=>Ht/2-y*sc,Ys:z=>Hs-0.14*sc-z*sc};}
 function prep(cv,W,H){const dpr=window.devicePixelRatio||1;if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.height=H+"px";}const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);return c;}
 
-let VIEWMODE="eye";
+let VIEWMODE="eye";let MARK=[0,0,1],MARK2=[0,1,0];
+function rotV(v,ax,a){const c=Math.cos(a),sn=Math.sin(a),d=dot(ax,v);return add(add(mul(v,c),mul(cross(ax,v),sn)),mul(ax,d*(1-c)));}
+function curW(){if(!S)return [0,0,0];const sp=S.sv.pts,rp=S.ret?S.ret.pts:[],n1=sp.length,idx=Math.floor(anim.t/DT);const q=idx<n1?sp[idx]:(idx-n1<rp.length?rp[idx-n1]:null);return q&&q.length>5?[q[3],q[4],q[5]]:[0,0,0];}
 function eyeCam(){const h=S&&S.sv&&S.sv.hit?S.sv.hit.p:[0.3,-0.2,0.15];const rb=document.querySelector("input[name=rub]:checked").value,fh=(rb==="g9"||rb==="inv");
   const eye=[Math.min(h[0]-0.45,-0.25),h[1]+(fh?0.32:0.06),0.62],tgt=[h[0]+1.4,h[1]*0.4,-0.02];
   const f=sub(tgt,eye),fl=nrm(f),fw=mul(f,1/fl);let r=cross(fw,[0,0,1]);r=mul(r,1/nrm(r));const u=cross(r,fw);return {eye,fw,r,u};}
@@ -345,8 +352,16 @@ function drawEye(idx,n1,sp,rp,col){const cv=$("eye"),W=cv.parentElement.clientWi
     const hd0=add(cc,mul(t2,-0.08)),hd1=add(cc,mul(t2,-0.18)),q0=P(hd0),q1=P(hd1);if(q0&&q1){c.strokeStyle="#9a7b4f";c.lineWidth=7;c.lineCap="round";c.beginPath();c.moveTo(q0[0],q0[1]);c.lineTo(q1[0],q1[1]);c.stroke();c.lineCap="butt";}
     const nq0=P(cc),nq1=P(add(cc,mul(n,0.09)));if(nq0&&nq1){c.strokeStyle=col("--out");c.lineWidth=2;c.beginPath();c.moveTo(nq0[0],nq0[1]);c.lineTo(nq1[0],nq1[1]);c.stroke();}}
   if(bp){const sh=P([bp[0],bp[1],0]);if(sh&&bp[2]>0){c.globalAlpha=0.25;c.fillStyle=col("--ink");c.beginPath();c.ellipse(sh[0],sh[1],Math.max(2,R/sh[2]*F),Math.max(1,R/sh[2]*F*0.35),0,0,Math.PI*2);c.fill();c.globalAlpha=1;}
-    const q=P(bp);if(q){c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(q[0],q[1],Math.max(3,R/q[2]*F),0,Math.PI*2);c.fill();c.stroke();}}
-  c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.fillText("緑の線＝打球面の向き・点線＝ラケットの動き・赤＝09C面／黒＝FL2面",6,H-6);}
+    const q=P(bp);if(q){const rr=Math.max(6,R/q[2]*F*1.8);c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(q[0],q[1],rr,0,Math.PI*2);c.fill();c.stroke();
+      const proj=v=>[dot(v,cam.r),-dot(v,cam.u),dot(v,cam.fw)];
+      const ring=[];for(let k=0;k<=36;k++){const a=k/36*2*Math.PI;const v=add(mul(MARK,Math.cos(a)),mul(MARK2,Math.sin(a)));const pv=proj(v);ring.push(pv);}
+      c.lineWidth=2;for(let k=0;k<36;k++){const a=ring[k],b=ring[k+1];c.strokeStyle=(a[2]+b[2])<0?col("--ink"):col("--muted");c.globalAlpha=(a[2]+b[2])<0?1:0.35;c.beginPath();c.moveTo(q[0]+a[0]*rr,q[1]+a[1]*rr);c.lineTo(q[0]+b[0]*rr,q[1]+b[1]*rr);c.stroke();}c.globalAlpha=1;
+      const w=curW();c.fillStyle=col("--ink");c.font="11px "+col("--f-num");const back=idx<n1;c.fillText((back?"来る球：":"返球：")+spinTxt(w,back?-1:1),8,16);
+      const zr=26,zx=W-zr-12,zy=zr+12;c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.5;c.beginPath();c.arc(zx,zy,zr,0,Math.PI*2);c.fill();c.stroke();
+      c.lineWidth=3;for(let k=0;k<36;k++){const a=ring[k],b=ring[k+1];const front=(a[2]+b[2])<0;c.strokeStyle=front?col("--ink"):col("--muted");c.globalAlpha=front?1:0.3;c.beginPath();c.moveTo(zx+a[0]*zr,zy+a[1]*zr);c.lineTo(zx+b[0]*zr,zy+b[1]*zr);c.stroke();}c.globalAlpha=1;
+      const wn=nrm(w);if(wn>2*Math.PI*3){const ax=proj(mul(w,1/wn));c.strokeStyle=col("--in");c.lineWidth=2;c.beginPath();c.moveTo(zx-ax[0]*zr*1.25,zy-ax[1]*zr*1.25);c.lineTo(zx+ax[0]*zr*1.25,zy+ax[1]*zr*1.25);c.stroke();}
+      c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.textAlign="center";c.fillText("回転（拡大）",zx,zy+zr+12);c.textAlign="left";}}
+  c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.font="10px "+col("--f-body");c.fillStyle=col("--muted");c.fillText("右上の球：黒い輪＝回転の様子（遅くしています）・オレンジ＝回転軸　緑＝打球面の向き・点線＝ラケットの動き",6,H-6);}
 function drawViews(){const cs0=getComputedStyle(document.documentElement),col0=n=>cs0.getPropertyValue(n).trim();if(VIEWMODE==="eye"){if(!S)return;const sp=S.sv.pts,rp=S.ret?S.ret.pts:[];drawEye(Math.floor(anim.t/DT),sp.length,sp,rp,col0);return;}
   const g=views(),cs=cs0,col=col0;
   const ct=prep($("top"),g.W,g.Ht),cs2=prep($("side"),g.W,g.Hs);
@@ -369,7 +384,7 @@ function drawViews(){const cs0=getComputedStyle(document.documentElement),col0=n
   let p=null;if(idx<n1)p=sp[idx];else if(rp.length&&idx-n1<rp.length)p=rp[idx-n1];else p=rp.length?rp[rp.length-1]:sp[n1-1];
   if(p){for(const [c,yy] of [[ct,g.Yt(p[1])],[cs2,g.Ys(p[2])]]){c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(g.X(p[0]),yy,5,0,Math.PI*2);c.fill();c.stroke();}}}
 function total(){return S?((S.sv.pts.length+(S.ret?S.ret.pts.length:0))*DT):0;}
-function tick(ts){const dt=anim.last?Math.min(0.05,(ts-anim.last)/1000):0;anim.last=ts;if(anim.playing&&S){if(anim.t>=total()){anim.hold+=dt;if(anim.hold>0.8){anim.t=0;anim.hold=0;}}else anim.t+=dt*anim.speed;}drawViews();requestAnimationFrame(tick);}
+function tick(ts){const dt=anim.last?Math.min(0.05,(ts-anim.last)/1000):0;anim.last=ts;if(anim.playing&&S){if(anim.t>=total()){anim.hold+=dt;if(anim.hold>0.8){anim.t=0;anim.hold=0;}}else anim.t+=dt*anim.speed;}if(anim.playing&&S){const w=curW(),wn=nrm(w);if(wn>1){const ax=mul(w,1/wn),vis=Math.min(wn/(2*Math.PI)/20,6)*2*Math.PI*dt;MARK=rotV(MARK,ax,vis);MARK2=rotV(MARK2,ax,vis);}}drawViews();requestAnimationFrame(tick);}
 function outputs(){const L=(id,t)=>$(id).textContent=t;const v=id=>+$(id).value;
   L("tho",v("th")+"°");L("pso",v("ps")===0?"まっすぐ":(v("ps")>0?"右へ"+v("ps")+"°":"左へ"+(-v("ps"))+"°"));L("swo",v("sw").toFixed(2)+" m/s");L("beo",v("be")===0?"水平":(v("be")>0?"上へ"+v("be")+"°":"下へ"+(-v("be"))+"°"));L("alo",v("al")===0?"まっすぐ":(v("al")>0?"右へ"+v("al")+"°":"左へ"+(-v("al"))+"°"));
 
