@@ -130,7 +130,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
   <div class="row"><label for="sw">スイングの速さ</label><output id="swo"></output><input type="range" id="sw" min="0" max="12" step="0.25" value="2.5"></div>
   <div class="row"><label for="be">スイングの上下の向き（＋上へ／−下へ）</label><output id="beo"></output><input type="range" id="be" min="-60" max="60" step="1" value="5"></div>
   <div class="row"><label for="al">スイングの左右の向き（＋右へ）</label><output id="alo"></output><input type="range" id="al" min="-60" max="60" step="1" value="0"></div>
-  <div class="row"><label for="tc">打つタイミング（弾んだ後の頂点から、−早い／＋遅い）</label><output id="tco"></output><input type="range" id="tc" min="-80" max="100" step="5" value="0"></div>
+  <div class="row"><label for="tc">打つタイミング（自分のコートで弾んでから見逃してミスになるまで）</label><output id="tco"></output><input type="range" id="tc" min="0" max="300" step="5" value="100"></div>
   <dl class="kv">
     <dt>打点の高さ（台の面＝0）</dt><dd id="o-h"></dd>
     <dt>打点の位置</dt><dd id="o-pos"></dd>
@@ -226,18 +226,23 @@ function serveState(){const v0=+$("sv0").value,el=+$("sel").value*deg,az=+$("saz
   const v=[-v0*Math.cos(el)*Math.cos(az),v0*Math.cos(el)*Math.sin(az),v0*Math.sin(el)];
   const wy=-(+$("sbk").value)*2*Math.PI,wz=(+$("ssd").value)*2*Math.PI,wx=(+$("sgx").value)*2*Math.PI;
   return {p:[TL+0.15,y,0.22],v,w:[wx,wy,wz]};}
-function simServe(tcMs){let s=serveState(),pts=[[...s.p]],t=0,b=0,b1=null,b2=null,peak=null,post=[];
-  while(t<3){const pr=s;s=step(s,DT);t+=DT;pts.push([...s.p]);
-    if(pr.p[0]>NETX&&s.p[0]<=NETX&&s.p[2]<NETH)return {fail:"サーブがネットにかかります",pts};
-    if(s.p[2]<=0){if(Math.abs(s.p[1])>HW)return {fail:"サーブが台の横に外れます",pts};
+function simServe(tcMs){let s=serveState(),pts=[[...s.p]],t=0,b=0,b1=null,b2=null,tb=0,post=[],peakT=null,endT=null,endWhy="";
+  while(t<3.5){const pr=s;s=step(s,DT);t+=DT;pts.push([...s.p]);
+    if(b<2&&pr.p[0]>NETX&&s.p[0]<=NETX&&s.p[2]<NETH)return {fail:"サーブがネットにかかります",pts};
+    if(b<2&&s.p[2]<=0){if(Math.abs(s.p[1])>HW)return {fail:"サーブが台の横に外れます",pts};
       if(b===0){if(s.p[0]<NETX)return {fail:"サーブが相手コートで弾まずに直接こちらへ来ます",pts};b1=[...s.p];b=1;s=bounce(s);continue;}
-      if(b===1){if(s.p[0]>NETX)return {fail:"サーブがネットを越えません",pts};if(s.p[0]<0)return {fail:"サーブが台から出ます",pts};b2=[...s.p];b=2;s=bounce(s);post=[];continue;}
-      break;}
-    if(s.p[0]<-1.5)break;
-    if(b===2){post.push({t,s});if(s.v[2]<0&&!peak)peak={t,s};if(peak&&t>=peak.t+tcMs/1000)break;}}
+      if(s.p[0]>NETX)return {fail:"サーブがネットを越えません",pts};if(s.p[0]<0)return {fail:"サーブが台から出ます",pts};
+      b2=[...s.p];b=2;s=bounce(s);tb=t;post=[];continue;}
+    if(b===2){post.push({t,s,i:pts.length-1});if(peakT===null&&s.v[2]<0)peakT=t;
+      const onTable=s.p[0]>=0&&s.p[0]<=TL&&Math.abs(s.p[1])<=HW;
+      if(s.p[2]<=0&&t-tb>0.01&&onTable){endT=t;endWhy="自分のコートで2回目に弾む";break;}
+      if(s.p[2]<=-0.76){endT=t;endWhy="床に落ちる";break;}
+      if(s.p[0]<-2.5){endT=t;endWhy="台から大きく離れる";break;}}}
   if(b<2)return {fail:"サーブがこちらのコートで弾みません",pts};
-  if(!peak)peak=post[post.length-1];const tgt=peak.t+tcMs/1000;let hit=post[0];for(const q of post){if(q.t<=tgt)hit=q;}
-  const cut=pts.length-Math.max(0,post.length-post.indexOf(hit)-1);return {pts:pts.slice(0,cut),hit:hit.s,b1,b2};}
+  if(endT===null)endT=t;if(peakT===null)peakT=endT;
+  const endMs=(endT-tb)*1000,peakMs=(peakT-tb)*1000,useMs=Math.max(0,Math.min(tcMs,endMs-5));
+  let hit=post[0];for(const q of post){if(q.t-tb<=useMs/1000)hit=q;}
+  return {pts:pts.slice(0,hit.i+1),hit:hit.s,b1,b2,peakMs,endMs,endWhy,useMs};}
 function racket(){const th=+$("th").value*deg,ps=+$("ps").value*deg,sw=+$("sw").value,be=+$("be").value*deg,al=+$("al").value*deg;
   return {n:[Math.cos(th)*Math.cos(ps),-Math.cos(th)*Math.sin(ps),Math.sin(th)],V:[sw*Math.cos(be)*Math.cos(al),-sw*Math.cos(be)*Math.sin(al),sw*Math.sin(be)],sw};}
 function hitBall(s,n,V,pr){const rv=sub(s.v,V),vn=dot(rv,n);if(vn>-0.3)return {miss:true};
@@ -257,8 +262,10 @@ function lr(y){return y>=0?"左"+fmt(y*100)+"cm":"右"+fmt(-y*100)+"cm";}
 function spinTxt(w,dirX){const top=dirX>0?w[1]:-w[1],side=w[2];const a=top/(2*Math.PI),b=side/(2*Math.PI);
   return (Math.abs(a)<3?"縦回転ほぼなし":(a>0?"上":"下")+fmt(Math.abs(a)))+"・"+(Math.abs(b)<3?"横なし":(b>0?"右横":"左横")+fmt(Math.abs(b)));}
 
-let SNAP=true,S=null,MAP=null,anim={t:0,playing:!matchMedia("(prefers-reduced-motion: reduce)").matches,last:0,hold:0,speed:0.25};
-function compute(){const sv=simServe(+$("tc").value);const w=$("warn");
+let SNAP=true,TCSNAP=true,S=null,MAP=null,anim={t:0,playing:!matchMedia("(prefers-reduced-motion: reduce)").matches,last:0,hold:0,speed:0.25};
+function compute(){let sv=simServe(+$("tc").value);const w=$("warn");
+  if(!sv.fail){const mx=Math.max(5,Math.floor((sv.endMs-5)/5)*5);$("tc").max=mx;if(TCSNAP){TCSNAP=false;$("tc").value=Math.min(mx,Math.round(sv.peakMs/5)*5);sv=simServe(+$("tc").value);}
+    const tcv=+$("tc").value,dp=Math.round(tcv-sv.peakMs);$("tco").textContent=tcv+"ms（"+(Math.abs(dp)<5?"頂点":(dp<0?"頂点の"+(-dp)+"ms前":"頂点の"+dp+"ms後"))+"・あと"+Math.max(0,Math.round(sv.endMs-tcv))+"msで"+sv.endWhy+"）";}
   if(sv.fail){w.hidden=false;w.textContent=sv.fail;S={sv,ret:null};MAP=null;["v-res","v-land","v-spin","v-margin","o-h","o-pos","o-v","o-spin","o-land","s-b1","s-b2","s-spin","s-curve"].forEach(i=>$(i).textContent="—");drawMap();return;}
   w.hidden=true;const rk=racket(),pr=P(),o=hitBall(sv.hit,rk.n,rk.V,pr),ret=flyBack(o,true);
   S={sv,o,ret,rk};
@@ -326,7 +333,7 @@ function total(){return S?((S.sv.pts.length+(S.ret?S.ret.pts.length:0))*DT):0;}
 function tick(ts){const dt=anim.last?Math.min(0.05,(ts-anim.last)/1000):0;anim.last=ts;if(anim.playing&&S){if(anim.t>=total()){anim.hold+=dt;if(anim.hold>0.8){anim.t=0;anim.hold=0;}}else anim.t+=dt*anim.speed;}drawViews();requestAnimationFrame(tick);}
 function outputs(){const L=(id,t)=>$(id).textContent=t;const v=id=>+$(id).value;
   L("tho",v("th")+"°");L("pso",v("ps")===0?"まっすぐ":(v("ps")>0?"右へ"+v("ps")+"°":"左へ"+(-v("ps"))+"°"));L("swo",v("sw").toFixed(2)+" m/s");L("beo",v("be")===0?"水平":(v("be")>0?"上へ"+v("be")+"°":"下へ"+(-v("be"))+"°"));L("alo",v("al")===0?"まっすぐ":(v("al")>0?"右へ"+v("al")+"°":"左へ"+(-v("al"))+"°"));
-  L("tco",v("tc")===0?"頂点":(v("tc")>0?"頂点の"+v("tc")+"ms後":"頂点の"+(-v("tc"))+"ms前"));
+
   L("sbko",v("sbk")===0?"なし":(v("sbk")>0?"上回転 "+v("sbk"):"下回転 "+(-v("sbk"))));L("sgxo",v("sgx")===0?"なし":(v("sgx")>0?"右へ跳ねる "+v("sgx"):"左へ跳ねる "+(-v("sgx"))));L("ssdo",v("ssd")===0?"なし":(v("ssd")>0?"右横 "+v("ssd"):"左横 "+(-v("ssd"))));
   L("sv0o",v("sv0").toFixed(2)+" m/s");L("selo",v("sel")+"°");L("sazo",v("saz")===0?"まっすぐ":(v("saz")>0?"右へ"+v("saz")+"°":"左へ"+(-v("saz"))+"°"));L("syo",v("sy")===0?"中央":(v("sy")>0?"右"+fmt(v("sy")*100)+"cm":"左"+fmt(-v("sy")*100)+"cm"));}
 let pend=0;function schedule(){outputs();cancelAnimationFrame(pend);pend=requestAnimationFrame(()=>{anim.t=0;anim.hold=0;compute();});}
@@ -335,7 +342,7 @@ document.querySelectorAll("input[type=range]").forEach(r=>{r.addEventListener("i
   r.addEventListener("touchmove",e=>{const t=e.touches[0];if(Math.abs(t.clientY-sy)>8&&Math.abs(t.clientY-sy)>Math.abs(t.clientX-sx)*1.2)rv();},{passive:true});
   r.addEventListener("touchend",e=>{const t=e.changedTouches[0];if(Math.abs(t.clientY-sy)>8&&Math.abs(t.clientY-sy)>Math.abs(t.clientX-sx)*1.2)rv();v0=null;},{passive:true});});
 document.querySelectorAll("input[name=rub]").forEach(r=>r.addEventListener("change",()=>{SNAP=true;schedule();}));
-document.querySelectorAll("input[name=sv]").forEach(r=>r.addEventListener("change",()=>{const s=SERVES[r.value];for(const k in s)$(k).value=s[k];$("sgx").value=s.sgx||0;if($("aimfix").checked)$("saz").value=0;SNAP=true;schedule();}));
+document.querySelectorAll("input[name=sv]").forEach(r=>r.addEventListener("change",()=>{const s=SERVES[r.value];for(const k in s)$(k).value=s[k];$("sgx").value=s.sgx||0;if($("aimfix").checked)$("saz").value=0;SNAP=true;TCSNAP=true;schedule();}));
 document.querySelectorAll("input[name=pipmode],input[name=pmu],input[name=pE]").forEach(r=>r.addEventListener("change",()=>{SNAP=true;schedule();}));
 document.querySelectorAll("input[name=lift]").forEach(r=>r.addEventListener("change",()=>{LIFT=r.value;SNAP=true;schedule();}));
 document.querySelectorAll("input[name=stroke]").forEach(r=>r.addEventListener("change",()=>{const s=STROKES[r.value];for(const k in s)$(k).value=s[k];SNAP=true;schedule();}));
