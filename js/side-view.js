@@ -51,13 +51,17 @@ function drawCourt(){if(!S)return;const g=geom(),{cv,W,H,X,Y,xmin,xmax}=g,dpr=wi
   const ia=S.inc.pts[0]?S.inc.pts[0][2]:0,oa=S.o?S.o.om:0;let ph="";if(idx<nIn)ph="相手の打球（"+(ia>=0?"上回転":"下回転")+"）";else if(S.out&&idx-nIn<nOut)ph="返球（相手から見て"+(oa>=0?"下回転":"上回転")+"）";else ph="着地";
   $("phase").textContent=ph;drawLoupe(p,col,idx,nIn);}
 let LP=null;
-function drawLoupe(p,col,idx,nIn){const lc=$("loupe");if(!lc)return;if(!LP){lc.style.display="none";return;}lc.style.display="";
-  const s=112,dpr=window.devicePixelRatio||1;if(lc.width!==Math.round(s*dpr)){lc.width=Math.round(s*dpr);lc.height=Math.round(s*dpr);}
-  const c=lc.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,s,s);
-  const K=s/0.26,{bx,by,th,sa,FR,BK,WD}=LP,LX=x=>s/2+(x-bx)*K,LY=y=>s/2-(y-by)*K,BRm=0.02;
+// 手元ルーペ：図の下に置く横長の帯。ラケットを左寄りに置き、台側（右）からボールが来るのを見せる
+let LOUPE_ON=true;try{LOUPE_ON=localStorage.getItem("loupeOn")!=="0";}catch(e){}
+{const b=document.getElementById("loupeBtn");if(b){b.setAttribute("aria-pressed",LOUPE_ON?"true":"false");
+  b.addEventListener("click",()=>{LOUPE_ON=!LOUPE_ON;b.setAttribute("aria-pressed",LOUPE_ON?"true":"false");try{localStorage.setItem("loupeOn",LOUPE_ON?"1":"0");}catch(e){}if(S)drawCourt();});}}
+function drawLoupe(p,col,idx,nIn){const lc=document.getElementById("loupe");if(!lc)return;if(!LP||!LOUPE_ON){lc.style.display="none";return;}lc.style.display="block";
+  const w=lc.clientWidth||340,h=lc.clientHeight||110,dpr=window.devicePixelRatio||1;if(lc.width!==Math.round(w*dpr)||lc.height!==Math.round(h*dpr)){lc.width=Math.round(w*dpr);lc.height=Math.round(h*dpr);}
+  const c=lc.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
+  const K=h/0.26,{bx,by,th,sa,FR,BK,WD}=LP,ox0=w*0.35,LX=x=>ox0+(x-bx)*K,LY=y=>h/2-(y-by)*K,BRm=0.02;
   const nx=-Math.cos(th),ny=Math.sin(th),tx=-Math.sin(th),ty=Math.cos(th),HL=0.079;
-  const inWin=q=>Math.abs(q[0]-bx)<0.25&&Math.abs(q[1]-by)<0.25;
-  const pth=(pts,color,w,alpha,upto)=>{c.globalAlpha=alpha;c.strokeStyle=color;c.lineWidth=w;c.beginPath();let st=false;const end=Math.min(pts.length,upto);
+  const inWin=q=>LX(q[0])>-20&&LX(q[0])<w+20&&Math.abs(q[1]-by)<0.2;
+  const pth=(pts,color,w_,alpha,upto)=>{c.globalAlpha=alpha;c.strokeStyle=color;c.lineWidth=w_;c.beginPath();let st=false;const end=Math.min(pts.length,upto);
     for(let i=0;i<end;i++){const q=pts[i];if(!inWin(q)){st=false;continue;}if(!st){c.moveTo(LX(q[0]),LY(q[1]));st=true;}else c.lineTo(LX(q[0]),LY(q[1]));}c.stroke();c.globalAlpha=1;};
   const outCol=S.ok?col("--out"):col("--bad");
   pth(S.inc.pts,col("--in"),2,0.25,1e9);if(S.out)pth(S.out.pts,outCol,2,0.25,1e9);
@@ -65,12 +69,12 @@ function drawLoupe(p,col,idx,nIn){const lc=$("loupe");if(!lc)return;if(!LP){lc.s
   {const ax=Math.cos(sa),ay=-Math.sin(sa),mx=bx-tx*0.105+nx*0.03,my=by-ty*0.105+ny*0.03,x0=mx-ax*0.035,y0=my-ay*0.035,x1=mx+ax*0.035,y1=my+ay*0.035,ang=Math.atan2(LY(y1)-LY(y0),LX(x1)-LX(x0));
    c.strokeStyle=col("--swing");c.fillStyle=col("--swing");c.lineWidth=2;c.setLineDash([4,3]);c.beginPath();c.moveTo(LX(x0),LY(y0));c.lineTo(LX(x1),LY(y1));c.stroke();c.setLineDash([]);
    const ex=LX(x1),ey=LY(y1);c.beginPath();c.moveTo(ex,ey);c.lineTo(ex-8*Math.cos(ang-0.45),ey-8*Math.sin(ang-0.45));c.lineTo(ex-8*Math.cos(ang+0.45),ey-8*Math.sin(ang+0.45));c.closePath();c.fill();}
-  let d=BRm;for(const [w,colr] of [[0.0035,FR],[0.006,WD],[0.0035,BK]]){const a=d,b=d+w;c.fillStyle=colr;c.beginPath();
-    c.moveTo(LX(bx+nx*a+tx*HL),LY(by+ny*a+ty*HL));c.lineTo(LX(bx+nx*b+tx*HL),LY(by+ny*b+ty*HL));c.lineTo(LX(bx+nx*b-tx*HL),LY(by+ny*b-ty*HL));c.lineTo(LX(bx+nx*a-tx*HL),LY(by+ny*a-ty*HL));c.closePath();c.fill();d=b;}
+  let d=BRm;for(const [w_,colr] of [[0.0035,FR],[0.006,WD],[0.0035,BK]]){const a=d,b=d+w_;c.fillStyle=colr;c.beginPath();
+    c.moveTo(LX(bx+nx*a+tx*HL),LY(by+ny*a+ty*HL));c.lineTo(LX(bx+nx*b+tx*HL),LY(by+ny*b+ty*HL));c.lineTo(LX(bx+nx*b-tx*HL),LY(by+ny*b-ty*HL));c.lineTo(LX(bx+nx*a-tx*HL),LY(by+ny*a-ty*HL));c.closePath();c.fill();c.strokeStyle=col("--muted");c.lineWidth=0.6;c.stroke();d=b;}
   if(p&&inWin(p)){const px=LX(p[0]),py=LY(p[1]),r=BRm*K;c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(px,py,r,0,Math.PI*2);c.fill();c.stroke();
     c.strokeStyle=col("--ballmark");c.lineWidth=2;c.beginPath();c.moveTo(px-Math.cos(anim.ang)*r,py-Math.sin(anim.ang)*r);c.lineTo(px+Math.cos(anim.ang)*r,py+Math.sin(anim.ang)*r);c.stroke();
     c.beginPath();c.arc(px+Math.cos(anim.ang)*r*0.55,py+Math.sin(anim.ang)*r*0.55,1.8,0,Math.PI*2);c.fillStyle=col("--ballmark");c.fill();}
-  c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.fillText("手元（実物比）",5,12);}
+  c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.fillText("手元（実物比）",6,13);}
 const HUMAN=1.65;
 function personPose(hx,hy,gx,gy){const H=HUMAN,f=H/1.65,L1=0.30*f,L2=0.36*f,grip=0.12;
   const cx=-S.dist;const gdx=gx==null?0:gx-hx+grip;const footX=Math.min(cx+gdx-0.45*f,-0.2);

@@ -87,7 +87,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 </header>
 
 <section class="stage" id="stage" aria-label="軌道のアニメーションと結果">
-  <div style="position:relative"><div id="courtWrap" style="overflow-x:auto;overscroll-behavior-x:contain"><canvas id="court" role="img" aria-label="卓球台を横から見た図。相手のドライブと自分の打球の軌道を再生する"></canvas></div><canvas id="loupe" aria-hidden="true" style="position:absolute;right:6px;top:6px;width:112px;height:112px;border:1px solid var(--line);border-radius:8px;background:var(--surface);pointer-events:none"></canvas></div>
+  <div id="courtWrap" style="overflow-x:auto;overscroll-behavior-x:contain"><canvas id="court" role="img" aria-label="卓球台を横から見た図。相手のドライブと自分の打球の軌道を再生する"></canvas></div><canvas id="loupe" aria-label="ラケットの周りを実物と同じ比率で拡大した図" role="img" style="display:block;width:100%;height:110px;margin-top:6px;border:1px solid var(--line);border-radius:10px;background:var(--surface)"></canvas>
   <div class="mini">
     <button class="btn sm" id="play" type="button">一時停止</button>
     <div class="sum">
@@ -106,6 +106,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <div class="speed" role="group" aria-label="表示の大きさ">
         <button type="button" data-v="fit" aria-pressed="false">全体</button>
         <button type="button" data-v="zoom" aria-pressed="true">拡大</button>
+        <button type="button" id="loupeBtn" aria-pressed="true">手元</button>
       </div>
     <div class="speed" role="group" aria-label="再生速度">
         <button type="button" data-s="0.1" aria-pressed="false">1/10</button>
