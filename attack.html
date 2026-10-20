@@ -371,29 +371,29 @@ function drawCourt(){if(!S)return;const g=geom(),{cv,W,H,X,Y,xmin,xmax}=g,dpr=wi
   if(S.o){const th=S.face*Math.PI/180,tx=-Math.sin(th),ty=Math.cos(th),L=0.08,cx=-S.dist,cy=S.inc.s.y;
     let off=0;if(idx<nIn){const rem=(nIn-idx)*DT;off=Math.min(0.35,rem*S.sw);}else{off=-Math.min(0.3,(idx-nIn)*DT*S.sw);}
     const bx=cx-Math.cos(S.sa*Math.PI/180)*off,by=cy+Math.sin(S.sa*Math.PI/180)*off;
-    const ox=-Math.cos(th)*9,oy=Math.sin(th)*9;
-    drawPerson(c,x=>X(x)+ox,y=>Y(y)+oy,bx,by,col);
+    const BR=Math.max(2,0.02*Math.abs(X(1)-X(0))),nx=-Math.cos(th),ny=Math.sin(th),ox=nx*(BR+2.25),oy=ny*(BR+2.25);
+    drawPerson(c,x=>X(x)+ox,y=>Y(y)+oy,bx,by,col,bx-tx*(L+0.06),by-ty*(L+0.06));
     {const ca=Math.cos(S.sa*Math.PI/180),sa_=Math.sin(S.sa*Math.PI/180),P=o=>[cx-ca*o,cy+sa_*o],A=P(0.35),Bp=P(-0.3);
      c.save();c.strokeStyle=col("--swing");c.lineWidth=2;c.setLineDash([5,4]);c.beginPath();c.moveTo(X(A[0])+ox,Y(A[1])+oy);c.lineTo(X(Bp[0])+ox,Y(Bp[1])+oy);c.stroke();c.setLineDash([]);
      const ang=Math.atan2((Y(Bp[1])-Y(A[1])),(X(Bp[0])-X(A[0]))),ex=X(Bp[0])+ox,ey=Y(Bp[1])+oy;c.fillStyle=col("--swing");c.beginPath();c.moveTo(ex,ey);c.lineTo(ex-9*Math.cos(ang-0.45),ey-9*Math.sin(ang-0.45));c.lineTo(ex-9*Math.cos(ang+0.45),ey-9*Math.sin(ang+0.45));c.closePath();c.fill();
      c.globalAlpha=0.22;c.strokeStyle=col("--ink");c.lineWidth=3;c.lineCap="round";for(const o of [0.35,0.2,0,-0.15,-0.3]){const q=P(o);c.beginPath();c.moveTo(X(q[0]-tx*L)+ox,Y(q[1]-ty*L)+oy);c.lineTo(X(q[0]+tx*L)+ox,Y(q[1]+ty*L)+oy);c.stroke();}
      c.restore();}
     {const rb=document.querySelector("input[name=rub]:checked").value,bh=(rb==="11"||rb==="ox"),FR=bh?"#262626":"#c0392b",BK=bh?"#c0392b":"#262626",WD="#c9a46a",GL=0.10;
-     const seg=(k,colr,w,a0,a1)=>{c.strokeStyle=colr;c.lineWidth=w;c.beginPath();c.moveTo(X(bx+tx*a0)+ox*k,Y(by+ty*a0)+oy*k);c.lineTo(X(bx+tx*a1)+ox*k,Y(by+ty*a1)+oy*k);c.stroke();};
-     {const Hp=personPose(bx,by);c.lineCap="round";c.strokeStyle=WD;c.lineWidth=5;c.beginPath();c.moveTo(X(bx)+ox*1.1,Y(by)+oy*1.1);c.lineTo(X(Hp.handX)+ox,Y(Hp.handY)+oy);c.stroke();}c.lineCap="butt";seg(1.17,BK,2.4,-L,L);seg(1,WD,2.4,-L,L);seg(0.83,FR,2.4,-L,L);
-     if(bh){c.strokeStyle=col("--muted");c.lineWidth=0.8;seg(0.74,col("--muted"),0.8,-L,L);}}}
+     const seg=(k,colr,w,a0,a1)=>{c.strokeStyle=colr;c.lineWidth=w;c.beginPath();c.moveTo(X(bx+tx*a0)+nx*(BR+k),Y(by+ty*a0)+ny*(BR+k));c.lineTo(X(bx+tx*a1)+nx*(BR+k),Y(by+ty*a1)+ny*(BR+k));c.stroke();};
+     c.lineCap="round";seg(2.25,WD,3,-L-GL,-L*0.9);c.lineCap="butt";seg(3.75,BK,1.5,-L,L);seg(2.25,WD,1.5,-L,L);seg(0.75,FR,1.5,-L,L);
+     if(bh){c.strokeStyle=col("--muted");c.lineWidth=0.8;seg(0,col("--muted"),0.8,-L,L);}}}
   let p=null;if(idx<nIn)p=S.inc.pts[idx];else if(S.out&&idx-nIn<nOut)p=S.out.pts[idx-nIn];else if(S.out)p=S.out.pts[nOut-1];else p=S.inc.pts[nIn-1];
-  if(p){const px=X(p[0]),py=Y(p[1]),r=7;c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(px,py,r,0,Math.PI*2);c.fill();c.stroke();
-    c.strokeStyle=col("--ballmark");c.lineWidth=2;c.beginPath();c.moveTo(px-Math.cos(anim.ang)*r,py-Math.sin(anim.ang)*r);c.lineTo(px+Math.cos(anim.ang)*r,py+Math.sin(anim.ang)*r);c.stroke();
-    c.beginPath();c.arc(px+Math.cos(anim.ang)*r*0.55,py+Math.sin(anim.ang)*r*0.55,1.8,0,Math.PI*2);c.fillStyle=col("--ballmark");c.fill();}
+  if(p){const px=X(p[0]),py=Y(p[1]),r=Math.max(2,0.02*Math.abs(X(1)-X(0)));c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(px,py,r,0,Math.PI*2);c.fill();c.stroke();
+    c.strokeStyle=col("--ballmark");c.lineWidth=1.2;c.beginPath();c.moveTo(px-Math.cos(anim.ang)*r,py-Math.sin(anim.ang)*r);c.lineTo(px+Math.cos(anim.ang)*r,py+Math.sin(anim.ang)*r);c.stroke();
+    c.beginPath();c.arc(px+Math.cos(anim.ang)*r*0.55,py+Math.sin(anim.ang)*r*0.55,Math.max(0.8,r*0.25),0,Math.PI*2);c.fillStyle=col("--ballmark");c.fill();}
   if(VIEW==="zoom"&&anim.playing&&p){const wrap=$("courtWrap");const target=X(p[0])-wrap.clientWidth*0.5;wrap.scrollLeft+=(target-wrap.scrollLeft)*0.15;}
   const ia=S.inc.pts[0]?S.inc.pts[0][2]:0,oa=S.o?S.o.om:0;let ph="";if(idx<nIn)ph="相手の打球（"+(ia>=0?"上回転":"下回転")+"）";else if(S.out&&idx-nIn<nOut)ph="返球（相手から見て"+(oa>=0?"下回転":"上回転")+"）";else ph="着地";
   $("phase").textContent=ph;}
 const HUMAN=1.65;
-function personPose(hx,hy){const H=HUMAN,f=H/1.65,L1=0.30*f,L2=0.36*f,grip=0.12;
-  const cx=-S.dist;const footX=Math.min(cx-0.45*f,-0.2);
+function personPose(hx,hy,gx,gy){const H=HUMAN,f=H/1.65,L1=0.30*f,L2=0.36*f,grip=0.12;
+  const cx=-S.dist;const gdx=gx==null?0:Math.sin(S.face*Math.PI/180)*0.14+grip;const footX=Math.min(cx+gdx-0.45*f,-0.2);
   const base=0.10*f;let drop=base,lean=0.04;
-  const tx=hx-grip,ty=hy;
+  const tx=gx??hx-grip,ty=gy??hy;
   for(let i=0;i<60;i++){const sx=footX+0.06+lean,sy=FLOOR+1.40*f-drop;if(Math.hypot(tx-sx,ty-sy)<=(L1+L2)*0.97)break;drop=Math.min(0.55*f,drop+0.0125*f);lean=Math.min(0.35*f,0.04+(drop-base)*0.7);}
   const shX=footX+0.06+lean,sY=FLOOR+1.40*f-drop,hipX=footX+0.02-(drop-base)*0.25,hY=FLOOR+0.86*f-drop*0.85;
   const kneeX=footX+0.18*f*(0.6+drop/(0.5*f)),kneeY=FLOOR+0.46*f-drop*0.3;
@@ -406,7 +406,7 @@ function personPose(hx,hy){const H=HUMAN,f=H/1.65,L1=0.30*f,L2=0.36*f,grip=0.12;
   let body="肩より上";for(const [y,n] of lv){if(hy<=y+0.04){body=n+"の高さ"+(hy<y-0.06?"より下":"");break;}}
   return {f,footX,shX,sY,hipX,hY,kneeX,kneeY,elX,elY,handX,handY,ext,elbowDeg,drop,lean,body};}
 function armLabel(ext){return ext>0.95?["伸びきり（届くのがやっと）","--bad"]:ext>0.85?["かなり伸びている","--in"]:ext<0.45?["窮屈（体に近すぎ）","--in"]:["肘に余裕あり","--out"];}
-function drawPerson(c,X,Y,hx,hy,col){const P=personPose(hx,hy),f=P.f,H=HUMAN;
+function drawPerson(c,X,Y,hx,hy,col,gx,gy){const P=personPose(hx,hy,gx,gy),f=P.f,H=HUMAN;
   c.save();c.globalAlpha=0.55;c.strokeStyle=col("--muted");c.lineCap="round";c.lineJoin="round";c.lineWidth=3;
   c.beginPath();c.moveTo(X(P.footX+0.12),Y(FLOOR));c.lineTo(X(P.kneeX),Y(P.kneeY));c.lineTo(X(P.hipX),Y(P.hY));c.lineTo(X(P.shX),Y(P.sY));c.stroke();
   c.beginPath();c.moveTo(X(P.footX-0.28*f),Y(FLOOR));c.lineTo(X(P.kneeX-0.24*f),Y(P.kneeY+0.02));c.lineTo(X(P.hipX),Y(P.hY));c.stroke();
