@@ -5,3 +5,8 @@ function kLook(vn,u,key){const K=KT.t[key||physKey()];const [i,fi]=_ip(KT.vn,vn)
 function invKey(){const v=document.querySelector("input[name=rub]:checked").value;return v==="g9"?"G9":v==="inv"?"INV":null;}
 function physKey(){const rb=document.querySelector("input[name=rub]:checked"),pre=(rb&&rb.value==="11")?"S11_":"";const m=document.querySelector("input[name=pmu]:checked"),e=document.querySelector("input[name=pE]:checked");return pre+"mu"+(m?m.value:"0.5")+"_E"+(e?e.value:"2.5");}
 function aero(S){const s=Math.min(Math.max(S,0),2);const CMm=(((0.2313*s-1.2055)*s+2.2813)*s-1.9501)*s+0.8254;return [(-0.0747*s+0.3591)*s+0.3682,(8/3)*CMm*s];}
+// FL2（粒）を選んでいるときだけ、粒にしか効かない設定（data-fl2）を表示する
+function syncFL2Only(){const r=document.querySelector("input[name=rub]:checked"),fl=!!r&&(r.value==="11"||r.value==="ox");
+  document.querySelectorAll("[data-fl2]").forEach(el=>{el.style.display=fl?"":"none";});}
+document.querySelectorAll("input[name=rub]").forEach(r=>r.addEventListener("change",syncFL2Only));
+document.addEventListener("DOMContentLoaded",syncFL2Only);syncFL2Only();

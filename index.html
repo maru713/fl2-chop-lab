@@ -233,11 +233,11 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <summary>計算の仮定と根拠</summary>
     <p class="note"><b>粒の物理モデル</b>：FL2の粒（高さ1.8mm・直径1.65mm・間隔2.15mm、ルール上限に近い細長さ）。薄（1.1mm）は粒の下に硬度38相当のスポンジ（ヤング率0.6MPaと仮定）を入れ、OXはラケットに直接貼った状態を1本ずつ、縮むばねと曲がるばねでつないだ柱として扱い、ボールが当たって離れるまでを0.0002ミリ秒刻みで計算した結果から、「面を押す速さ」と「面に沿ってこすれる速さ」ごとのつかむ強さの表を作っています。押す力が粒の座屈荷重を超えると粒が倒れ、倒れながら先端がボールを横に引きずる効果も入っています。ゴムの硬さと粒の先端の摩擦係数は実測がないので選べるようにしています。体感（触るだけ→ナックル、下を強くこする→下回転、強いドライブのカット→回転が残る）と合うのは摩擦係数0.5でした。反発（跳ね返りの強さ）は、このモデルではボールやラケット本体の損失が入らないため、下の反発の値をそのまま使います。</p>
     <p class="note"><b>裏ソフトの物理モデル</b>（グレイザー09C 厚・テンション系）：表面のシートを1mm角の点に分け、1点ずつスポンジの柱（縦・横のばね、つぶれると硬くなる）と隣の点（シートの張り）につないで、ボールが当たって離れるまでを0.0001ミリ秒刻みで計算し、「つかむ強さ」と「反発」の表を作っています。シートが横にたわんで戻る弾きもこの計算に含まれます。ボールやスポンジの損失と摩擦係数は、裏ソフトに14m/sで斜めに当てた実測（Applied Sciences 2019、下回転66回転/秒、0°・30°・60°）に合わせて決めました（反発の差±0.03、回転の比の差±0.07以内）。グレイザー09C 厚はスポンジ1.9mm（スプリングスポンジX、硬度42）、微粘着として摩擦を1.3倍、粘着力50kPaを加えています。テンション系は2.1mm・粘着なし。実測ラバーの銘柄が不明なこと、合わせたのが14m/sの1点だけなこと、スポンジの硬さ（1.8MPa）と粘着の強さは仮定であることに注意してください。</p>
-    <div class="seg" role="radiogroup" aria-label="粒の先端の摩擦係数" style="grid-template-columns:repeat(3,minmax(0,1fr))"><label><input type="radio" name="pmu" value="0.5" checked>摩擦 0.5</label><label><input type="radio" name="pmu" value="0.8">摩擦 0.8</label><label><input type="radio" name="pmu" value="1.0">摩擦 1.0</label></div>
-    <div class="seg" role="radiogroup" aria-label="ゴムの硬さ" style="grid-template-columns:repeat(3,minmax(0,1fr))"><label><input type="radio" name="pE" value="1.5">ゴム 柔らかめ</label><label><input type="radio" name="pE" value="2.5" checked>ゴム 普通</label><label><input type="radio" name="pE" value="4.0">ゴム 硬め</label></div>
-    <p class="note">下の2つはFL2の実測値がないため仮定です。ラバーを選び直すと初期値に戻ります。</p>
-    <div class="row"><label for="e">反発（面に垂直な方向の跳ね返り率）</label><output id="eo"></output><input type="range" id="e" min="0.3" max="0.9" step="0.01" value="0.45"></div>
-    <div class="row"><label for="et">ゴムが横にたわんで戻る強さ（0＝戻らない）</label><output id="eto"></output><input type="range" id="et" min="0" max="0.6" step="0.01" value="0"></div>
+    <div data-fl2 class="seg" role="radiogroup" aria-label="粒の先端の摩擦係数" style="grid-template-columns:repeat(3,minmax(0,1fr))"><label><input type="radio" name="pmu" value="0.5" checked>摩擦 0.5</label><label><input type="radio" name="pmu" value="0.8">摩擦 0.8</label><label><input type="radio" name="pmu" value="1.0">摩擦 1.0</label></div>
+    <div data-fl2 class="seg" role="radiogroup" aria-label="ゴムの硬さ" style="grid-template-columns:repeat(3,minmax(0,1fr))"><label><input type="radio" name="pE" value="1.5">ゴム 柔らかめ</label><label><input type="radio" name="pE" value="2.5" checked>ゴム 普通</label><label><input type="radio" name="pE" value="4.0">ゴム 硬め</label></div>
+    <p class="note" data-fl2>下の2つはFL2の実測値がないため仮定です。ラバーを選び直すと初期値に戻ります。</p>
+    <div data-fl2 class="row"><label for="e">反発（面に垂直な方向の跳ね返り率）</label><output id="eo"></output><input type="range" id="e" min="0.3" max="0.9" step="0.01" value="0.45"></div>
+    <div data-fl2 class="row"><label for="et">ゴムが横にたわんで戻る強さ（0＝戻らない）</label><output id="eto"></output><input type="range" id="et" min="0" max="0.6" step="0.01" value="0"></div>
     <p class="note">空気の力（抗力・回転で曲がる力）は、卓球ボールの流体計算（CFD）から作られた式（磯村ら 2016、回転の強さの割合0.1〜2.0、速さ0.5〜10m/sで計算）を使っています。抗力係数＝−0.0747S²＋0.3591S＋0.3682、曲がる力の係数＝(8/3)×S×(0.2313S⁴−1.2055S³＋2.2813S²−1.9501S＋0.8254)（Sは回転の強さの割合）。10m/sより速い球や、回転の強さの割合が2を超える球は、式の範囲外を延長して使っています。実測ではなく計算による値で、実験では回転の割合によって揚力が落ち込む（負のマグヌス効果）という報告もあります。</p>
     <ul class="find note">
       <li>裏ソフトは、表面のゴムが横にたわんでから戻ることで、ボールの回転を逆向きに弾き返します。これがないと、下回転をストップしても回転が止まるだけでナックルになります。裏ソフトは0.35、FL2は0と仮定しています（どちらも実測値ではありません）。</li>
@@ -255,8 +255,8 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 </div>
 
 <p style="text-align:center;font-size:13px;margin:0 0 32px"><a href="attack.html">攻撃編</a> ／ <a href="receive.html">レシーブ編</a> ／ <a href="grip.html">ラバーがつかむ仕組み</a></p>
-<script src="js/physics.js?v=2026102002"></script>
-<script src="js/side-view.js?v=2026102002"></script>
+<script src="js/physics.js?v=2026102003"></script>
+<script src="js/side-view.js?v=2026102003"></script>
 <script>
 const M=0.0027,R=0.02,AR=Math.PI*R*R,RHO=1.2,CD=0.5,G=9.8;
 const NETH=0.1525,FLOOR=-0.76,DT=5e-4,EX=1.5;
