@@ -132,7 +132,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <label><input type="radio" name="rub" id="r-inv" value="inv">テンション系<br>（非粘着）</label>
     <label><input type="radio" name="rub" id="r-ox" value="ox">FL2 OX<br>（比較）</label>
   </div>
-  <div class="seg" style="display:none" role="radiogroup" aria-label="粒の性質の計算方法"><label><input type="radio" name="pipmode" value="phys" checked>粒の物理モデル<br>（推奨）</label><label><input type="radio" name="pipmode" value="hyp">旧：仮説モード</label><label><input type="radio" name="pipmode" value="const">つかむ強さ一定</label></div><input type="checkbox" id="pip" checked hidden>
+  
   <div class="seg" role="group" aria-label="打ち方の例"><label><input type="radio" name="stroke" value="loop">ループ（上へこする）</label><label><input type="radio" name="stroke" value="drive">ドライブ（前上へ）</label><label><input type="radio" name="stroke" value="smash">スマッシュ（前へ叩く）</label></div>
   <div class="row"><label for="face">面の角度（垂直＝0°、＋開く／−かぶせる）</label><output id="faceo"></output><input type="range" id="face" min="-60" max="60" step="1" value="-15"></div>
   <div class="row"><label for="dist">打点（エンドラインの後ろ、マイナスは台の上）</label><output id="disto"></output><input type="range" id="dist" min="-0.6" max="3" step="0.05" value="0.5"></div>
@@ -217,7 +217,6 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
       <dt>返球の角度（上＋）</dt><dd id="o-ang"></dd>
       <dt>返球の回転</dt><dd id="o-rps"></dd>
       <dt>面を押す速さ</dt><dd id="o-vn"></dd>
-      <dt>粒の状態</dt><dd id="o-pip"></dd>
       <dt>つかむ強さ（今回）</dt><dd id="o-k"></dd>
     </dl>
     <canvas id="inset" role="img" aria-label="打点での速度ベクトル"></canvas>
@@ -234,27 +233,20 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
   <details>
     <summary>計算の仮定と根拠</summary>
     <p class="note"><b>粒の物理モデル</b>：FL2の粒（高さ1.8mm・直径1.65mm・間隔2.15mm、ルール上限に近い細長さ）。薄（1.1mm）は粒の下に硬度38相当のスポンジ（ヤング率0.6MPaと仮定）を入れ、OXはラケットに直接貼った状態を1本ずつ、縮むばねと曲がるばねでつないだ柱として扱い、ボールが当たって離れるまでを0.0002ミリ秒刻みで計算した結果から、「面を押す速さ」と「面に沿ってこすれる速さ」ごとのつかむ強さの表を作っています。押す力が粒の座屈荷重を超えると粒が倒れ、倒れながら先端がボールを横に引きずる効果も入っています。ゴムの硬さと粒の先端の摩擦係数は実測がないので選べるようにしています。体感（触るだけ→ナックル、下を強くこする→下回転、強いドライブのカット→回転が残る）と合うのは摩擦係数0.5でした。反発（跳ね返りの強さ）は、このモデルではボールやラケット本体の損失が入らないため、下の反発の値をそのまま使います。</p>
-    <p class="note"><b>裏ソフトの物理モデル</b>（グレイザー09C 厚・テンション系）：表面のシートを1mm角の点に分け、1点ずつスポンジの柱（縦・横のばね、つぶれると硬くなる）と隣の点（シートの張り）につないで、ボールが当たって離れるまでを0.0001ミリ秒刻みで計算し、「つかむ強さ」と「反発」の表を作っています。シートが横にたわんで戻る弾きもこの計算に含まれます。ボールやスポンジの損失と摩擦係数は、裏ソフトに14m/sで斜めに当てた実測（Applied Sciences 2019、下回転66回転/秒、0°・30°・60°）に合わせて決めました（反発の差±0.03、回転の比の差±0.07以内）。グレイザー09C 厚はスポンジ1.9mm（スプリングスポンジX、硬度42）、微粘着として摩擦を1.3倍、粘着力50kPaを加えています。テンション系は2.1mm・粘着なし。実測ラバーの銘柄が不明なこと、合わせたのが14m/sの1点だけなこと、スポンジの硬さ（1.8MPa）と粘着の強さは仮定であることに注意してください。「粒の性質の計算方法」で物理モデル以外を選ぶと、裏ソフトも下の固定値に戻ります。</p>
+    <p class="note"><b>裏ソフトの物理モデル</b>（グレイザー09C 厚・テンション系）：表面のシートを1mm角の点に分け、1点ずつスポンジの柱（縦・横のばね、つぶれると硬くなる）と隣の点（シートの張り）につないで、ボールが当たって離れるまでを0.0001ミリ秒刻みで計算し、「つかむ強さ」と「反発」の表を作っています。シートが横にたわんで戻る弾きもこの計算に含まれます。ボールやスポンジの損失と摩擦係数は、裏ソフトに14m/sで斜めに当てた実測（Applied Sciences 2019、下回転66回転/秒、0°・30°・60°）に合わせて決めました（反発の差±0.03、回転の比の差±0.07以内）。グレイザー09C 厚はスポンジ1.9mm（スプリングスポンジX、硬度42）、微粘着として摩擦を1.3倍、粘着力50kPaを加えています。テンション系は2.1mm・粘着なし。実測ラバーの銘柄が不明なこと、合わせたのが14m/sの1点だけなこと、スポンジの硬さ（1.8MPa）と粘着の強さは仮定であることに注意してください。</p>
     <div class="seg" role="radiogroup" aria-label="粒の先端の摩擦係数" style="grid-template-columns:repeat(3,minmax(0,1fr))"><label><input type="radio" name="pmu" value="0.5" checked>摩擦 0.5</label><label><input type="radio" name="pmu" value="0.8">摩擦 0.8</label><label><input type="radio" name="pmu" value="1.0">摩擦 1.0</label></div>
     <div class="seg" role="radiogroup" aria-label="ゴムの硬さ" style="grid-template-columns:repeat(3,minmax(0,1fr))"><label><input type="radio" name="pE" value="1.5">ゴム 柔らかめ</label><label><input type="radio" name="pE" value="2.5" checked>ゴム 普通</label><label><input type="radio" name="pE" value="4.0">ゴム 硬め</label></div>
     <p class="note">下の2つはFL2の実測値がないため仮定です。ラバーを選び直すと初期値に戻ります。</p>
-    <div class="row"><label for="k">粒がボールをつかむ強さ（仮説モードでは粒が倒れたときの値。回転が止まりきる強さ＝1）</label><output id="ko"></output><input type="range" id="k" min="0" max="1" step="0.01" value="0.15"></div>
     <div class="row"><label for="e">反発（ゆっくり当たったとき、面に垂直な方向の跳ね返り率）</label><output id="eo"></output><input type="range" id="e" min="0.3" max="0.95" step="0.01" value="0.84"></div>
     <div class="row"><label for="eslope">強く当たるほど反発が下がる量（1m/sごと）</label><output id="esloper"></output><input type="range" id="eslope" min="0" max="0.04" step="0.001" value="0.021"></div>
-    <div class="row"><label for="kmax">粒が立っているときのつかむ強さ（仮説モード）</label><output id="kmaxo"></output><input type="range" id="kmax" min="0" max="1" step="0.01" value="0.9"></div>
-    <div class="row"><label for="pv0">粒が倒れ始める、面を押す速さ</label><output id="pv0o"></output><input type="range" id="pv0" min="0.5" max="8" step="0.5" value="3"></div>
-    <div class="row"><label for="pv1">粒が完全に倒れる、面を押す速さ</label><output id="pv1o"></output><input type="range" id="pv1" min="2" max="15" step="0.5" value="9"></div>
-    <div class="row"><label for="pvb">しっかり引っかかる、こする速さ（面に沿ったスイングの速さ）</label><output id="pvbo"></output><input type="range" id="pvb" min="1" max="12" step="0.5" value="6"></div>
     <div class="row"><label for="et">ゴムが横にたわんで戻る強さ（0＝戻らない）</label><output id="eto"></output><input type="range" id="et" min="0" max="0.6" step="0.01" value="0"></div>
-    <div class="seg" role="radiogroup" aria-label="空気の力の式" style="grid-template-columns:repeat(3,minmax(0,1fr))"><label><input type="radio" name="lift" value="iso" checked>卓球ボールのCFD式<br>（磯村ら2016）</label><label><input type="radio" name="lift" value="cap">旧：上限0.35</label><label><input type="radio" name="lift" value="sat">野球ボールの式</label></div>
     <p class="note">空気の力（抗力・回転で曲がる力）は、卓球ボールの流体計算（CFD）から作られた式（磯村ら 2016、回転の強さの割合0.1〜2.0、速さ0.5〜10m/sで計算）を使っています。抗力係数＝−0.0747S²＋0.3591S＋0.3682、曲がる力の係数＝(8/3)×S×(0.2313S⁴−1.2055S³＋2.2813S²−1.9501S＋0.8254)（Sは回転の強さの割合）。10m/sより速い球や、回転の強さの割合が2を超える球は、式の範囲外を延長して使っています。実測ではなく計算による値で、実験では回転の割合によって揚力が落ち込む（負のマグヌス効果）という報告もあります。</p>
     <ul class="find note">
       <li>裏ソフトは、表面のゴムが横にたわんでから戻ることで、ボールの回転を逆向きに弾き返します。これがないと、下回転をストップしても回転が止まるだけでナックルになります。裏ソフトは0.35、FL2は0と仮定しています（どちらも実測値ではありません）。</li>
-      <li>仮説モードでは、つかむ強さを「上の粒が倒れたときの値」から「粒が立っているときの値」の間で変えます。面を押す速さが速いほど粒が倒れて小さくなり、面に沿ってこするスイングが速いほど大きくなります。境目の数値は、強いドライブのカットでは回転がそのまま残り、ツッツキに触るだけだとナックル、下を強くこすると下回転、という体感に合うように決めたもので、測定値ではありません。</li>
       <li>ロングピップスの「つかむ強さ」は裏ソフトよりずっと小さいと測定されています（Gossard 2026）。比率の数値は確認できず、FL2の測定もありません。</li>
       <li>反発は同じ研究でアンチラバーが0.53でした。粒高OXはそれ以下と推定しています。ロングピップスは回転が速いほど反発が下がるとされていますが、このモデルでは一定です。</li>
       <li>FL2は返球時に回転の20%を失う、裏ソフトは失わないと仮定しています。</li>
-      <li>以下は「粒の性質の計算方法」で物理モデル以外を選んだときの固定値です。グレイザー09C（厚）の固定値はすべて仮定です（実測値ではありません）。微粘着シートは低い押し付けでもボールをつかむと考えてつかむ強さ0.95、テンションスポンジの弾き（横にたわんで戻る）は非粘着テンション系より控えめとして0.35、反発はゆっくり当たったとき0.84で、強く当たるほど1m/sごとに0.021下がる（Gossard 2026で攻撃用裏ソフトの平均的な下がり方）としています。比較用の「テンション系（非粘着）」は、つかむ強さ0.8・弾き0.45・反発0.88です。メーカー公表値はスポンジ硬度42度・スピード75・スピン87。スポンジの厚さ・硬さ、ラケット本体の違いは、反発の値にまとめて含めたつもりで、個別には計算していません。</li>
+      <li>グレイザー09C（厚）のメーカー公表値は、スポンジ硬度42度・スピード75・スピン87です。</li>
       <li>空気の力は上の式（切り替え可）。台での弾みは反発0.89・摩擦0.25。相手はエンドラインの後ろ0.5m・台から30cmの高さで打つ想定。図は縦横同じ比率で、球の大きさだけ実際より大きく描いています。</li>
     </ul>
     <p class="note src">出典：
@@ -266,8 +258,8 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 </div>
 
 <p style="text-align:center;font-size:13px;margin:0 0 32px"><a href="./">カット編</a> ／ <a href="receive.html">レシーブ編</a> ／ <a href="grip.html">ラバーがつかむ仕組み</a></p>
-<script src="js/physics.js?v=2026102001"></script>
-<script src="js/side-view.js?v=2026102001"></script>
+<script src="js/physics.js?v=2026102002"></script>
+<script src="js/side-view.js?v=2026102002"></script>
 <script>
 const M=0.0027,R=0.02,AR=Math.PI*R*R,RHO=1.2,CD=0.5,G=9.8;
 const NETH=0.1525,FLOOR=-0.76,DT=5e-4,EX=1.5;
@@ -316,12 +308,11 @@ function incoming(v0,rps,target,dist,arc,angDeg){const a=angDeg!==undefined?angD
 function chop(s,face,k,e,kp,sw,sa){const th=face*Math.PI/180,b=sa*Math.PI/180;
   const nx=Math.cos(th),ny=Math.sin(th),tx=-ny,ty=nx,Rx=sw*Math.cos(b),Ry=-sw*Math.sin(b);
   const rx=s.vx-Rx,ry=s.vy-Ry,vn=rx*nx+ry*ny,vt=rx*tx+ry*ty,u=vt-s.om*R;
-  let B=1,D=0;const isFL=(()=>{const v=document.querySelector("input[name=rub]:checked").value;return v==="ox"||v==="11";})();let et=+$("et").value,eT=null;const ik=invKey();if(ik&&pipMode()==="phys"){k=kLook(Math.abs(vn),Math.abs(u),ik);eT=kLook(Math.abs(vn),Math.abs(u),ik+"_e");et=0;kp=1;B=-1;}else if(isFL&&pipMode()==="phys"){k=kLook(Math.abs(vn),Math.abs(u));kp=1;B=-1;}else if(pipOn()){const pv0=+$("pv0").value,pv1=Math.max(pv0+0.5,+$("pv1").value);B=Math.max(0,Math.min(1,1-(Math.abs(vn)-pv0)/(pv1-pv0)));D=Math.max(0,Math.min(1,Math.abs(Rx*tx+Ry*ty)/+$("pvb").value));k=k+(+$("kmax").value-k)*B*D;}
+  let B=1,D=0;const isFL=(()=>{const v=document.querySelector("input[name=rub]:checked").value;return v==="ox"||v==="11";})();let et=+$("et").value,eT=null;const ik=invKey();if(ik){k=kLook(Math.abs(vn),Math.abs(u),ik);eT=kLook(Math.abs(vn),Math.abs(u),ik+"_e");et=0;kp=1;B=-1;}else if(isFL){k=kLook(Math.abs(vn),Math.abs(u));kp=1;B=-1;}
   const dvt=-k*(1+et)*u/2.5;
   const esEl=document.getElementById("eslope"),es=esEl?+esEl.value:0,eEff=eT!==null?eT:Math.max(0.3,e-es*Math.max(0,Math.abs(vn)-2));
   const vt2=vt+dvt,vn2=-eEff*vn,om2=(s.om-1.5*dvt/R)*kp;
   return {x:s.x,y:s.y,vx:vn2*nx+vt2*tx+Rx,vy:vn2*ny+vt2*ty+Ry,om:om2,Rx,Ry,nx,ny,tx,ty,kEff:k,B,D,vn:Math.abs(vn),miss:vn>-0.3};}
-function pipOn(){if(pipMode()!=="hyp")return false;const v=document.querySelector("input[name=rub]:checked").value;return $("pip").checked&&(v==="ox"||v==="11");}
 function flyOut(s0,rec,dt){dt=dt||DT;if(s0.miss)return {res:"面の裏に当たる",pts:rec?[[s0.x,s0.y,s0.om]]:null};let s={...s0},pts=rec?[[s.x,s.y,s.om]]:null,t=0,clr=null;
   while(t<3){const p=s;s=stepS(s,dt);t+=dt;if(rec)pts.push([s.x,s.y,s.om]);
     if(p.x<NETX&&s.x>=NETX){const yy=p.y+(s.y-p.y)*(NETX-p.x)/(s.x-p.x);if(yy<NETH)return {res:"ネット",pts};clr=yy-NETH;}
@@ -335,12 +326,12 @@ function flyOut(s0,rec,dt){dt=dt||DT;if(s0.miss)return {res:"面の裏に当た�
     if(s.x>6)return {res:"オーバー",pts};}
   return {res:"オーバー",pts};}
 function courtXPad(){return Math.max(1.1,+$("oppd").value+0.3);}
-function faceRun(s,sw,sa,step,dt){const k=+$("k").value,e=+$("e").value;let best=[0,-1,-1],cur=0,st=-1;
+function faceRun(s,sw,sa,step,dt){const k=0,e=+$("e").value;let best=[0,-1,-1],cur=0,st=-1;
   for(let f=-60;f<=60;f+=step){const ok=okRes(flyOut(chop(s,f,k,e,keep,sw,sa),false,dt));if(ok){if(cur===0)st=f;cur+=step;if(cur>best[0])best=[cur,st,f];}else cur=0;}
   return best;}
-function update(){const v0=+$("v0").value,rps=+$("rps").value,bx=+$("bx").value,dist=+$("dist").value,face=+$("face").value,sw=+$("sw").value,sa=+$("sa").value,k=+$("k").value,e=+$("e").value;
+function update(){const v0=+$("v0").value,rps=+$("rps").value,bx=+$("bx").value,dist=+$("dist").value,face=+$("face").value,sw=+$("sw").value,sa=+$("sa").value,k=0,e=+$("e").value;
   $("v0o").textContent=v0+" m/s";$("rpso").textContent=(rps>=0?"上回転 ":"下回転 ")+Math.abs(rps);$("bxo").textContent=fmt(bx,2)+" m";$("disto").textContent=dist>=0?fmt(dist,1)+" m後方":"台の上 "+fmt(-dist,1)+" m";
-  $("faceo").textContent=face+"°";$("swo").textContent=fmt(sw,1)+" m/s";$("sao").textContent=sa+"°";$("ko").textContent=fmt(k,2);$("eo").textContent=fmt(e,2);$("esloper").textContent="−"+fmt(+$("eslope").value,3);$("oppdo").textContent=fmt(+$("oppd").value,1)+" m";$("opph_o").textContent=(+$("opph").value>=0?"+":"")+Math.round(+$("opph").value*100)+" cm";$("kmaxo").textContent=fmt(+$("kmax").value,2);$("pv0o").textContent=fmt(+$("pv0").value,1)+" m/s";$("pv1o").textContent=fmt(+$("pv1").value,1)+" m/s";$("pvbo").textContent=fmt(+$("pvb").value,1)+" m/s";$("eto").textContent=fmt(+$("et").value,2);
+  $("faceo").textContent=face+"°";$("swo").textContent=fmt(sw,1)+" m/s";$("sao").textContent=sa+"°";$("eo").textContent=fmt(e,2);$("esloper").textContent="−"+fmt(+$("eslope").value,3);$("oppdo").textContent=fmt(+$("oppd").value,1)+" m";$("opph_o").textContent=(+$("opph").value>=0?"+":"")+Math.round(+$("opph").value*100)+" cm";$("eto").textContent=fmt(+$("et").value,2);
   TL=COURSE[document.querySelector("input[name=course]:checked").value];NETX=TL/2;
   const arc=$("arc").checked?"high":"low";
   const inc=getInc(dist);const w=$("a-warn");anim.t=0;anim.hold=0;
@@ -366,14 +357,13 @@ function update(){const v0=+$("v0").value,rps=+$("rps").value,bx=+$("bx").value,
   $("o-v").textContent=fmt(Math.hypot(o.vx,o.vy))+" m/s";$("o-ang").textContent=fmt(Math.atan2(o.vy,o.vx)*180/Math.PI,0)+"°";
   $("o-rps").textContent=(sp>=0?"下回転 ":"上回転 ")+fmt(Math.abs(sp),0)+" 回転/秒";
   $("o-vn").textContent=fmt(o.vn)+" m/s";$("o-k").textContent=fmt(o.kEff,2);
-  $("o-pip").textContent=o.B===-1?"物理モデル（表から）":!pipOn()?"考えない":(o.B<0.2?"倒れている":o.B<0.8?"半分倒れている":"立っている")+"・"+(o.D<0.3?"こすりは弱い":o.D<0.8?"こすりは中くらい":"強くこすっている");
+  
   drawInset();}
 let pend=0;function schedule(){cancelAnimationFrame(pend);pend=requestAnimationFrame(update);}
-function applyPreset(key){const p=PRE[key];$("k").value=p.k;$("e").value=p.e;$("et").value=p.et;$("eslope").value=p.es;keep=p.keep;}
+function applyPreset(key){const p=PRE[key];$("e").value=p.e;$("et").value=p.et;$("eslope").value=p.es;keep=p.keep;}
 document.querySelectorAll("input[name=rub]").forEach(r=>r.addEventListener("change",()=>{applyPreset(r.value);schedule();}));
 document.querySelectorAll("input[name=course]").forEach(r=>r.addEventListener("change",schedule));
 $("arc").addEventListener("change",schedule);
-$("pip").addEventListener("change",()=>{bestFace();schedule();});
 const STROKES={loop:{sw:9,sa:-60},drive:{sw:11,sa:-30},smash:{sw:15,sa:0}};
 document.querySelectorAll("input[name=stroke]").forEach(r=>r.addEventListener("change",()=>{const p=STROKES[r.value];$("sw").value=p.sw;$("sa").value=p.sa;bestFace();schedule();}));
 ["sw","sa"].forEach(id=>$(id).addEventListener("input",()=>document.querySelectorAll("input[name=stroke]").forEach(x=>x.checked=false)));
@@ -412,7 +402,7 @@ function drawHeat(){const cv=$("heat");if(!HEAT){cv.style.height="0px";return;}c
 function runSearch(){TL=COURSE[document.querySelector("input[name=course]:checked").value];NETX=TL/2;const inc=getInc(+$("dist").value);
   if(inc.fail){$("srch-msg").textContent="相手の打球の条件を見直してください";return;}
   $("srch-msg").textContent="計算中…";$("search").disabled=true;const cells=[];let i=0,j=0;
-  const stepFn=()=>{const t0=performance.now();while(j<SW_STEPS.length&&performance.now()-t0<40){const run=faceRun(inc.s,SW_STEPS[j],SA_STEPS[i],2,3e-3);const w=run[0]>0?run[2]-run[1]:0,c=run[0]>0?Math.round((run[1]+run[2])/2):null;let v=0,sp=0,sc=0;if(c!==null){const o=chop(inc.s,c,+$("k").value,+$("e").value,keep,SW_STEPS[j],SA_STEPS[i]);v=Math.hypot(o.vx,o.vy);sp=-o.om/2/Math.PI;const Rb=Math.min(1,w/12),Sv=Math.max(0,Math.min(1,(v-8)/17)),Ss=Math.max(0,Math.min(1,sp/150));sc=Rb<0.5?3*Rb:3*Rb+2*Sv+Ss;}cells.push({i,j,w,c,v,sp,sc});i++;if(i>=SA_STEPS.length){i=0;j++;}}
+  const stepFn=()=>{const t0=performance.now();while(j<SW_STEPS.length&&performance.now()-t0<40){const run=faceRun(inc.s,SW_STEPS[j],SA_STEPS[i],2,3e-3);const w=run[0]>0?run[2]-run[1]:0,c=run[0]>0?Math.round((run[1]+run[2])/2):null;let v=0,sp=0,sc=0;if(c!==null){const o=chop(inc.s,c,0,+$("e").value,keep,SW_STEPS[j],SA_STEPS[i]);v=Math.hypot(o.vx,o.vy);sp=-o.om/2/Math.PI;const Rb=Math.min(1,w/12),Sv=Math.max(0,Math.min(1,(v-8)/17)),Ss=Math.max(0,Math.min(1,sp/150));sc=Rb<0.5?3*Rb:3*Rb+2*Sv+Ss;}cells.push({i,j,w,c,v,sp,sc});i++;if(i>=SA_STEPS.length){i=0;j++;}}
     if(j<SW_STEPS.length){$("srch-msg").textContent="計算中… "+Math.round(100*j/SW_STEPS.length)+"%";setTimeout(stepFn,0);return;}
     HEAT={cells};$("search").disabled=false;const useA=document.querySelector("input[name=metric]:checked").value==="attack";HEAT.useA=useA;const key=x=>useA?x.sc:x.w;const best=cells.reduce((b,x)=>key(x)>(b?key(b):-1)?x:b,null);
     if(!best||best.w<=0){$("srch-msg").textContent="";$("srch-best").textContent="この条件では入る振り方が見つかりませんでした。頂点の高さの上限を緩めるか、打点を変えてください。";drawHeat();return;}
@@ -439,8 +429,7 @@ document.querySelectorAll('input[type=range]').forEach(r=>{let sx=0,sy=0,v0=null
   r.addEventListener("touchstart",e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;v0=r.value;},{passive:true});
   r.addEventListener("touchmove",e=>{const t=e.touches[0],dx=Math.abs(t.clientX-sx),dy=Math.abs(t.clientY-sy);if(dy>8&&dy>dx*1.2)revert();},{passive:true});
   r.addEventListener("touchend",e=>{const t=e.changedTouches[0],dx=Math.abs(t.clientX-sx),dy=Math.abs(t.clientY-sy);if(dy>8&&dy>dx*1.2)revert();v0=null;},{passive:true});});
-document.querySelectorAll("input[name=lift]").forEach(r=>r.addEventListener("change",()=>{LIFT=r.value;if(typeof HEAT!=="undefined"&&HEAT){HEAT=null;drawHeat();}bestFace();schedule();}));
-document.querySelectorAll("input[name=pipmode],input[name=pmu],input[name=pE]").forEach(r=>r.addEventListener("change",()=>{if(typeof HEAT!=="undefined"&&HEAT){HEAT=null;drawHeat();}bestFace();schedule();}));
+document.querySelectorAll("input[name=pmu],input[name=pE]").forEach(r=>r.addEventListener("change",()=>{if(typeof HEAT!=="undefined"&&HEAT){HEAT=null;drawHeat();}bestFace();schedule();}));
 (function init(){applyPreset("g9");$("play").textContent=anim.playing?"一時停止":"再生";
   TL=COURSE[document.querySelector("input[name=course]:checked").value];NETX=TL/2;
   document.querySelector("input[name=shot]:checked").dispatchEvent(new Event("change"));update();if(!anim.playing){anim.t=total();}requestAnimationFrame(tick);})();

@@ -3,8 +3,5 @@ const KT={"vn":[0.5,1,2,3,4,5,6,8,10,12,15],"u":[0.5,1,2,3,4,6,8,10,12,15,18],"t
 function _ip(a,x){if(x<=a[0])return [0,0];for(let i=0;i<a.length-1;i++)if(x<=a[i+1])return [i,(x-a[i])/(a[i+1]-a[i])];return [a.length-2,1];}
 function kLook(vn,u,key){const K=KT.t[key||physKey()];const [i,fi]=_ip(KT.vn,vn),[j,fj]=_ip(KT.u,u);const a=K[i][j]*(1-fj)+K[i][j+1]*fj,b=K[i+1][j]*(1-fj)+K[i+1][j+1]*fj;return a*(1-fi)+b*fi;}
 function invKey(){const v=document.querySelector("input[name=rub]:checked").value;return v==="g9"?"G9":v==="inv"?"INV":null;}
-function pipMode(){const r=document.querySelector("input[name=pipmode]:checked");return r?r.value:"phys";}
 function physKey(){const rb=document.querySelector("input[name=rub]:checked"),pre=(rb&&rb.value==="11")?"S11_":"";const m=document.querySelector("input[name=pmu]:checked"),e=document.querySelector("input[name=pE]:checked");return pre+"mu"+(m?m.value:"0.5")+"_E"+(e?e.value:"2.5");}
-let LIFT="iso";
-function aero(S){if(LIFT==="iso"){const s=Math.min(Math.max(S,0),2);const CMm=(((0.2313*s-1.2055)*s+2.2813)*s-1.9501)*s+0.8254;return [(-0.0747*s+0.3591)*s+0.3682,(8/3)*CMm*s];}
-  if(LIFT==="sat")return [0.5,S>1e-6?1/(2.022+0.981/S):0];return [0.5,Math.min(0.6*S,0.35)];}
+function aero(S){const s=Math.min(Math.max(S,0),2);const CMm=(((0.2313*s-1.2055)*s+2.2813)*s-1.9501)*s+0.8254;return [(-0.0747*s+0.3591)*s+0.3682,(8/3)*CMm*s];}
