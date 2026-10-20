@@ -372,15 +372,15 @@ function drawCourt(){if(!S)return;const g=geom(),{cv,W,H,X,Y,xmin,xmax}=g,dpr=wi
     let off=0;if(idx<nIn){const rem=(nIn-idx)*DT;off=Math.min(0.35,rem*S.sw);}else{off=-Math.min(0.3,(idx-nIn)*DT*S.sw);}
     const bx=cx-Math.cos(S.sa*Math.PI/180)*off,by=cy+Math.sin(S.sa*Math.PI/180)*off;
     const BR=Math.max(2,0.02*Math.abs(X(1)-X(0))),nx=-Math.cos(th),ny=Math.sin(th),ox=nx*(BR+2.25),oy=ny*(BR+2.25);
-    drawPerson(c,x=>X(x)+ox,y=>Y(y)+oy,bx,by,col,bx-tx*(L+0.06),by-ty*(L+0.06));
+    drawPerson(c,x=>X(x)+ox,y=>Y(y)+oy,bx,by,col,bx-Math.cos(th)*0.03,by+Math.sin(th)*0.03);
     {const ca=Math.cos(S.sa*Math.PI/180),sa_=Math.sin(S.sa*Math.PI/180),P=o=>[cx-ca*o,cy+sa_*o],A=P(0.35),Bp=P(-0.3);
      c.save();c.strokeStyle=col("--swing");c.lineWidth=2;c.setLineDash([5,4]);c.beginPath();c.moveTo(X(A[0])+ox,Y(A[1])+oy);c.lineTo(X(Bp[0])+ox,Y(Bp[1])+oy);c.stroke();c.setLineDash([]);
      const ang=Math.atan2((Y(Bp[1])-Y(A[1])),(X(Bp[0])-X(A[0]))),ex=X(Bp[0])+ox,ey=Y(Bp[1])+oy;c.fillStyle=col("--swing");c.beginPath();c.moveTo(ex,ey);c.lineTo(ex-9*Math.cos(ang-0.45),ey-9*Math.sin(ang-0.45));c.lineTo(ex-9*Math.cos(ang+0.45),ey-9*Math.sin(ang+0.45));c.closePath();c.fill();
      c.globalAlpha=0.22;c.strokeStyle=col("--ink");c.lineWidth=3;c.lineCap="round";for(const o of [0.35,0.2,0,-0.15,-0.3]){const q=P(o);c.beginPath();c.moveTo(X(q[0]-tx*L)+ox,Y(q[1]-ty*L)+oy);c.lineTo(X(q[0]+tx*L)+ox,Y(q[1]+ty*L)+oy);c.stroke();}
      c.restore();}
-    {const rb=document.querySelector("input[name=rub]:checked").value,bh=(rb==="11"||rb==="ox"),FR=bh?"#262626":"#c0392b",BK=bh?"#c0392b":"#262626",WD="#c9a46a",GL=0.10;
+    {const rb=document.querySelector("input[name=rub]:checked").value,bh=(rb==="11"||rb==="ox"),FR=bh?"#262626":"#c0392b",BK=bh?"#c0392b":"#262626",WD="#c9a46a";
      const seg=(k,colr,w,a0,a1)=>{c.strokeStyle=colr;c.lineWidth=w;c.beginPath();c.moveTo(X(bx+tx*a0)+nx*(BR+k),Y(by+ty*a0)+ny*(BR+k));c.lineTo(X(bx+tx*a1)+nx*(BR+k),Y(by+ty*a1)+ny*(BR+k));c.stroke();};
-     c.lineCap="round";seg(2.25,WD,3,-L-GL,-L*0.9);c.lineCap="butt";seg(3.75,BK,1.5,-L,L);seg(2.25,WD,1.5,-L,L);seg(0.75,FR,1.5,-L,L);
+     c.lineCap="butt";seg(3.75,BK,1.5,-L,L);seg(2.25,WD,1.5,-L,L);seg(0.75,FR,1.5,-L,L);
      if(bh){c.strokeStyle=col("--muted");c.lineWidth=0.8;seg(0,col("--muted"),0.8,-L,L);}}}
   let p=null;if(idx<nIn)p=S.inc.pts[idx];else if(S.out&&idx-nIn<nOut)p=S.out.pts[idx-nIn];else if(S.out)p=S.out.pts[nOut-1];else p=S.inc.pts[nIn-1];
   if(p){const px=X(p[0]),py=Y(p[1]),r=Math.max(2,0.02*Math.abs(X(1)-X(0)));c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(px,py,r,0,Math.PI*2);c.fill();c.stroke();
@@ -391,7 +391,7 @@ function drawCourt(){if(!S)return;const g=geom(),{cv,W,H,X,Y,xmin,xmax}=g,dpr=wi
   $("phase").textContent=ph;}
 const HUMAN=1.65;
 function personPose(hx,hy,gx,gy){const H=HUMAN,f=H/1.65,L1=0.30*f,L2=0.36*f,grip=0.12;
-  const cx=-S.dist;const gdx=gx==null?0:Math.sin(S.face*Math.PI/180)*0.14+grip;const footX=Math.min(cx+gdx-0.45*f,-0.2);
+  const cx=-S.dist;const gdx=gx==null?0:gx-hx+grip;const footX=Math.min(cx+gdx-0.45*f,-0.2);
   const base=0.10*f;let drop=base,lean=0.04;
   const tx=gx??hx-grip,ty=gy??hy;
   for(let i=0;i<60;i++){const sx=footX+0.06+lean,sy=FLOOR+1.40*f-drop;if(Math.hypot(tx-sx,ty-sy)<=(L1+L2)*0.97)break;drop=Math.min(0.55*f,drop+0.0125*f);lean=Math.min(0.35*f,0.04+(drop-base)*0.7);}
