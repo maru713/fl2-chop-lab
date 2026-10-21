@@ -148,6 +148,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     </div>
     <div class="row"><label for="tbk">欲しい上下の回転（＋上回転／−下回転）</label><output id="tbko"></output><input type="range" id="tbk" min="-80" max="60" step="1" value="-50"></div>
     <div class="row"><label for="tsd">欲しい横回転（相手から見て ＋右へ曲がる／−左へ）</label><output id="tsdo"></output><input type="range" id="tsd" min="-80" max="80" step="1" value="0"></div>
+    <div class="row" style="grid-template-columns:1fr auto"><span style="font-size:14px">進む向きの回転（レシーブ編の「回転軸の傾き」）<br><small style="color:var(--muted)">1回打つだけでは自由に選べず、打ち出しとトスで決まります。変えたいときは、打ち出しの角度・向きか、トスの落ちる速さを変えます</small></span><output id="tgxo">—</output></div>
     <div class="seg" style="grid-template-columns:1fr"><label><input type="checkbox" id="autoL" checked>打ち出しの速さと角度を「よいサーブの基準」から自動で決める</label></div>
     <p class="note" style="margin:0 0 4px">基準（高さ・速さ・短さ）は、下の「結果」の中で変えられます。左右の向きは自分で決めます。</p>
     <div class="row"><label for="tv0">打ち出しの速さ</label><output id="tv0o"></output><input type="range" id="tv0" min="1.5" max="12" step="0.05" value="5"></div>
@@ -332,7 +333,7 @@ function compute(){const s0=tossState(),pr=P();let inv=null;PRE_T=Math.sqrt(2*(+
         $("tv0").value=best.v0;$("tel").value=best.el;inv=inverse();al={v0:best.v0,el:best.el,score:best.sc};}}
     inv.auto=auto?(al||{score:-99}):null;inv.a=setFwdFrom(inv.n,inv.V);}
   outputs();const rk=inv?{n:inv.n,V:inv.V}:fwdRacket(),o=hitBall(s0,rk.n,rk.V,pr);const w=$("warn");
-  if(o.miss){S={pts:[[...s0.p,0,0,0]],rk,s0,o:null};w.hidden=false;w.textContent="ラケットがボールに向かって動いていないので当たりません。面の向きかスイングの向きを変えてください。";["v-res","v-spin","v-speed","v-len","r-v2","r-peak","r-stop","r-launch","r-spin0","r-axis","r-b1","r-net","r-b2","r-spin2","r-curve","r-kick","r-after"].forEach(i=>$(i).textContent="—");$("s-res").className="bad";howto(inv,null);return;}
+  if(o.miss){S={pts:[[...s0.p,0,0,0]],rk,s0,o:null};w.hidden=false;w.textContent="ラケットがボールに向かって動いていないので当たりません。面の向きかスイングの向きを変えてください。";["v-res","v-spin","v-speed","v-len","r-v2","r-peak","r-stop","tgxo","r-launch","r-spin0","r-axis","r-b1","r-net","r-b2","r-spin2","r-curve","r-kick","r-after"].forEach(i=>$(i).textContent="—");$("s-res").className="bad";howto(inv,null);return;}
   const f=fly(o),hitT=racketHitsTable(rk,s0.p);S={pts:f.pts,rk,s0,o,f,hitT};const msgs=[];if(hitT)msgs.push("振り抜きでラケットが台に当たります（"+(hitT.d<=0.001?"打つ瞬間":"当たってから"+fmt(hitT.d*100)+"cm振ったところ")+"）。打つ高さを上げるか、エンドラインから離れて打つか、スイングを下へ向けすぎないようにしてください。");if(f.fail)msgs.push(f.fail);w.hidden=!msgs.length;w.textContent=msgs.join(" ");
   const sp=nrm(o.v),el=Math.asin(o.v[2]/sp)/deg,az=Math.atan2(o.v[1],-o.v[0])/deg;
   $("s-res").className=f.fail?"bad":"ok";$("v-res").textContent=f.fail?"入らない":"入る";$("v-spin").textContent=spinShort(o.w);$("v-speed").textContent=fmt(sp,1)+" m/s";
@@ -355,6 +356,7 @@ function compute(){const s0=tossState(),pr=P();let inv=null;PRE_T=Math.sqrt(2*(+
   $("r-after").textContent=f.fail?"—":(f.after||"—");
   $("r-stop").textContent=!f.fail&&f.b2&&f.b3?fmt((f.b2[0]-f.b3[0])*100)+" cm":"—";
   {const q=new URLSearchParams({sv0:fmt(sp,2),sel:fmt(el,1),saz:fmt(az,1),sy:fmt(-o.p[1],2),sbk:fmt(comp(o.w).sbk),ssd:fmt(comp(o.w).ssd),sgx:fmt(comp(o.w).sgx),sx:fmt(o.p[0]-TL,2),sz:fmt(o.p[2],2)});$("go-rcv").href="receive.html?"+q.toString();$("go-rcv").hidden=!!f.fail;}
+  {const g=comp(o.w).sgx;$("tgxo").textContent=Math.abs(g)<0.5?"ほぼ0":(g>0?"＋":"−")+fmt(Math.abs(g))+"（"+(g>0?"右":"左")+"へ跳ねる）";}
   howto(inv,o);}
 function howto(inv,o){const el=$("howto");if(!inv){el.textContent="";return;}
   const {th:t,ps:p,sw,be,al}=inv.a;
