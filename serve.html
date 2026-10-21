@@ -197,7 +197,8 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
   <h2 style="margin-top:12px">よいサーブの基準</h2>
   <p class="note" style="margin-top:0">3つとも満たすと「良い」、外れたものを結果の上に赤で出します。</p>
   <div class="row"><label for="hmax">高さ：相手のコートで弾んだ後の頂点が、台からこの高さ以下</label><output id="hmaxo"></output><input type="range" id="hmax" min="0.05" max="0.4" step="0.01" value="0.15"></div>
-  <div class="row"><label for="vmin">速さ：相手のコートに来たときの速さが、これ以上</label><output id="vmino"></output><input type="range" id="vmin" min="1" max="10" step="0.1" value="3"></div>
+  <div class="row"><label for="vmin">速さ：相手のコートに来たときの速さが、これ以上</label><output id="vmino"></output><input type="range" id="vmin" min="1" max="6" step="0.1" value="3"></div>
+  <p class="note" id="vmaxNote" style="margin:0 0 4px"></p>
   <div class="row"><label for="smin">短さ：相手の台で2回目に弾む位置が、エンドラインからこれ以上内側</label><output id="smino"></output><input type="range" id="smin" min="0" max="0.8" step="0.01" value="0.15"></div>
   <p class="howto" id="evalTxt"></p>
   <a class="go" id="go-rcv" href="receive.html">このサーブをレシーブ編で受ける →</a>
@@ -252,14 +253,18 @@ function racketHitsTable(rk,h){const sw=nrm(rk.V)||1,dir=mul(rk.V,1/sw),pref=pre
   for(let d=-0.1;d<=0.12+1e-9;d+=0.01){for(const q of racketPoints(add(h,mul(dir,d)),rk.n,pref))if(q[0]<=TL&&q[0]>=0&&Math.abs(q[1])<=HW+0.02&&q[2]<=0.003)return {d:Math.max(0,d),q};}
   return null;}
 // サーブの基準への余裕（0以上なら全部満たす）。入らないサーブは −50
-function serveScore(f){if(f.fail||f.netZ===undefined)return -50;const hm=+$("hmax").value,vm=+$("vmin").value,sm=+$("smin").value,pk=f.peak?f.peak[2]:0,sh=f.b3?f.b3[0]:-0.3,clr=f.netZ-NETH;
-  return Math.min((hm-pk)/0.05,((f.v2||0)-vm)/1,(sh-sm)/0.15,(clr-0.01)/0.02);}
+function serveParts(f){const hm=+$("hmax").value,vm=+$("vmin").value,sm=+$("smin").value,pk=f.peak?f.peak[2]:0,sh=f.b3?f.b3[0]:-0.3,clr=f.netZ-NETH;
+  return {h:(hm-pk)/0.05,v:((f.v2||0)-vm)/1,s:(sh-sm)/0.15,c:(clr-0.01)/0.02};}
+function serveScore(f){if(f.fail||f.netZ===undefined)return -50;const p=serveParts(f);return Math.min(p.h,p.v,p.s,p.c);}
+// 速さ以外の基準（高さ・短さ・ネットの上）を満たしたまま出せる一番速い「相手のコートに来たときの速さ」。自動の逆算で一緒に調べる
+let VMAX=null;
 // 打ち出しの自動決定：欲しい回転（または実際に出る回転 wFix）のまま、打ち出しの速さと角度を総当たりで調べ、
 // 高さ・速さ・短さ・ネットの上の余裕が一番余裕をもって満たせるものを選ぶ（score≧0 なら全部満たす）
-function autoLaunch(wFix){const s0=tossState(),tbk=+$("tbk").value,tsd=+$("tsd").value,az=+$("taz").value*deg;
+function autoLaunch(wFix){if(!wFix)VMAX=null;const s0=tossState(),tbk=+$("tbk").value,tsd=+$("tsd").value,az=+$("taz").value*deg;
   const evalAt=(v0,el)=>{const e=el*deg,vout=[-v0*Math.cos(e)*Math.cos(az),v0*Math.cos(e)*Math.sin(az),v0*Math.sin(e)],dv=sub(vout,s0.v);let w=wFix;
     if(!w){const wy=-tbk*TAU,wz=tsd*TAU,wx=-(wy*dv[1]+wz*dv[2])/dv[0];w=[wx,wy,wz];if((2*R/3)*nrm(w)/nrm(dv)>0.9)return null;}
-    return {v0,el,score:serveScore(fly({p:s0.p,v:vout,w}))};};
+    const f=fly({p:s0.p,v:vout,w});if(!f.fail&&f.netZ!==undefined){const p=serveParts(f);if(Math.min(p.h,p.s,p.c)>=0&&(VMAX===null||f.v2>VMAX))VMAX=f.v2;}
+    return {v0,el,score:serveScore(f)};};
   let best=null;const take=r=>{if(r&&(!best||r.score>best.score))best=r;};
   for(let v0=2.5;v0<=11;v0+=0.5)for(let el=-40;el<=5;el+=1)take(evalAt(v0,el));
   if(!best||best.score<=-50)return null;
@@ -311,7 +316,7 @@ let PRE_T=0.3; // 当たる前から再生する時間（秒）：トスが手�
 function tossZ(t){const sz=S.s0.p[2],vt=-S.s0.v[2];return sz-vt*t-0.5*G*t*t;}
 let S=null,anim={t:-PRE_T,playing:!matchMedia("(prefers-reduced-motion: reduce)").matches,last:0,hold:0,speed:0.25};
 function compute(){const s0=tossState(),pr=P();let inv=null;PRE_T=Math.sqrt(2*(+$("tth").value)/G)+tossV()/G;
-  if(mode()==="inv"){let al=null;const auto=$("autoL").checked;
+  if(mode()==="inv"){let al=null;const auto=$("autoL").checked;if(!auto)VMAX=undefined;
     if(auto){al=autoLaunch(null);if(al){$("tv0").value=al.v0;$("tel").value=al.el;}}
     inv=inverse();
     // ラバーがつかみきれない・ぴったりの当て方がないときは、ラケットの逆算まで含めて、まわりの打ち出しを探し直す
@@ -330,6 +335,7 @@ function compute(){const s0=tossState(),pr=P();let inv=null;PRE_T=Math.sqrt(2*(+
      txt="高さ："+(pk>hm?"<b style=\"color:var(--bad)\">×</b>":"○")+" 頂点"+fmt(pk*100)+"cm（基準"+fmt(hm*100)+"cm以下）<br>速さ："+((f.v2||0)<vm?"<b style=\"color:var(--bad)\">×</b>":"○")+" "+fmt(f.v2||0,1)+" m/s（基準"+fmt(vm,1)+" m/s以上）<br>短さ："+(sh<sm?"<b style=\"color:var(--bad)\">×</b>":"○")+" "+(f.b3?"2回目はエンドから"+fmt(sh*100)+"cm内側":"相手の台で2回目に弾まない")+"（基準"+fmt(sm*100)+"cm以上内側）";}
    $("v-len").textContent=f.fail?"—":(bad.length?bad.join("・"):"良い");$("s-ev").className=f.fail?"":(bad.length?"bad":"ok");$("evalTxt").innerHTML=f.fail?"サーブが入っていません。":txt;}
   $("r-v2").textContent=f.v2?fmt(f.v2,1)+" m/s":"—";
+  $("vmaxNote").textContent=mode()==="inv"&&$("autoL").checked?(VMAX?"いまの回転・打つ位置で、高さと短さの基準を満たしたまま出せる一番速いのは "+fmt(VMAX,1)+" m/s です。":"いまの回転・打つ位置では、高さと短さの基準を同時に満たす打ち出しがありません。"):"出せる一番速い速さは、逆算モードで「自動で決める」を選ぶと表示します。短く入れるサーブでは、ふつう4 m/s前後が上限です。";
   $("r-peak").textContent=f.peak?"台から"+fmt(f.peak[2]*100)+"cm・"+(f.peak[0]>=0?"エンドから"+fmt(f.peak[0]*100)+"cm内側":"エンドの外"):"—";
   $("r-launch").textContent=fmt(sp,2)+" m/s・"+(el<0?"下へ"+fmt(-el,1):"上へ"+fmt(el,1))+"°・"+(Math.abs(az)<0.25?"まっすぐ":(az>0?"右へ":"左へ")+fmt(Math.abs(az),1)+"°");
   $("r-spin0").textContent=spinLong(o.w);$("r-axis").textContent=axisTxt(o.w);
