@@ -104,7 +104,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
       <div id="s-res"><small>結果</small><b id="v-res">—</b></div>
       <div><small>回転（相手から見て）</small><b id="v-spin">—</b></div>
       <div><small>打球の速さ</small><b id="v-speed">—</b></div>
-      <div><small>長さ</small><b id="v-len">—</b></div>
+      <div id="s-ev"><small>評価</small><b id="v-len">—</b></div>
     </div>
     <button class="pin" id="pin" type="button" aria-pressed="true">固定</button>
   </div>
@@ -163,8 +163,10 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 
   <details style="margin-top:6px">
     <summary>トスと打つ位置</summary>
-    <div class="row"><label for="vt">トスが落ちてくる速さ（0＝頂点で打つ）</label><output id="vto"></output><input type="range" id="vt" min="0" max="3" step="0.1" value="1"></div>
-    <div class="row"><label for="sz">打つ高さ（台の上面から）</label><output id="szo"></output><input type="range" id="sz" min="0.02" max="0.45" step="0.01" value="0.2"></div>
+    <div class="row"><label for="hz">トスを上げる手の高さ（台の上面から）</label><output id="hzo"></output><input type="range" id="hz" min="0" max="0.3" step="0.01" value="0.02"></div>
+    <div class="row"><label for="tth">トスの高さ（手から頂点まで、ルールで16cm以上）</label><output id="ttho"></output><input type="range" id="tth" min="0.16" max="1" step="0.01" value="0.25"></div>
+    <div class="row"><label for="sz">打つ高さ（台の上面から）</label><output id="szo"></output><input type="range" id="sz" min="0.02" max="0.45" step="0.01" value="0.12"></div>
+    <p class="note" id="tossNote" style="margin:0 0 4px"></p>
     <div class="row"><label for="sx">エンドラインからの距離</label><output id="sxo"></output><input type="range" id="sx" min="0" max="0.5" step="0.01" value="0.15"></div>
     <div class="row"><label for="sy">打つ位置の左右（＋自分から見て右、0＝センターライン）</label><output id="syo"></output><input type="range" id="sy" min="-0.7" max="0.7" step="0.01" value="-0.3"></div>
     <div data-fl2>
@@ -186,8 +188,16 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <dt>相手のコートに来たときの回転</dt><dd id="r-spin2">—</dd>
     <dt>空中での曲がり（相手から見て）</dt><dd id="r-curve">—</dd>
     <dt>相手のコートでの跳ね方</dt><dd id="r-kick">—</dd>
+    <dt>相手のコートに来たときの速さ</dt><dd id="r-v2">—</dd>
+    <dt>相手のコートで弾んだ後の頂点</dt><dd id="r-peak">—</dd>
     <dt>そのあと</dt><dd id="r-after">—</dd>
   </dl>
+  <h2 style="margin-top:12px">よいサーブの基準</h2>
+  <p class="note" style="margin-top:0">3つとも満たすと「良い」、外れたものを結果の上に赤で出します。</p>
+  <div class="row"><label for="hmax">高さ：相手のコートで弾んだ後の頂点が、台からこの高さ以下</label><output id="hmaxo"></output><input type="range" id="hmax" min="0.05" max="0.4" step="0.01" value="0.15"></div>
+  <div class="row"><label for="vmin">速さ：相手のコートに来たときの速さが、これ以上</label><output id="vmino"></output><input type="range" id="vmin" min="1" max="10" step="0.1" value="3"></div>
+  <div class="row"><label for="smin">短さ：相手の台で2回目に弾む位置が、エンドラインからこれ以上内側</label><output id="smino"></output><input type="range" id="smin" min="0" max="0.8" step="0.01" value="0.15"></div>
+  <p class="howto" id="evalTxt"></p>
   <a class="go" id="go-rcv" href="receive.html">このサーブをレシーブ編で受ける →</a>
 </section>
 
@@ -199,6 +209,8 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
       <li>回転していないボールを1回打つと、回転の軸は必ず「打球の速さからトスの落ちる速さを引いた向き」と直角になります。そのため、進む向きを軸にした回転（レシーブ編の「回転軸の傾き」）は自由には決められず、上下・横の回転と打ち出しの角度、トスの落ちる速さで決まります。</li>
       <li>完全に食いついてこするだけで打っても、回転によるボールの表面の速さは、ボールの速さの変化の1.5倍までです。逆算でこれを超える回転を選ぶと、出せる一番強い回転に下げて計算します。</li>
       <li>逆算では、欲しい回転と打ち出しから、面の向きを式で求め、ラバーの表を使ってラケットの速さと向きを探しています。ラバーがつかみきれないと、欲しい回転より弱くなります。</li>
+      <li>トスは、手の高さ＋トスの高さを頂点として、打つ高さまで自由落下した速さで当たるとしています（空気抵抗は入れていません）。</li>
+      <li>よいサーブの基準は、相手のコートで弾んだ後の一番高い位置（相手の台の上にある間）、相手のコートで弾む直前の速さ、相手の台で2回目に弾む位置で判定しています。この計算では、短く入れて弾んだ後をネット（15cm）より低くするのは、下回転でもぎりぎりです。</li>
       <li>空気の力と台での弾みは、レシーブ編と同じです（卓球ボールのCFD式、台の反発0.89・摩擦0.25）。手首の回転や、ラケットの中心から外れた位置に当たる効果は入っていません。</li>
     </ul>
   </details>
@@ -215,8 +227,11 @@ const P=()=>PRE[document.querySelector("input[name=rub]:checked").value];
 const fmt=(n,d=0)=>(Math.round(n*10**d)/10**d).toFixed(d);
 // 自分（サーバー）は x＝TL 側に立ち、−x へ打つ。自分から見て右＝+y、相手（レシーバー）から見て右＝−y
 const mode=()=>document.querySelector("input[name=mode]:checked").value;
-const EX={back:{tbk:-45,tsd:0,tv0:5.5,tel:-22.5,taz:0},sideback:{tbk:-35,tsd:30,tv0:5.5,tel:-29.5,taz:-5},sidetop:{tbk:20,tsd:35,tv0:5.25,tel:-31.5,taz:-5},knuckle:{tbk:-5,tsd:0,tv0:5.75,tel:-26,taz:0},long:{tbk:-35,tsd:0,tv0:6.5,tel:-16.5,taz:0},rside:{tbk:-35,tsd:-30,tv0:6.25,tel:-18,taz:5}};
-function tossState(){return {p:[TL+(+$("sx").value),+$("sy").value,+$("sz").value],v:[0,0,-(+$("vt").value)],w:[0,0,0]};}
+// 例：ネットの上2cmほどを通り、なるべく低く短く入る打ち出し（打つ高さ sz も含む）
+const EX={back:{tbk:-45,tsd:0,tv0:5.75,tel:-20.5,taz:0,sz:0.12},sideback:{tbk:-35,tsd:30,tv0:5.75,tel:-27,taz:-2.5,sz:0.12},sidetop:{tbk:20,tsd:35,tv0:5.25,tel:-32.5,taz:-5,sz:0.16},knuckle:{tbk:-5,tsd:0,tv0:6,tel:-22,taz:0,sz:0.16},long:{tbk:-35,tsd:0,tv0:7.5,tel:-13,taz:0,sz:0.12},rside:{tbk:-35,tsd:-30,tv0:6.25,tel:-18,taz:5,sz:0.12}};
+// トスの頂点（手の高さ＋トスの高さ）から打つ高さまで落ちてくる速さ。空気抵抗は小さいので入れない
+function tossV(){const apex=+$("hz").value+(+$("tth").value),drop=apex-(+$("sz").value);return drop>0?Math.sqrt(2*G*drop):0;}
+function tossState(){return {p:[TL+(+$("sx").value),+$("sy").value,+$("sz").value],v:[0,0,-tossV()],w:[0,0,0]};}
 function faceN(th,ps){return [-Math.cos(th*deg)*Math.cos(ps*deg),Math.cos(th*deg)*Math.sin(ps*deg),Math.sin(th*deg)];}
 function swingV(sw,be,al){return [-sw*Math.cos(be*deg)*Math.cos(al*deg),sw*Math.cos(be*deg)*Math.sin(al*deg),sw*Math.sin(be*deg)];}
 function fwdRacket(){return {n:faceN(+$("th").value,+$("ps").value),V:swingV(+$("sw").value,+$("be").value,+$("al").value)};}
@@ -261,8 +276,9 @@ function fly(s0){let s={p:[...s0.p],v:[...s0.v],w:[...s0.w]};const pts=[[...s.p,
     if(s.p[2]<=0){const x=s.p[0],y=s.p[1],on=Math.abs(y)<=HW&&x>=0&&x<=TL;
       if(stage===0){if(!on||x<NETX){o.fail=x>TL?"自分のコートに届かず台の手前に落ちます":"自分のコートで弾みません";break;}o.b1=[x,y];s=bounce(s);stage=1;continue;}
       if(stage===1){o.fail="ネットを越えずに自分のコートで2回弾みます";break;}
-      if(stage===1.5){if(!on||x>NETX){o.fail=x<0?"相手のコートを越えて出ます（オーバー）":"相手のコートの横に外れます";o.b2=null;break;}o.b2=[x,y];o.w2=[...s.w];s=bounce(s);o.w2b=[...s.w];stage=2;continue;}
+      if(stage===1.5){if(!on||x>NETX){o.fail=x<0?"相手のコートを越えて出ます（オーバー）":"相手のコートの横に外れます";o.b2=null;break;}o.b2=[x,y];o.v2=nrm(s.v);o.w2=[...s.w];s=bounce(s);o.w2b=[...s.w];o.peak=null;stage=2;continue;}
       if(stage===2){if(on){o.b3=[x,y];o.after="相手の台でもう一度弾む（短いサーブ）・"+fmt(x*100)+"cm";break;}o.after=o.after||"相手の台から出る（長いサーブ）";break;}}
+    if(stage===2&&s.p[0]>=0&&(!o.peak||s.p[2]>o.peak[2]))o.peak=[s.p[0],s.p[1],s.p[2]];
     if(stage===2&&pr.p[0]>=0&&s.p[0]<0&&!o.after){o.after="相手の台から出る（長いサーブ）・エンドの上"+fmt(s.p[2]*100)+"cm";}
     if(stage===2&&(s.p[0]<-1.2||s.p[2]<-0.76))break;}
   if(!o.fail&&stage<2)o.fail="相手のコートに届きません";
@@ -272,11 +288,16 @@ let S=null,anim={t:-PRE_T,playing:!matchMedia("(prefers-reduced-motion: reduce)"
 function compute(){const s0=tossState(),pr=P();let inv=null;
   if(mode()==="inv"){inv=inverse();inv.a=setFwdFrom(inv.n,inv.V);}
   outputs();const rk=inv?{n:inv.n,V:inv.V}:fwdRacket(),o=hitBall(s0,rk.n,rk.V,pr);const w=$("warn");
-  if(o.miss){S={pts:[[...s0.p,0,0,0]],rk,s0,o:null};w.hidden=false;w.textContent="ラケットがボールに向かって動いていないので当たりません。面の向きかスイングの向きを変えてください。";["v-res","v-spin","v-speed","v-len","r-launch","r-spin0","r-axis","r-b1","r-net","r-b2","r-spin2","r-curve","r-kick","r-after"].forEach(i=>$(i).textContent="—");$("s-res").className="bad";howto(inv,null);return;}
+  if(o.miss){S={pts:[[...s0.p,0,0,0]],rk,s0,o:null};w.hidden=false;w.textContent="ラケットがボールに向かって動いていないので当たりません。面の向きかスイングの向きを変えてください。";["v-res","v-spin","v-speed","v-len","r-v2","r-peak","r-launch","r-spin0","r-axis","r-b1","r-net","r-b2","r-spin2","r-curve","r-kick","r-after"].forEach(i=>$(i).textContent="—");$("s-res").className="bad";howto(inv,null);return;}
   const f=fly(o);S={pts:f.pts,rk,s0,o,f};w.hidden=!f.fail;if(f.fail)w.textContent=f.fail;
   const sp=nrm(o.v),el=Math.asin(o.v[2]/sp)/deg,az=Math.atan2(o.v[1],-o.v[0])/deg;
   $("s-res").className=f.fail?"bad":"ok";$("v-res").textContent=f.fail?"入らない":"入る";$("v-spin").textContent=spinShort(o.w);$("v-speed").textContent=fmt(sp,1)+" m/s";
-  $("v-len").textContent=f.fail?"—":(f.b3?"短い":"長い");
+  {const bad=[];let txt="";if(!f.fail){const hm=+$("hmax").value,vm=+$("vmin").value,sm=+$("smin").value,pk=f.peak?f.peak[2]:0,sh=f.b3?f.b3[0]:-1;
+     if(pk>hm)bad.push("高い");if((f.v2||0)<vm)bad.push("遅い");if(sh<sm)bad.push(f.b3?"短さが足りない":"長い");
+     txt="高さ："+(pk>hm?"<b style=\"color:var(--bad)\">×</b>":"○")+" 頂点"+fmt(pk*100)+"cm（基準"+fmt(hm*100)+"cm以下）<br>速さ："+((f.v2||0)<vm?"<b style=\"color:var(--bad)\">×</b>":"○")+" "+fmt(f.v2||0,1)+" m/s（基準"+fmt(vm,1)+" m/s以上）<br>短さ："+(sh<sm?"<b style=\"color:var(--bad)\">×</b>":"○")+" "+(f.b3?"2回目はエンドから"+fmt(sh*100)+"cm内側":"相手の台で2回目に弾まない")+"（基準"+fmt(sm*100)+"cm以上内側）";}
+   $("v-len").textContent=f.fail?"—":(bad.length?bad.join("・"):"良い");$("s-ev").className=f.fail?"":(bad.length?"bad":"ok");$("evalTxt").innerHTML=f.fail?"サーブが入っていません。":txt;}
+  $("r-v2").textContent=f.v2?fmt(f.v2,1)+" m/s":"—";
+  $("r-peak").textContent=f.peak?"台から"+fmt(f.peak[2]*100)+"cm・"+(f.peak[0]>=0?"エンドから"+fmt(f.peak[0]*100)+"cm内側":"エンドの外"):"—";
   $("r-launch").textContent=fmt(sp,2)+" m/s・"+(el<0?"下へ"+fmt(-el,1):"上へ"+fmt(el,1))+"°・"+(Math.abs(az)<0.25?"まっすぐ":(az>0?"右へ":"左へ")+fmt(Math.abs(az),1)+"°");
   $("r-spin0").textContent=spinLong(o.w);$("r-axis").textContent=axisTxt(o.w);
   $("r-b1").textContent=f.b1?"エンドから"+fmt((TL-f.b1[0])*100)+"cm・"+lrS(f.b1[1]):"—";
@@ -317,7 +338,7 @@ function drawViews(){const cs=getComputedStyle(document.documentElement),col=n=>
     const tS=[-n[2],n[0]],sl=Math.hypot(tS[0],tS[1])||1;cs2.strokeStyle=col("--ink");cs2.lineWidth=4;cs2.lineCap="round";cs2.beginPath();cs2.moveTo(g.X(cc[0]-tS[0]/sl*L),g.Ys(cc[2]-tS[1]/sl*L));cs2.lineTo(g.X(cc[0]+tS[0]/sl*L),g.Ys(cc[2]+tS[1]/sl*L));cs2.stroke();ct.lineCap=cs2.lineCap="butt";}
   const p=pts[idx];if(p){for(const [c,yy] of [[ct,g.Yt(p[1])],[cs2,g.Ys(p[2])]]){c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(g.X(p[0]),yy,5,0,Math.PI*2);c.fill();c.stroke();}}}
 // 手元の3D：打つ瞬間のラケット・ボール・回転軸を見る（自分の目線・右横・前からを選べて、横ドラッグで回せる）
-let VIEW="hand";const CAMS={back:{yaw:20,pitch:32,dist:0.7},side:{yaw:90,pitch:12,dist:0.62},front:{yaw:150,pitch:20,dist:0.62}},V3D={...CAMS.side};let RING=null,RINGW=null;
+let VIEW="hand";const CAMS={back:{yaw:20,pitch:30,dist:1.15},side:{yaw:90,pitch:12,dist:0.95},front:{yaw:150,pitch:20,dist:0.95}},V3D={...CAMS.side};let RING=null,RINGW=null;
 function curW3(){if(!S||anim.t<0||!S.pts)return [0,0,0];const q=S.pts[Math.max(0,Math.min(S.pts.length-1,Math.floor(anim.t/DT)))];return q&&q.length>5?[q[3],q[4],q[5]]:[0,0,0];}
 function spinVis(dt){const w=curW3(),m=nrm(w);if(m<1){RING=null;return;}const ax=mul(w,1/m);
   if(!RING||!RINGW||dot(mul(RINGW,1/nrm(RINGW)),ax)<0.999){let e1=Math.abs(ax[2])<0.9?[ax[1],-ax[0],0]:[0,ax[2],-ax[1]];e1=mul(e1,1/nrm(e1));RING=[e1,cross(ax,e1)];}
@@ -362,7 +383,9 @@ function tick(ts){const dt=anim.last?Math.min(0.05,(ts-anim.last)/1000):0;anim.l
 function outputs(){const L=(id,t)=>$(id).textContent=t,v=id=>+$(id).value,sg=(x,p,n,z,u)=>Math.abs(x)<0.5?z:(x>0?p:n)+fmt(Math.abs(x))+(u||"");
   L("tho",v("th")>=0?"開き "+fmt(v("th"))+"°":"かぶせ "+fmt(-v("th"))+"°");L("pso",sg(v("ps"),"右へ","左へ","まっすぐ","°"));L("swo",fmt(v("sw"),1)+" m/s");L("beo",sg(v("be"),"上へ","下へ","水平","°"));L("alo",sg(v("al"),"右へ","左へ","前へ","°"));
   L("tbko",sg(v("tbk"),"上回転 ","下回転 ","なし"));L("tsdo",sg(v("tsd"),"右横 ","左横 ","なし"));L("tv0o",fmt(v("tv0"),2)+" m/s");L("telo",fmt(v("tel"),1)+"°");L("tazo",Math.abs(v("taz"))<0.25?"まっすぐ":(v("taz")>0?"右へ":"左へ")+fmt(Math.abs(v("taz")),1)+"°");
-  L("vto",v("vt")<0.05?"頂点":fmt(v("vt"),1)+" m/s");L("szo",fmt(v("sz")*100)+" cm");L("sxo",fmt(v("sx")*100)+" cm");L("syo",lrS(v("sy")));}
+  L("hzo",fmt(v("hz")*100)+" cm");L("ttho",fmt(v("tth")*100)+" cm");L("szo",fmt(v("sz")*100)+" cm");
+  {const apex=v("hz")+v("tth"),d=apex-v("sz");$("tossNote").textContent=d>0?"トスの頂点は台の上"+fmt(apex*100)+"cm。打つ高さまで"+fmt(d*100)+"cm落ちてくるので、当たるときの落ちる速さは "+fmt(tossV(),1)+" m/s です。":"打つ高さがトスの頂点より高いので、頂点で打つとして計算しています。";}
+  L("hmaxo",fmt(v("hmax")*100)+" cm");L("vmino",fmt(v("vmin"),1)+" m/s");L("smino",fmt(v("smin")*100)+" cm");L("sxo",fmt(v("sx")*100)+" cm");L("syo",lrS(v("sy")));}
 let pend=0;function schedule(){cancelAnimationFrame(pend);pend=requestAnimationFrame(()=>{anim.t=-PRE_T;anim.hold=0;compute();});}
 function syncMode(){const m=mode();$("g-inv").hidden=m!=="inv";$("g-fwd").querySelectorAll("input").forEach(i=>i.disabled=m==="inv");}
 document.querySelectorAll("input[type=range]").forEach(r=>{r.addEventListener("input",schedule);let sx=0,sy=0,v0=null;const rv=()=>{if(v0!==null&&r.value!==v0){r.value=v0;schedule();}};
