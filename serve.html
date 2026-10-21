@@ -215,14 +215,14 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
       <li>トスは、手の高さ＋トスの高さを頂点として、打つ高さまで自由落下した速さで当たるとしています（空気抵抗は入れていません）。</li>
       <li>よいサーブの基準は、相手のコートで弾んだ後の一番高い位置（相手の台の上にある間）、打った直後の速さ、相手の台で2回目に弾む位置で判定しています。速さの目安は、Tリーグの試合1773本のサーブを計測した研究（<a href="https://journals.sagepub.com/doi/10.1177/22150218251409592" target="_blank" rel="noopener" style="color:var(--table)">Tamaki &amp; Yoshida 2025</a>）の中央値です。この計算では、短く入れて弾んだ後をネット（15cm）より低くするのは、下回転でもぎりぎりです。</li>
       <li>ラケットが台に当たるかは、ボールに当たる10cm手前から、当たった後もまっすぐ12cm振り抜くとして、ラケットの縁とグリップの先が台の上面（エンドラインより内側）より下に入るかで判定しています。実際は打った後にスイングを持ち上げられるので、厳しめの判定です。</li>
-      <li>空気の力と台での弾みは、レシーブ編と同じです（卓球ボールのCFD式、台の反発0.89・摩擦0.25）。手首の回転や、ラケットの中心から外れた位置に当たる効果は入っていません。</li>
+      <li>空気の力と台での弾みは、レシーブ編と同じです（卓球ボールのCFD式。台での弾みは、摩擦0.25の点接触モデルに、プロの試合データで決めた「当たる速さで変わる反発」と補正を加えたもの（Sony AI 2026））。手首の回転や、ラケットの中心から外れた位置に当たる効果は入っていません。</li>
     </ul>
   </details>
 </section>
 </div>
 
-<script src="js/physics.js?v=2026102101"></script>
-<script src="js/flight3d.js?v=2026102101"></script>
+<script src="js/physics.js?v=2026102202"></script>
+<script src="js/flight3d.js?v=2026102202"></script>
 <script src="js/view3d.js?v=2026102201"></script>
 <script>
 const $=id=>document.getElementById(id);

@@ -7,9 +7,7 @@ const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],sub=(a,b)=>[a[0]-b[0],a[1]-b[1]
 function acc(v,w){const sp=nrm(v)||1e-6,q=0.5*RHO*AR*sp*sp/M;const c=cross(w,v),cn=nrm(c),Sp=R*(cn/sp)/sp;const [cd,cl]=aero(Sp);let a=mul(v,-q*cd/sp);a[2]-=G;
   if(cn>1e-9)a=add(a,mul(c,q*cl/cn));return a;}
 function step(s,dt){const a=acc(s.v,s.w);return {p:add(s.p,mul(s.v,dt)),v:add(s.v,mul(a,dt)),w:mul(s.w,Math.exp(-0.15*dt))};}
-function bounce(s){const vz=s.v[2],v2=[s.v[0],s.v[1],-0.89*vz];const u=add([s.v[0],s.v[1],0],cross(s.w,[0,0,-R]));const un=Math.hypot(u[0],u[1]);
-  let J=[0,0,0];if(un>1e-9){const j=Math.min(0.25*1.89*Math.abs(vz),un/2.5);J=[-u[0]/un*j,-u[1]/un*j,0];}
-  return {p:[s.p[0],s.p[1],1e-4],v:add(v2,J),w:add(s.w,mul(cross([0,0,1],J),-1.5/R))};}
+function bounce(s){const b=tableBounce(s.v,s.w);return {p:[s.p[0],s.p[1],1e-4],v:b.v,w:b.w};} // 台での弾みは physics.js の tableBounce
 const deg=Math.PI/180;
 function hitBall(s,n,V,pr){const rv=sub(s.v,V),vn=dot(rv,n);if(vn>-0.3)return {miss:true};
   const vt=sub(rv,mul(n,vn)),u=add(vt,cross(s.w,mul(n,-R)));let k=pr.k;

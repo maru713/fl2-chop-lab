@@ -10,3 +10,21 @@ function syncFL2Only(){const r=document.querySelector("input[name=rub]:checked")
   document.querySelectorAll("[data-fl2]").forEach(el=>{el.style.display=fl?"":"none";});}
 document.querySelectorAll("input[name=rub]").forEach(r=>r.addEventListener("change",syncFL2Only));
 document.addEventListener("DOMContentLoaded",syncFL2Only);syncFL2Only();
+
+// 台での弾み（全ページ共通）。Nakashima らの点接触モデル（摩擦0.25、滑り／転がりの判定）に、
+// Sony AI（Conti ら 2026、プロの試合データ）の「当たる速さで変わる反発」と補正項を加えたもの。
+// v,w：当たる直前の速度（m/s）と回転（rad/s）。z が上向き、右手系。返り値は当たった直後の {v,w}
+const TB_DVV=[[0,0,0],[0,0,3.378e-3],[-0.02344,0,-0.02717]],TB_DVW=[[0,3.330e-4,0],[-6.940e-4,-5.428e-5,-2.126e-4],[1.768e-5,-1.148e-5,-8.228e-6]],
+  TB_DWV=[[-0.69324,0,-1.02984],[0.51114,0,0],[0.34033,0,0]],TB_DWW=[[0.06456,3.501e-4,0.01193],[0.00756,0.00211,0.00389],[0.00314,0.00291,0.03411]];
+function tableBounce(v,w){const r=R,vz=v[2],e=Math.max(0.6,Math.min(0.98,0.98+0.02*vz)),k=1.5;
+  const vT=[v[0]-r*w[1],v[1]+r*w[0]],vtn=Math.hypot(vT[0],vT[1]),a=vtn>1e-9?Math.min(0.4,0.25*(1+e)*Math.abs(vz)/vtn):0.4;
+  const Avv=[[1-a,0,0],[0,1-a,0],[0,0,-e]],Avw=[[0,a*r,0],[-a*r,0,0],[0,0,0]],Awv=[[0,-k*a/r,0],[k*a/r,0,0],[0,0,0]],Aww=[[1-k*a,0,0],[0,1-k*a,0],[0,0,1]];
+  const vxy=Math.hypot(v[0],v[1]);
+  if(vxy>1e-6){const c=v[0]/vxy,s=v[1]/vxy,Rm=[[c,s,0],[-s,c,0],[0,0,1]];
+    // 補正は水平速度の向きにそろえた座標で与えられているので、Rᵀ·ΔA·R で元の座標に戻して引く
+    const sub_=(A,D)=>{for(let i=0;i<3;i++)for(let j=0;j<3;j++){let t=0;for(let p=0;p<3;p++)for(let q=0;q<3;q++)t+=Rm[p][i]*D[p][q]*Rm[q][j];A[i][j]-=t;}};
+    sub_(Avv,TB_DVV);sub_(Avw,TB_DVW);sub_(Awv,TB_DWV);sub_(Aww,TB_DWW);}
+  const mv=(A,x)=>[0,1,2].map(i=>A[i][0]*x[0]+A[i][1]*x[1]+A[i][2]*x[2]);const p1=mv(Avv,v),p2=mv(Avw,w),q1=mv(Awv,v),q2=mv(Aww,w);
+  return {v:[p1[0]+p2[0],p1[1]+p2[1],p1[2]+p2[2]],w:[q1[0]+q2[0],q1[1]+q2[1],q1[2]+q2[2]]};}
+// 横から見た2次元の図（カット・攻撃）用：x＝台の長さ方向、y＝高さ、om＝紙面に垂直な軸の回転（接点の速さ＝vx＋om·R の向き）
+function tableBounce2D(vx,vy,om){const b=tableBounce([vx,0,vy],[0,-om,0]);return [b.v[0],b.v[2],-b.w[1]];}

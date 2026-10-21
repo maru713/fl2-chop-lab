@@ -244,7 +244,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
       <li>ロングピップスの「つかむ強さ」は裏ソフトよりずっと小さいと測定されています（Gossard 2026）。比率の数値は確認できず、FL2の測定もありません。</li>
       <li>反発は同じ研究でアンチラバーが0.53でした。粒高OXはそれ以下と推定しています。ロングピップスは回転が速いほど反発が下がるとされていますが、このモデルでは一定です。</li>
       <li>FL2は返球時に回転の20%を失う、裏ソフトは失わないと仮定しています。</li>
-      <li>空気の力は上の式（切り替え可）。台での弾みは反発0.89・摩擦0.25。相手はエンドラインの後ろ0.5m・台から30cmの高さで打つ想定。図は縦横同じ比率で、球の大きさだけ実際より大きく描いています。</li>
+      <li>空気の力は上の式（切り替え可）。台での弾みは、摩擦0.25の点接触モデルに、プロの試合データで決めた「当たる速さで変わる反発（0.98−0.02×縦の速さ）」と補正を加えたもの（Sony AI 2026）。相手はエンドラインの後ろ0.5m・台から30cmの高さで打つ想定。図は縦横同じ比率で、球の大きさだけ実際より大きく描いています。</li>
     </ul>
     <p class="note src">出典：
       <a href="https://arxiv.org/html/2604.11349" target="_blank" rel="noopener">Gossard 2026, Learning Racket-Ball Bounce Dynamics Across Diverse Rubbers</a> ／
@@ -255,7 +255,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 </div>
 
 <p style="text-align:center;font-size:13px;margin:0 0 32px"><a href="attack.html">攻撃編</a> ／ <a href="receive.html">レシーブ編</a> ／ <a href="grip.html">ラバーがつかむ仕組み</a></p>
-<script src="js/physics.js?v=2026102003"></script>
+<script src="js/physics.js?v=2026102202"></script>
 <script src="js/side-view.js?v=2026102003"></script>
 <script>
 const M=0.0027,R=0.02,AR=Math.PI*R*R,RHO=1.2,CD=0.5,G=9.8;
@@ -289,8 +289,7 @@ function incoming(v0,rps,target,dist,arc,angDeg){const a=angDeg!==undefined?angD
   let bxHit=null;let s={x:TL+0.5,y:0.3,vx:-v0*Math.cos(a),vy:v0*Math.sin(a),om:rps*2*Math.PI},pts=[[s.x,s.y,s.om]],t=0,bounced=false,hit=null,peak=-9,cross0=null,crossM=null;
   while(t<4){const p=s;s=stepS(s,DT);t+=DT;
     if(!bounced&&s.y<=0){bounced=true;bxHit=s.x;if(s.x<0||s.x>NETX)return {fail:s.x>NETX?"相手の打球が相手側のコートに落ちます（ネットを越えません）。角度を上げるか速さを上げてください。":"相手の打球が自分のコートを越えてオーバーします。角度を下げるか速さを下げてください。",pts};
-      const vy2=-0.89*s.vy,slip=s.vx+s.om*R;const J=-Math.min(0.25*1.89*Math.abs(s.vy),Math.abs(slip)/2.5)*Math.sign(slip);
-      s={x:s.x,y:1e-4,vx:s.vx+J,vy:vy2,om:s.om+1.5*J/R};}
+      const nb=tableBounce2D(s.vx,s.vy,s.om);s={x:s.x,y:1e-4,vx:nb[0],vy:nb[1],om:nb[2]};}
     if(!hit)pts.push([s.x,s.y,s.om]);
     if(!bounced&&p.x>NETX&&s.x<=NETX&&s.y<NETH)return {fail:"相手の打球がネットにかかります。角度か速さを上げてください。",pts};
     if(bounced){peak=Math.max(peak,s.y);
@@ -314,8 +313,7 @@ function flyOut(s0,rec,dt){dt=dt||DT;if(s0.miss)return {res:"面の裏に当た�
   while(t<3){const p=s;s=stepS(s,dt);t+=dt;if(rec)pts.push([s.x,s.y,s.om]);
     if(p.x<NETX&&s.x>=NETX){const yy=p.y+(s.y-p.y)*(NETX-p.x)/(s.x-p.x);if(yy<NETH)return {res:"ネット",pts};clr=yy-NETH;}
     if(s.x>=0&&s.y<=0){if(s.x<NETX||s.x>TL)return {res:s.x<NETX?"自コート":"オーバー",pts,clr,land:s.x};
-      const land=s.x,vy2=-0.89*s.vy,slip=s.vx+s.om*R,J=-Math.min(0.25*1.89*Math.abs(s.vy),Math.abs(slip)/2.5)*Math.sign(slip);
-      s={x:s.x,y:1e-4,vx:s.vx+J,vy:vy2,om:s.om+1.5*J/R};let pk={x:s.x,y:0},t2=0;
+      const land=s.x,nb=tableBounce2D(s.vx,s.vy,s.om);s={x:s.x,y:1e-4,vx:nb[0],vy:nb[1],om:nb[2]};let pk={x:s.x,y:0},t2=0;
       while(t2<1.5){s=stepS(s,dt);t2+=dt;if(rec)pts.push([s.x,s.y,s.om]);if(s.y>pk.y)pk={x:s.x,y:s.y};
         if(s.vy<0&&(!rec||s.y<pk.y*0.4||s.x>TL+1.3))break;}
       return {res:"入る",pts,clr,land,pk};}
