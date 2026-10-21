@@ -283,9 +283,11 @@ function fly(s0){let s={p:[...s0.p],v:[...s0.v],w:[...s0.w]};const pts=[[...s.p,
     if(stage===2&&(s.p[0]<-1.2||s.p[2]<-0.76))break;}
   if(!o.fail&&stage<2)o.fail="相手のコートに届きません";
   return o;}
-const PRE_T=0.08; // 当たる前から再生する時間（秒）
+let PRE_T=0.3; // 当たる前から再生する時間（秒）：トスが手を離れてから当たるまで。compute で決める
+// 当たる時刻を0として、t<0 のトス中のボールの高さ（手から上がって頂点を過ぎ、打つ高さまで落ちる）
+function tossZ(t){const sz=S.s0.p[2],vt=-S.s0.v[2];return sz-vt*t-0.5*G*t*t;}
 let S=null,anim={t:-PRE_T,playing:!matchMedia("(prefers-reduced-motion: reduce)").matches,last:0,hold:0,speed:0.25};
-function compute(){const s0=tossState(),pr=P();let inv=null;
+function compute(){const s0=tossState(),pr=P();let inv=null;PRE_T=Math.sqrt(2*(+$("tth").value)/G)+tossV()/G;
   if(mode()==="inv"){inv=inverse();inv.a=setFwdFrom(inv.n,inv.V);}
   outputs();const rk=inv?{n:inv.n,V:inv.V}:fwdRacket(),o=hitBall(s0,rk.n,rk.V,pr);const w=$("warn");
   if(o.miss){S={pts:[[...s0.p,0,0,0]],rk,s0,o:null};w.hidden=false;w.textContent="ラケットがボールに向かって動いていないので当たりません。面の向きかスイングの向きを変えてください。";["v-res","v-spin","v-speed","v-len","r-v2","r-peak","r-launch","r-spin0","r-axis","r-b1","r-net","r-b2","r-spin2","r-curve","r-kick","r-after"].forEach(i=>$(i).textContent="—");$("s-res").className="bad";howto(inv,null);return;}
@@ -336,7 +338,7 @@ function drawViews(){const cs=getComputedStyle(document.documentElement),col=n=>
     const cc=add(sub(h,mul(dir,off)),mul(rk.n,-R*1.4)),n=rk.n;
     const tT=[-n[1],n[0]],tl=Math.hypot(tT[0],tT[1])||1;ct.strokeStyle=col("--ink");ct.lineWidth=4;ct.lineCap="round";ct.beginPath();ct.moveTo(g.X(cc[0]-tT[0]/tl*L),g.Yt(cc[1]-tT[1]/tl*L));ct.lineTo(g.X(cc[0]+tT[0]/tl*L),g.Yt(cc[1]+tT[1]/tl*L));ct.stroke();
     const tS=[-n[2],n[0]],sl=Math.hypot(tS[0],tS[1])||1;cs2.strokeStyle=col("--ink");cs2.lineWidth=4;cs2.lineCap="round";cs2.beginPath();cs2.moveTo(g.X(cc[0]-tS[0]/sl*L),g.Ys(cc[2]-tS[1]/sl*L));cs2.lineTo(g.X(cc[0]+tS[0]/sl*L),g.Ys(cc[2]+tS[1]/sl*L));cs2.stroke();ct.lineCap=cs2.lineCap="butt";}
-  const p=pts[idx];if(p){for(const [c,yy] of [[ct,g.Yt(p[1])],[cs2,g.Ys(p[2])]]){c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(g.X(p[0]),yy,5,0,Math.PI*2);c.fill();c.stroke();}}}
+  const p=anim.t<0?[S.s0.p[0],S.s0.p[1],tossZ(anim.t)]:pts[idx];if(p){for(const [c,yy] of [[ct,g.Yt(p[1])],[cs2,g.Ys(p[2])]]){c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(g.X(p[0]),yy,5,0,Math.PI*2);c.fill();c.stroke();}}}
 // 手元の3D：打つ瞬間のラケット・ボール・回転軸を見る（自分の目線・右横・前からを選べて、横ドラッグで回せる）
 let VIEW="hand";const CAMS={back:{yaw:20,pitch:30,dist:1.15},side:{yaw:90,pitch:12,dist:0.95},front:{yaw:150,pitch:20,dist:0.95}},V3D={...CAMS.side};let RING=null,RINGW=null;
 function curW3(){if(!S||anim.t<0||!S.pts)return [0,0,0];const q=S.pts[Math.max(0,Math.min(S.pts.length-1,Math.floor(anim.t/DT)))];return q&&q.length>5?[q[3],q[4],q[5]]:[0,0,0];}
@@ -355,14 +357,15 @@ function draw3D(){const cv=$("c3d"),W=cv.parentElement.clientWidth||340,H=Math.r
    if(q.every(Boolean)){c.globalAlpha=0.22;c.fillStyle=col("--table");c.beginPath();q.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath();c.fill();c.globalAlpha=1;}
    c.globalAlpha=0.6;seg([TL,HW,0],[TL,-HW,0],col("--table"),2.5);seg([TL,HW,0],[x0,HW,0],col("--table"),2);seg([TL,-HW,0],[x0,-HW,0],col("--table"),2);c.globalAlpha=1;}
   const t=anim.t,rk=S.rk,sw=nrm(rk.V)||1,dir=mul(rk.V,1/sw);
-  const ballP=t<0?add(h,mul(S.s0.v,t)):(S.pts[Math.max(0,Math.min(S.pts.length-1,Math.floor(t/DT)))]||h).slice(0,3);
+  const ballP=t<0?[h[0],h[1],tossZ(t)]:(S.pts[Math.max(0,Math.min(S.pts.length-1,Math.floor(t/DT)))]||h).slice(0,3);
   {const sh=P([ballP[0],ballP[1],0]);if(sh&&ballP[2]>0){c.globalAlpha=0.25;c.fillStyle=col("--ink");c.beginPath();c.ellipse(sh[0],sh[1],Math.max(2,R/sh[2]*F),Math.max(1,R/sh[2]*F*0.4),0,0,Math.PI*2);c.fill();c.globalAlpha=1;}}
   // トスの通り道・ラケットの通り道・打球の向き
-  seg(add(h,[0,0,0.25]),h,col("--muted"),1.2,[2,3]);seg(sub(h,mul(dir,0.25)),add(h,mul(dir,0.2)),col("--swing"),1.5,[5,4]);
+  {const hz=+$("hz").value,ap=hz+(+$("tth").value);seg([h[0],h[1],hz],[h[0],h[1],Math.max(ap,h[2])],col("--muted"),1.2,[2,3]);
+   const hp=P([h[0],h[1],hz]);if(hp){c.globalAlpha=0.5;c.fillStyle=col("--muted");c.beginPath();c.ellipse(hp[0],hp[1],Math.max(4,0.045/hp[2]*F),Math.max(2,0.015/hp[2]*F),0,0,Math.PI*2);c.fill();c.globalAlpha=1;}}seg(sub(h,mul(dir,0.25)),add(h,mul(dir,0.2)),col("--swing"),1.5,[5,4]);
   arrow(add(h,mul(dir,0.12)),add(h,mul(dir,0.2)),col("--swing"),2);
   if(S.o){const vo=S.o.v,vm=nrm(vo);if(vm>0.1)arrow(h,add(h,mul(vo,0.22/vm)),col("--in"),1.5);}
   // ラケットは当たる前後だけ動かす
-  const tc=Math.max(-PRE_T,Math.min(0.06,t)),rkP=add(h,mul(rk.V,tc));const rb=document.querySelector("input[name=rub]:checked").value,bh=(rb==="11"||rb==="ox");
+  const tc=Math.max(-0.12,Math.min(0.06,t)),rkP=add(h,mul(rk.V,tc));const rb=document.querySelector("input[name=rub]:checked").value,bh=(rb==="11"||rb==="ox");
   const pref=bh?[0.35,0.85,-0.40]:[0.45,-0.75,-0.45];
   const drawBall=()=>{const q=P(ballP);if(!q)return;const rr=Math.max(2,R/q[2]*F);c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(q[0],q[1],rr,0,Math.PI*2);c.fill();c.stroke();
     const w=curW3(),m=nrm(w);if(m>TAU*2&&RING){const ax=mul(w,1/m);seg(sub(ballP,mul(ax,R*2.6)),add(ballP,mul(ax,R*2.6)),col("--axis"),2.5);
@@ -371,7 +374,7 @@ function draw3D(){const cv=$("c3d"),W=cv.parentElement.clientWidth||340,H=Math.r
   const ballNear=dot(sub(ballP,eye),fw)<dot(sub(add(rkP,mul(rk.n,-R)),eye),fw);
   if(ballNear){racket3D(c,P,eye,F,rkP,rk.n,pref,bh,col);drawBall();}else{drawBall();racket3D(c,P,eye,F,rkP,rk.n,pref,bh,col);}
   c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.fillText((bh?"黒＝FL2の面":"赤＝裏ソフトの面")+"・緑＝面の向き・紫＝回転軸・点線＝ラケットの動き",6,H-6);
-  c.fillStyle=col("--ink");c.font="11px "+col("--f-num");c.fillText(t<0?"当たる前":"打った後："+spinShort(S.o?S.o.w:[0,0,0]),6,14);}
+  c.fillStyle=col("--ink");c.font="11px "+col("--f-num");c.fillText(t<0?(t<-(tossV()/G)?"トス（上がっていく）":"トス（落ちてくる）"):"打った後："+spinShort(S.o?S.o.w:[0,0,0]),6,14);}
 {const cv=$("c3d");let drag=null;
   cv.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY,yaw:V3D.yaw,pitch:V3D.pitch,mouse:e.pointerType==="mouse"};cv.setPointerCapture(e.pointerId);cv.style.cursor="grabbing";});
   cv.addEventListener("pointermove",e=>{if(!drag)return;V3D.yaw=drag.yaw-(e.clientX-drag.x)*0.5;if(drag.mouse)V3D.pitch=Math.max(-10,Math.min(80,drag.pitch+(e.clientY-drag.y)*0.4));if(!anim.playing)draw3D();});
@@ -386,7 +389,7 @@ function outputs(){const L=(id,t)=>$(id).textContent=t,v=id=>+$(id).value,sg=(x,
   L("hzo",fmt(v("hz")*100)+" cm");L("ttho",fmt(v("tth")*100)+" cm");L("szo",fmt(v("sz")*100)+" cm");
   {const apex=v("hz")+v("tth"),d=apex-v("sz");$("tossNote").textContent=d>0?"トスの頂点は台の上"+fmt(apex*100)+"cm。打つ高さまで"+fmt(d*100)+"cm落ちてくるので、当たるときの落ちる速さは "+fmt(tossV(),1)+" m/s です。":"打つ高さがトスの頂点より高いので、頂点で打つとして計算しています。";}
   L("hmaxo",fmt(v("hmax")*100)+" cm");L("vmino",fmt(v("vmin"),1)+" m/s");L("smino",fmt(v("smin")*100)+" cm");L("sxo",fmt(v("sx")*100)+" cm");L("syo",lrS(v("sy")));}
-let pend=0;function schedule(){cancelAnimationFrame(pend);pend=requestAnimationFrame(()=>{anim.t=-PRE_T;anim.hold=0;compute();});}
+let pend=0;function schedule(){cancelAnimationFrame(pend);pend=requestAnimationFrame(()=>{compute();anim.t=-PRE_T;anim.hold=0;});}
 function syncMode(){const m=mode();$("g-inv").hidden=m!=="inv";$("g-fwd").querySelectorAll("input").forEach(i=>i.disabled=m==="inv");}
 document.querySelectorAll("input[type=range]").forEach(r=>{r.addEventListener("input",schedule);let sx=0,sy=0,v0=null;const rv=()=>{if(v0!==null&&r.value!==v0){r.value=v0;schedule();}};
   r.addEventListener("touchstart",e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;v0=r.value;},{passive:true});
@@ -404,7 +407,7 @@ function modeNote(){const v=document.querySelector("input[name=rub]:checked").va
 document.querySelectorAll("input[name=rub]").forEach(r=>r.addEventListener("change",modeNote));modeNote();
 // 初期値：「下回転ショート」の逆算結果を当て方の初期値にする
 (function init(){const e=EX.back;for(const k in e)$(k).value=e[k];document.querySelector("input[name=ex][value=back]").checked=true;const inv=inverse();setFwdFrom(inv.n,inv.V);
-  syncMode();$("play").textContent=anim.playing?"一時停止":"再生";compute();if(!anim.playing)anim.t=total();requestAnimationFrame(tick);})();
+  syncMode();$("play").textContent=anim.playing?"一時停止":"再生";compute();anim.t=anim.playing?-PRE_T:total();requestAnimationFrame(tick);})();
 </script>
 
 </body>
