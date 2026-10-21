@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>サーブ回転ラボ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: phone-first — sticky stage with top view + side view (server on the left), then how-to-hit controls, then the results */
+:root{
+  --bg:#f3f5f4; --surface:#ffffff; --ink:#18221f; --muted:#5b6964; --line:#d5dcd9;
+  --table:#1f5a7a; --net:#18221f; --in:#d0611f; --out:#11806a; --bad:#b3362c; --swing:#7c8a85;
+  --ball:#fbfaf7;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111715; --surface:#19211e; --ink:#e6ece9; --muted:#9aa8a3; --line:#2c3733;
+  --table:#3c86ad; --net:#e6ece9; --in:#f08a4b; --out:#3cc2a3; --bad:#ef7a6e; --swing:#8d9b96; --ball:#f4f1ea; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111715; --surface:#19211e; --ink:#e6ece9; --muted:#9aa8a3; --line:#2c3733;
+  --table:#3c86ad; --net:#e6ece9; --in:#f08a4b; --out:#3cc2a3; --bad:#ef7a6e; --swing:#8d9b96; --ball:#f4f1ea; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65}
+.wrap{max-width:820px;margin:0 auto;padding-inline:16px;padding-block:14px 48px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.wrap>*{min-width:0}
+h1{font-size:1.35rem;font-weight:700;margin:0;line-height:1.3}
+h2{font-size:1rem;font-weight:700;margin:0 0 4px}
+.lead{margin:2px 0 0;color:var(--muted);font-size:13px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.stage{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:4px 6px;margin-inline:-16px;padding-inline:16px;border-bottom:1px solid var(--line)}
+.stage.unpinned{position:static}
+.views{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.views canvas{display:block;width:100%}
+.vlab{font-size:10px;color:var(--muted);padding:2px 8px 0}
+.vtabs{display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap}
+.vtabs button,.vtabs span button{font:inherit;font-size:12px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:3px 12px;min-height:30px;cursor:pointer}
+.vtabs button[aria-pressed="true"]{border-color:var(--table);color:var(--table);font-weight:700}
+#eye{display:block;width:100%}
+.mini{display:flex;align-items:stretch;gap:6px;margin-top:5px}
+.btn{font:inherit;font-size:14px;font-weight:700;border:1px solid var(--table);background:var(--table);color:var(--surface);border-radius:999px;padding:6px 16px;min-height:36px;cursor:pointer}
+.btn.sm{font-size:12px;padding:2px 10px;min-height:32px;white-space:nowrap}
+.btn:focus-visible,.seg label:has(input:focus-visible){outline:2px solid var(--table);outline-offset:2px}
+.pin{font:inherit;font-size:11px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:8px;padding:2px 6px;cursor:pointer;white-space:nowrap}
+.pin[aria-pressed="true"]{color:var(--table);border-color:var(--table)}
+.sum{flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;min-width:0}
+.sum div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px 6px;min-width:0}
+.sum small{display:block;font-size:10px;color:var(--muted);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sum b{display:block;font-family:var(--f-num);font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+.sum .ok b{color:var(--out)} .sum .bad b{color:var(--bad)}
+.legend{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:11px;color:var(--muted);margin-top:4px}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px;border-radius:2px}
+.row{display:grid;grid-template-columns:1fr auto;gap:0 10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.row label{font-size:14px} .row output{font-family:var(--f-num);font-size:14px;font-variant-numeric:tabular-nums}
+.row input[type=range]{grid-column:1/-1;width:100%;height:30px;margin:2px 0 0;accent-color:var(--table);touch-action:pan-y}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:6px 0 4px}
+.seg label{position:relative;border:1px solid var(--line);border-radius:10px;padding:8px 4px;font-size:13px;text-align:center;cursor:pointer;min-height:40px;display:grid;place-items:center}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){border-color:var(--table);color:var(--table);font-weight:700}
+.note{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:14px;margin:6px 0 4px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums}
+#map{display:block;width:100%;touch-action:manipulation}
+details>summary{cursor:pointer;font-weight:700;padding:4px 0;min-height:32px}
+ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
+.warn{color:var(--bad);font-size:13px;margin:4px 0 0}
+.src a{color:var(--table);word-break:break-all}
+
+.grp{display:grid;gap:0}
+.res{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px;margin:6px 0 0}
+.res dt{color:var(--muted)} .res dd{margin:0;text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+.howto{font-size:14px;margin:6px 0 0;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.howto b{color:var(--table)}
+.go{display:inline-block;margin-top:8px;font-weight:700;color:var(--table)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <h1>サーブ回転ラボ</h1>
+  <p class="lead">トスしたボールにラケットをどう当てると、どんな回転と軌道のサーブになるかを計算します。欲しい回転から当て方を逆算することもできます。右利き・自分（サーバー）から見た左右で表示します。</p>
+</header>
+
+<section class="stage" id="stage" aria-label="サーブの軌道のアニメーション">
+  <div class="vtabs" role="group" aria-label="再生速度"><span style="font-size:12px;color:var(--muted);align-self:center">再生</span><button type="button" data-s="0.1" aria-pressed="false">1/10</button><button type="button" data-s="0.25" aria-pressed="true">1/4</button><button type="button" data-s="1" aria-pressed="false">実速</button></div>
+  <div class="views">
+    <div class="vlab">上から見た図（左が自分、下＝自分から見て右）</div>
+    <canvas id="top" role="img" aria-label="上から見た台とサーブの軌道"></canvas>
+    <div class="vlab">横から見た図</div>
+    <canvas id="side" role="img" aria-label="横から見た台とサーブの軌道"></canvas>
+  </div>
+  <div class="mini">
+    <button class="btn sm" id="play" type="button">一時停止</button>
+    <div class="sum">
+      <div id="s-res"><small>結果</small><b id="v-res">—</b></div>
+      <div><small>回転（相手から見て）</small><b id="v-spin">—</b></div>
+      <div><small>打球の速さ</small><b id="v-speed">—</b></div>
+      <div><small>長さ</small><b id="v-len">—</b></div>
+    </div>
+    <button class="pin" id="pin" type="button" aria-pressed="true">固定</button>
+  </div>
+  <p class="warn" id="warn" hidden></p>
+</section>
+
+<section class="panel" aria-label="凡例">
+  <div class="legend">
+    <span><i style="background:var(--in)"></i>サーブ（入る）</span>
+    <span><i style="background:var(--bad)"></i>サーブ（入らない）</span>
+    <span><i style="background:var(--swing)"></i>ラケットの動き</span>
+    <span><i style="background:var(--ink)"></i>ラケットの面</span>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="h-hit">
+  <h2 id="h-hit">当て方</h2>
+  <div class="seg" role="radiogroup" aria-label="入力の仕方" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+    <label><input type="radio" name="mode" value="fwd" checked>当て方から計算</label>
+    <label><input type="radio" name="mode" value="inv">欲しい回転から逆算</label>
+  </div>
+  <div class="seg" role="radiogroup" aria-label="ラバー" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    <label><input type="radio" name="rub" value="g9" checked>グレイザー<br>09C</label>
+    <label><input type="radio" name="rub" value="inv">テンション<br>系</label>
+    <label><input type="radio" name="rub" value="11">FL2 薄</label>
+    <label><input type="radio" name="rub" value="ox">FL2 OX</label>
+  </div>
+  <p class="note" id="modeNote" style="margin:2px 0 6px"></p>
+
+  <div class="grp" id="g-inv" hidden>
+    <div class="seg" role="group" aria-label="欲しいサーブの例" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <label><input type="radio" name="ex" value="back">下回転<br>ショート</label>
+      <label><input type="radio" name="ex" value="sideback">横下回転</label>
+      <label><input type="radio" name="ex" value="sidetop">横上回転</label>
+      <label><input type="radio" name="ex" value="knuckle">ナックル</label>
+      <label><input type="radio" name="ex" value="long">下回転<br>ロング</label>
+      <label><input type="radio" name="ex" value="rside">逆横下</label>
+    </div>
+    <div class="row"><label for="tbk">欲しい上下の回転（＋上回転／−下回転）</label><output id="tbko"></output><input type="range" id="tbk" min="-80" max="60" step="1" value="-50"></div>
+    <div class="row"><label for="tsd">欲しい横回転（相手から見て ＋右へ曲がる／−左へ）</label><output id="tsdo"></output><input type="range" id="tsd" min="-80" max="80" step="1" value="0"></div>
+    <div class="row"><label for="tv0">打ち出しの速さ</label><output id="tv0o"></output><input type="range" id="tv0" min="2" max="12" step="0.05" value="5"></div>
+    <div class="row"><label for="tel">打ち出しの上下の角度（−下向き）</label><output id="telo"></output><input type="range" id="tel" min="-40" max="10" step="0.5" value="-20"></div>
+    <div class="row"><label for="taz">打ち出しの左右の向き（＋自分から見て右へ）</label><output id="tazo"></output><input type="range" id="taz" min="-25" max="25" step="0.5" value="0"></div>
+    <p class="howto" id="howto"></p>
+  </div>
+
+  <div class="grp" id="g-fwd">
+    <div class="row"><label for="th">面の開き（0＝垂直、＋上に開く／−かぶせる）</label><output id="tho"></output><input type="range" id="th" min="-40" max="90" step="1" value="60"></div>
+    <div class="row"><label for="ps">面の左右の向き（＋自分から見て右へ向ける）</label><output id="pso"></output><input type="range" id="ps" min="-90" max="90" step="1" value="0"></div>
+    <div class="row"><label for="sw">スイングの速さ</label><output id="swo"></output><input type="range" id="sw" min="0.5" max="25" step="0.1" value="10"></div>
+    <div class="row"><label for="be">スイングの上下の向き（＋上へ／−下へ）</label><output id="beo"></output><input type="range" id="be" min="-80" max="60" step="1" value="-25"></div>
+    <div class="row"><label for="al">スイングの左右の向き（0＝前へ、＋右へ／−左へ、±90＝真横）</label><output id="alo"></output><input type="range" id="al" min="-150" max="150" step="1" value="0"></div>
+  </div>
+
+  <details style="margin-top:6px">
+    <summary>トスと打つ位置</summary>
+    <div class="row"><label for="vt">トスが落ちてくる速さ（0＝頂点で打つ）</label><output id="vto"></output><input type="range" id="vt" min="0" max="3" step="0.1" value="1"></div>
+    <div class="row"><label for="sz">打つ高さ（台の上面から）</label><output id="szo"></output><input type="range" id="sz" min="0.02" max="0.45" step="0.01" value="0.2"></div>
+    <div class="row"><label for="sx">エンドラインからの距離</label><output id="sxo"></output><input type="range" id="sx" min="0" max="0.5" step="0.01" value="0.15"></div>
+    <div class="row"><label for="sy">打つ位置の左右（＋自分から見て右、0＝センターライン）</label><output id="syo"></output><input type="range" id="sy" min="-0.7" max="0.7" step="0.01" value="-0.3"></div>
+    <div data-fl2>
+      <div class="seg" role="radiogroup" aria-label="粒の先端の摩擦係数"><label><input type="radio" name="pmu" value="0.5" checked>摩擦 0.5</label><label><input type="radio" name="pmu" value="0.8">摩擦 0.8</label><label><input type="radio" name="pmu" value="1.0">摩擦 1.0</label></div>
+      <div class="seg" role="radiogroup" aria-label="ゴムの硬さ"><label><input type="radio" name="pE" value="1.5">ゴム 柔らかめ</label><label><input type="radio" name="pE" value="2.5" checked>ゴム 普通</label><label><input type="radio" name="pE" value="4.0">ゴム 硬め</label></div>
+    </div>
+  </details>
+</section>
+
+<section class="panel" aria-labelledby="h-res">
+  <h2 id="h-res">結果</h2>
+  <dl class="res">
+    <dt>打ち出し</dt><dd id="r-launch">—</dd>
+    <dt>打った直後の回転</dt><dd id="r-spin0">—</dd>
+    <dt>回転軸</dt><dd id="r-axis">—</dd>
+    <dt>自分のコートで弾む位置</dt><dd id="r-b1">—</dd>
+    <dt>ネットの上</dt><dd id="r-net">—</dd>
+    <dt>相手のコートで弾む位置</dt><dd id="r-b2">—</dd>
+    <dt>相手のコートに来たときの回転</dt><dd id="r-spin2">—</dd>
+    <dt>空中での曲がり（相手から見て）</dt><dd id="r-curve">—</dd>
+    <dt>相手のコートでの跳ね方</dt><dd id="r-kick">—</dd>
+    <dt>そのあと</dt><dd id="r-after">—</dd>
+  </dl>
+  <a class="go" id="go-rcv" href="receive.html">このサーブをレシーブ編で受ける →</a>
+</section>
+
+<section class="panel">
+  <details>
+    <summary>計算の仮定と根拠</summary>
+    <ul class="find">
+      <li>ラケットとボールは1回だけ当たるとして、レシーブ編と同じ接触の計算（ラバーごとのつかむ強さと反発の表）を使っています。トスのボールは回転していないとします。</li>
+      <li>回転していないボールを1回打つと、回転の軸は必ず「打球の速さからトスの落ちる速さを引いた向き」と直角になります。そのため、進む向きを軸にした回転（レシーブ編の「回転軸の傾き」）は自由には決められず、上下・横の回転と打ち出しの角度、トスの落ちる速さで決まります。</li>
+      <li>完全に食いついてこするだけで打っても、回転によるボールの表面の速さは、ボールの速さの変化の1.5倍までです。逆算でこれを超える回転を選ぶと、出せる一番強い回転に下げて計算します。</li>
+      <li>逆算では、欲しい回転と打ち出しから、面の向きを式で求め、ラバーの表を使ってラケットの速さと向きを探しています。ラバーがつかみきれないと、欲しい回転より弱くなります。</li>
+      <li>空気の力と台での弾みは、レシーブ編と同じです（卓球ボールのCFD式、台の反発0.89・摩擦0.25）。手首の回転や、ラケットの中心から外れた位置に当たる効果は入っていません。</li>
+    </ul>
+  </details>
+</section>
+</div>
+
+<script src="js/physics.js?v=2026102101"></script>
+<script src="js/flight3d.js?v=2026102101"></script>
+<script>
+const $=id=>document.getElementById(id);
+const DT=1e-3,TAU=2*Math.PI;
+const P=()=>PRE[document.querySelector("input[name=rub]:checked").value];
+const fmt=(n,d=0)=>(Math.round(n*10**d)/10**d).toFixed(d);
+// 自分（サーバー）は x＝TL 側に立ち、−x へ打つ。自分から見て右＝+y、相手（レシーバー）から見て右＝−y
+const mode=()=>document.querySelector("input[name=mode]:checked").value;
+const EX={back:{tbk:-45,tsd:0,tv0:5.5,tel:-22.5,taz:0},sideback:{tbk:-35,tsd:30,tv0:5.5,tel:-29.5,taz:-5},sidetop:{tbk:20,tsd:35,tv0:5.25,tel:-31.5,taz:-5},knuckle:{tbk:-5,tsd:0,tv0:5.75,tel:-26,taz:0},long:{tbk:-35,tsd:0,tv0:6.5,tel:-16.5,taz:0},rside:{tbk:-35,tsd:-30,tv0:6.25,tel:-18,taz:5}};
+function tossState(){return {p:[TL+(+$("sx").value),+$("sy").value,+$("sz").value],v:[0,0,-(+$("vt").value)],w:[0,0,0]};}
+function faceN(th,ps){return [-Math.cos(th*deg)*Math.cos(ps*deg),Math.cos(th*deg)*Math.sin(ps*deg),Math.sin(th*deg)];}
+function swingV(sw,be,al){return [-sw*Math.cos(be*deg)*Math.cos(al*deg),sw*Math.cos(be*deg)*Math.sin(al*deg),sw*Math.sin(be*deg)];}
+function fwdRacket(){return {n:faceN(+$("th").value,+$("ps").value),V:swingV(+$("sw").value,+$("be").value,+$("al").value)};}
+// レシーブ編のスライダーと同じ表し方（相手から見て）：sbk＋上回転、ssd＋右横、sgx＋相手のバウンドで右へ跳ねる
+const comp=w=>({sbk:-w[1]/TAU,ssd:w[2]/TAU,sgx:w[0]/TAU});
+function spinShort(w){const c=comp(w),a=Math.abs(c.sbk)<3?"縦なし":(c.sbk>0?"上":"下")+fmt(Math.abs(c.sbk)),b=Math.abs(c.ssd)<3?"横なし":(c.ssd>0?"右横":"左横")+fmt(Math.abs(c.ssd));return a+"・"+b;}
+function spinLong(w){const c=comp(w);return spinShort(w)+"・進む向き"+(Math.abs(c.sgx)<1?"なし":(c.sgx>0?"＋":"−")+fmt(Math.abs(c.sgx)))+"（回転/秒）";}
+function axisTxt(w){const m=nrm(w);if(m<TAU*2)return "ほぼ回転なし（ナックル）";const c=comp(w),vert=Math.atan2(Math.abs(c.ssd),Math.hypot(c.sbk,c.sgx))/deg,fw=Math.atan2(Math.abs(c.sgx),Math.abs(c.sbk))/deg;
+  return "合計"+fmt(m/TAU)+"回転/秒・水平から"+fmt(vert)+"°起きている・左右方向から進む向きへ"+fmt(fw)+"°";}
+const lrS=y=>Math.abs(y)<0.005?"中央":(y>0?"右"+fmt(y*100)+"cm":"左"+fmt(-y*100)+"cm");
+// 逆算：欲しい回転と打ち出しに合うように、面の向き（2つの角度）とラケットの速度（3成分）を同時に探す
+function solveLin(A,b){const n=b.length,M_=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M_[r][c])>Math.abs(M_[p][c]))p=r;[M_[c],M_[p]]=[M_[p],M_[c]];const d=M_[c][c];if(Math.abs(d)<1e-12)return null;
+    for(let r=0;r<n;r++){if(r===c)continue;const f=M_[r][c]/d;for(let k=c;k<=n;k++)M_[r][k]-=f*M_[c][k];}}return M_.map((r,i)=>r[n]/r[i]);}
+function inverse(){const s0=tossState(),pr=P(),v0=+$("tv0").value,el=+$("tel").value*deg,az=+$("taz").value*deg,tbk=+$("tbk").value,tsd=+$("tsd").value;
+  const vout=[-v0*Math.cos(el)*Math.cos(az),v0*Math.cos(el)*Math.sin(az),v0*Math.sin(el)],dv=sub(vout,s0.v);
+  // 1回の接触なら回転軸は (打球−トス) と直角：進む向きの回転はこれで決まる
+  const wy=-tbk*TAU,wz=tsd*TAU,wx=-(wy*dv[1]+wz*dv[2])/dv[0],wWant=[wx,wy,wz],ratio=(2*R/3)*nrm(wWant)/nrm(dv);
+  const resid=x=>{const o=hitBall(s0,faceN(x[0],x[1]),[x[2],x[3],x[4]],pr);if(o.miss)return null;const c=comp(o.w);return [...sub(o.v,vout),(c.sbk-tbk)/10,(c.ssd-tsd)/10];};
+  const cost=r=>r?r.reduce((a,v)=>a+v*v,0):Infinity;
+  const start=cap=>{let w=wWant;const rr=(2*R/3)*nrm(w)/nrm(dv);if(rr>cap)w=mul(w,cap/rr);const c=mul(w,-2*R/3),dd=dot(dv,dv),pp=mul(cross(dv,c),1/dd),lam=Math.sqrt(Math.max(0,1-dot(pp,pp)))/Math.sqrt(dd);
+    let n=add(pp,mul(dv,lam));n=mul(n,1/nrm(n));const dvn=dot(dv,n),dvt=sub(dv,mul(n,dvn)),V=add(add(s0.v,mul(n,dvn/1.85)),mul(dvt,2.5));
+    return [Math.asin(Math.max(-1,Math.min(1,n[2])))/deg,Math.atan2(n[1],-n[0])/deg,...V];};
+  let best=null;
+  for(const cap of [0.8,0.6,0.4]){let x=start(cap),r=resid(x),C=cost(r),lam=1e-2;
+    for(let it=0;it<80&&r;it++){const h=[0.2,0.2,0.01,0.01,0.01],J=[];
+      for(let k=0;k<5;k++){const x2=[...x];x2[k]+=h[k];const r2=resid(x2);if(!r2){J.length=0;break;}J.push(r2.map((v,i)=>(v-r[i])/h[k]));}
+      if(J.length<5)break;
+      const A=[...Array(5)].map((_,i)=>[...Array(5)].map((_,j)=>{let s_=0;for(let m=0;m<r.length;m++)s_+=J[i][m]*J[j][m];return s_;})),g=[...Array(5)].map((_,i)=>{let s_=0;for(let m=0;m<r.length;m++)s_+=J[i][m]*r[m];return -s_;});
+      let ok=false;for(let tries=0;tries<8;tries++){const A2=A.map((row,i)=>row.map((v,j)=>i===j?v*(1+lam)+1e-9:v)),d=solveLin(A2,g);if(!d)break;const x2=x.map((v,i)=>v+d[i]),r2=resid(x2),C2=cost(r2);
+        if(C2<C){x=x2;r=r2;C=C2;lam=Math.max(1e-6,lam/3);ok=true;break;}lam*=4;}
+      if(!ok||C<1e-6)break;}
+    if(r&&(!best||C<best.C))best={x,r,C};if(best&&best.C<1e-3)break;}
+  if(!best)return {n:faceN(60,0),V:swingV(8,-20,0),res:9,wWant,ratio,capped:ratio>1};
+  const x=best.x;return {n:faceN(x[0],x[1]),V:[x[2],x[3],x[4]],res:Math.hypot(best.r[0],best.r[1],best.r[2]),wWant,ratio,capped:ratio>1};}
+function setFwdFrom(n,V){const th=Math.asin(Math.max(-1,Math.min(1,n[2])))/deg,ps=Math.atan2(n[1],-n[0])/deg,sw=nrm(V),be=Math.asin(Math.max(-1,Math.min(1,V[2]/(sw||1))))/deg,al=Math.atan2(V[1],-V[0])/deg;
+  $("th").value=th;$("ps").value=ps;$("sw").value=sw;$("be").value=be;$("al").value=al;return {th,ps,sw,be,al};}
+// サーブの飛び方：自分のコート→ネット→相手のコート→その後
+function fly(s0){let s={p:[...s0.p],v:[...s0.v],w:[...s0.w]};const pts=[[...s.p,...s.w]];let t=0,stage=0;const o={pts};
+  while(t<3){const pr=s;s=step(s,DT);t+=DT;pts.push([...s.p,...s.w]);
+    if(stage>=1&&stage<2&&pr.p[0]>NETX&&s.p[0]<=NETX){const f=(NETX-pr.p[0])/(s.p[0]-pr.p[0]),z=pr.p[2]+(s.p[2]-pr.p[2])*f,y=pr.p[1]+(s.p[1]-pr.p[1])*f;o.netZ=z;if(z<NETH&&Math.abs(y)<HW+0.15){o.fail="ネットにかかります";break;}stage=1.5;}
+    if(stage===0&&pr.p[0]>NETX&&s.p[0]<=NETX){o.fail="自分のコートで弾まずに相手側へ飛んでいます";break;}
+    if(s.p[2]<=0){const x=s.p[0],y=s.p[1],on=Math.abs(y)<=HW&&x>=0&&x<=TL;
+      if(stage===0){if(!on||x<NETX){o.fail=x>TL?"自分のコートに届かず台の手前に落ちます":"自分のコートで弾みません";break;}o.b1=[x,y];s=bounce(s);stage=1;continue;}
+      if(stage===1){o.fail="ネットを越えずに自分のコートで2回弾みます";break;}
+      if(stage===1.5){if(!on||x>NETX){o.fail=x<0?"相手のコートを越えて出ます（オーバー）":"相手のコートの横に外れます";o.b2=null;break;}o.b2=[x,y];o.w2=[...s.w];s=bounce(s);o.w2b=[...s.w];stage=2;continue;}
+      if(stage===2){if(on){o.b3=[x,y];o.after="相手の台でもう一度弾む（短いサーブ）・"+fmt(x*100)+"cm";break;}o.after=o.after||"相手の台から出る（長いサーブ）";break;}}
+    if(stage===2&&pr.p[0]>=0&&s.p[0]<0&&!o.after){o.after="相手の台から出る（長いサーブ）・エンドの上"+fmt(s.p[2]*100)+"cm";}
+    if(stage===2&&(s.p[0]<-1.2||s.p[2]<-0.76))break;}
+  if(!o.fail&&stage<2)o.fail="相手のコートに届きません";
+  return o;}
+let S=null,anim={t:0,playing:!matchMedia("(prefers-reduced-motion: reduce)").matches,last:0,hold:0,speed:0.25};
+function compute(){const s0=tossState(),pr=P();let inv=null;
+  if(mode()==="inv"){inv=inverse();inv.a=setFwdFrom(inv.n,inv.V);}
+  outputs();const rk=inv?{n:inv.n,V:inv.V}:fwdRacket(),o=hitBall(s0,rk.n,rk.V,pr);const w=$("warn");
+  if(o.miss){S={pts:[[...s0.p,0,0,0]],rk,s0,o:null};w.hidden=false;w.textContent="ラケットがボールに向かって動いていないので当たりません。面の向きかスイングの向きを変えてください。";["v-res","v-spin","v-speed","v-len","r-launch","r-spin0","r-axis","r-b1","r-net","r-b2","r-spin2","r-curve","r-kick","r-after"].forEach(i=>$(i).textContent="—");$("s-res").className="bad";howto(inv,null);return;}
+  const f=fly(o);S={pts:f.pts,rk,s0,o,f};w.hidden=!f.fail;if(f.fail)w.textContent=f.fail;
+  const sp=nrm(o.v),el=Math.asin(o.v[2]/sp)/deg,az=Math.atan2(o.v[1],-o.v[0])/deg;
+  $("s-res").className=f.fail?"bad":"ok";$("v-res").textContent=f.fail?"入らない":"入る";$("v-spin").textContent=spinShort(o.w);$("v-speed").textContent=fmt(sp,1)+" m/s";
+  $("v-len").textContent=f.fail?"—":(f.b3?"短い":"長い");
+  $("r-launch").textContent=fmt(sp,2)+" m/s・"+(el<0?"下へ"+fmt(-el,1):"上へ"+fmt(el,1))+"°・"+(Math.abs(az)<0.25?"まっすぐ":(az>0?"右へ":"左へ")+fmt(Math.abs(az),1)+"°");
+  $("r-spin0").textContent=spinLong(o.w);$("r-axis").textContent=axisTxt(o.w);
+  $("r-b1").textContent=f.b1?"エンドから"+fmt((TL-f.b1[0])*100)+"cm・"+lrS(f.b1[1]):"—";
+  $("r-net").textContent=f.netZ!==undefined?"ネットより"+fmt((f.netZ-NETH)*100)+"cm上":"—";
+  $("r-b2").textContent=f.b2?"ネットから"+fmt((NETX-f.b2[0])*100)+"cm・"+lrS(f.b2[1]):"—";
+  $("r-spin2").textContent=f.w2?spinLong(f.w2):"—";
+  {const c=comp(o.w);$("r-curve").textContent=Math.abs(c.ssd)<3?"ほぼ曲がらない":(c.ssd>0?"右へ曲がる（自分から見て左）":"左へ曲がる（自分から見て右）");}
+  if(f.w2){const c=comp(f.w2),k=c.sgx;$("r-kick").textContent=(Math.abs(k)<2?"横にはほぼ跳ねない":(k>0?"右へ跳ねる":"左へ跳ねる")+"（進む向き"+fmt(Math.abs(k))+"回転/秒）")+"・"+(c.sbk<-10?"止まりぎみ":c.sbk>10?"伸びる":"前後はふつう");}else $("r-kick").textContent="—";
+  $("r-after").textContent=f.fail?"—":(f.after||"—");
+  {const q=new URLSearchParams({sv0:fmt(sp,2),sel:fmt(el,1),saz:fmt(az,1),sy:fmt(-o.p[1],2),sbk:fmt(comp(o.w).sbk),ssd:fmt(comp(o.w).ssd),sgx:fmt(comp(o.w).sgx),sx:fmt(o.p[0]-TL,2),sz:fmt(o.p[2],2)});$("go-rcv").href="receive.html?"+q.toString();$("go-rcv").hidden=!!f.fail;}
+  howto(inv,o);}
+function howto(inv,o){const el=$("howto");if(!inv){el.textContent="";return;}
+  const {th:t,ps:p,sw,be,al}=inv.a;
+  const A=Math.abs(al),side=al>0?"右":"左",dir=A<3?"前へ":A<87?side+"前へ（前から"+fmt(A)+"°）":A<=93?"真横（"+side+"）へ":side+"後ろへ（前から"+fmt(A)+"°）";
+  let h="<b>当て方：</b>面を"+(t>=0?"上に"+fmt(t)+"°開き":fmt(-t)+"°かぶせ")+(Math.abs(p)>=1?"、"+(p>0?"右":"左")+"へ"+fmt(Math.abs(p))+"°向け":"")+"、ラケットを"+fmt(sw,1)+" m/sで"+dir+"、"+(Math.abs(be)<3?"水平に":(be>0?"上へ":"下へ")+fmt(Math.abs(be))+"°")+"の向きに振ります。";
+  if(inv.capped)h+="<br>欲しい回転は、この打ち出しの速さでは理論上も出せない強さです（こするだけで打っても上限の"+fmt(inv.ratio*100)+"%）。";
+  if(o&&!o.miss){const want=nrm(inv.wWant)/TAU,got=nrm(o.w)/TAU;h+="<br>出る回転："+spinLong(o.w)+"。"+(want>3&&got<want*0.9?"ラバーがつかみきれず、欲しい回転（"+fmt(want)+"回転/秒）より弱くなります。":"");
+    if(inv.res>0.05)h+="<br>このラバーでは、この打ち出しにぴったり合う当て方が見つかりませんでした（打ち出しのずれ "+fmt(inv.res,2)+" m/s）。";}
+  {const g=comp(inv.wWant).sgx;h+="<br>進む向きの回転は自由に選べず、この打ち出しとトスでは "+(Math.abs(g)<0.5?"ほぼ0":(g>0?"＋":"−")+fmt(Math.abs(g))+" 回転/秒（相手のバウンドで"+(g>0?"右":"左")+"へ跳ねる向き）")+"に決まります。";}
+  el.innerHTML=h;}
+// 図：自分を左に置く（x を反転）
+function views(){const top=$("top"),W=top.parentElement.clientWidth||340,xmin=-0.5,xmax=TL+0.65,sc=W/(xmax-xmin);
+  const Ht=Math.round(1.75*sc),Hs=Math.round(0.8*sc);return {W,Ht,Hs,sc,X:x=>(xmax-x)*sc,Yt:y=>Ht/2+y*sc,Ys:z=>Hs-0.14*sc-z*sc};}
+function prep(cv,W,H){const dpr=window.devicePixelRatio||1;if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.height=H+"px";}const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);return c;}
+function drawViews(){const cs=getComputedStyle(document.documentElement),col=n=>cs.getPropertyValue(n).trim(),g=views();
+  const ct=prep($("top"),g.W,g.Ht),cs2=prep($("side"),g.W,g.Hs);
+  ct.fillStyle=col("--table");ct.globalAlpha=0.25;ct.fillRect(g.X(TL),g.Yt(-HW),g.X(0)-g.X(TL),g.Yt(HW)-g.Yt(-HW));ct.globalAlpha=1;ct.strokeStyle=col("--table");ct.lineWidth=2;ct.strokeRect(g.X(TL),g.Yt(-HW),g.X(0)-g.X(TL),g.Yt(HW)-g.Yt(-HW));
+  ct.lineWidth=1;ct.beginPath();ct.moveTo(g.X(0),g.Yt(0));ct.lineTo(g.X(TL),g.Yt(0));ct.stroke();ct.strokeStyle=col("--net");ct.lineWidth=2;ct.beginPath();ct.moveTo(g.X(NETX),g.Yt(HW+0.15));ct.lineTo(g.X(NETX),g.Yt(-HW-0.15));ct.stroke();
+  ct.fillStyle=col("--muted");ct.font="10px "+col("--f-body");ct.fillText("自分",g.X(TL)+4,g.Yt(HW)+12);ct.fillText("相手",g.X(0.4),g.Yt(HW)+12);
+  cs2.strokeStyle=col("--table");cs2.lineWidth=3;cs2.beginPath();cs2.moveTo(g.X(0),g.Ys(0));cs2.lineTo(g.X(TL),g.Ys(0));cs2.stroke();cs2.strokeStyle=col("--net");cs2.lineWidth=2;cs2.beginPath();cs2.moveTo(g.X(NETX),g.Ys(0));cs2.lineTo(g.X(NETX),g.Ys(NETH));cs2.stroke();
+  if(!S)return;const pts=S.pts,idx=Math.min(pts.length-1,Math.floor(anim.t/DT)),okc=S.f&&!S.f.fail?col("--in"):col("--bad");
+  const path=(c,colr,w,a,upto,yf)=>{c.globalAlpha=a;c.strokeStyle=colr;c.lineWidth=w;c.beginPath();const e=Math.min(pts.length,upto);for(let i=0;i<e;i+=3){const p=pts[i];if(i===0)c.moveTo(g.X(p[0]),yf(p));else c.lineTo(g.X(p[0]),yf(p));}c.stroke();c.globalAlpha=1;};
+  for(const [c,yf] of [[ct,p=>g.Yt(p[1])],[cs2,p=>g.Ys(p[2])]]){path(c,okc,2,0.3,1e9,yf);path(c,okc,2.5,1,idx+1,yf);}
+  {const h=S.s0.p,rk=S.rk,sw=nrm(rk.V)||1,dir=mul(rk.V,1/sw),L=0.08,off=idx<1?0:-Math.min(0.2,idx*DT*sw);
+    const a0=sub(h,mul(dir,0.25)),a1=add(h,mul(dir,0.2));for(const [c,yf] of [[ct,p=>g.Yt(p[1])],[cs2,p=>g.Ys(p[2])]]){c.strokeStyle=col("--swing");c.setLineDash([4,3]);c.lineWidth=1.5;c.beginPath();c.moveTo(g.X(a0[0]),yf(a0));c.lineTo(g.X(a1[0]),yf(a1));c.stroke();c.setLineDash([]);}
+    const cc=add(sub(h,mul(dir,off)),mul(rk.n,-R*1.4)),n=rk.n;
+    const tT=[-n[1],n[0]],tl=Math.hypot(tT[0],tT[1])||1;ct.strokeStyle=col("--ink");ct.lineWidth=4;ct.lineCap="round";ct.beginPath();ct.moveTo(g.X(cc[0]-tT[0]/tl*L),g.Yt(cc[1]-tT[1]/tl*L));ct.lineTo(g.X(cc[0]+tT[0]/tl*L),g.Yt(cc[1]+tT[1]/tl*L));ct.stroke();
+    const tS=[-n[2],n[0]],sl=Math.hypot(tS[0],tS[1])||1;cs2.strokeStyle=col("--ink");cs2.lineWidth=4;cs2.lineCap="round";cs2.beginPath();cs2.moveTo(g.X(cc[0]-tS[0]/sl*L),g.Ys(cc[2]-tS[1]/sl*L));cs2.lineTo(g.X(cc[0]+tS[0]/sl*L),g.Ys(cc[2]+tS[1]/sl*L));cs2.stroke();ct.lineCap=cs2.lineCap="butt";}
+  const p=pts[idx];if(p){for(const [c,yy] of [[ct,g.Yt(p[1])],[cs2,g.Ys(p[2])]]){c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(g.X(p[0]),yy,5,0,Math.PI*2);c.fill();c.stroke();}}}
+function total(){return S?S.pts.length*DT:0;}
+function tick(ts){const dt=anim.last?Math.min(0.05,(ts-anim.last)/1000):0;anim.last=ts;if(anim.playing&&S){if(anim.t>=total()){anim.hold+=dt;if(anim.hold>0.8){anim.t=0;anim.hold=0;}}else anim.t+=dt*anim.speed;}drawViews();requestAnimationFrame(tick);}
+function outputs(){const L=(id,t)=>$(id).textContent=t,v=id=>+$(id).value,sg=(x,p,n,z,u)=>Math.abs(x)<0.5?z:(x>0?p:n)+fmt(Math.abs(x))+(u||"");
+  L("tho",v("th")>=0?"開き "+fmt(v("th"))+"°":"かぶせ "+fmt(-v("th"))+"°");L("pso",sg(v("ps"),"右へ","左へ","まっすぐ","°"));L("swo",fmt(v("sw"),1)+" m/s");L("beo",sg(v("be"),"上へ","下へ","水平","°"));L("alo",sg(v("al"),"右へ","左へ","前へ","°"));
+  L("tbko",sg(v("tbk"),"上回転 ","下回転 ","なし"));L("tsdo",sg(v("tsd"),"右横 ","左横 ","なし"));L("tv0o",fmt(v("tv0"),2)+" m/s");L("telo",fmt(v("tel"),1)+"°");L("tazo",Math.abs(v("taz"))<0.25?"まっすぐ":(v("taz")>0?"右へ":"左へ")+fmt(Math.abs(v("taz")),1)+"°");
+  L("vto",v("vt")<0.05?"頂点":fmt(v("vt"),1)+" m/s");L("szo",fmt(v("sz")*100)+" cm");L("sxo",fmt(v("sx")*100)+" cm");L("syo",lrS(v("sy")));}
+let pend=0;function schedule(){cancelAnimationFrame(pend);pend=requestAnimationFrame(()=>{anim.t=0;anim.hold=0;compute();});}
+function syncMode(){const m=mode();$("g-inv").hidden=m!=="inv";$("g-fwd").querySelectorAll("input").forEach(i=>i.disabled=m==="inv");}
+document.querySelectorAll("input[type=range]").forEach(r=>{r.addEventListener("input",schedule);let sx=0,sy=0,v0=null;const rv=()=>{if(v0!==null&&r.value!==v0){r.value=v0;schedule();}};
+  r.addEventListener("touchstart",e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;v0=r.value;},{passive:true});
+  r.addEventListener("touchmove",e=>{const t=e.touches[0];if(Math.abs(t.clientY-sy)>8&&Math.abs(t.clientY-sy)>Math.abs(t.clientX-sx)*1.2)rv();},{passive:true});
+  r.addEventListener("touchend",e=>{const t=e.changedTouches[0];if(Math.abs(t.clientY-sy)>8&&Math.abs(t.clientY-sy)>Math.abs(t.clientX-sx)*1.2)rv();v0=null;},{passive:true});});
+document.querySelectorAll("input[name=rub],input[name=pmu],input[name=pE]").forEach(r=>r.addEventListener("change",schedule));
+document.querySelectorAll("input[name=mode]").forEach(r=>r.addEventListener("change",()=>{syncMode();schedule();}));
+document.querySelectorAll("input[name=ex]").forEach(r=>r.addEventListener("change",()=>{const e=EX[r.value];for(const k in e)$(k).value=e[k];schedule();}));
+["tbk","tsd","tv0","tel","taz"].forEach(id=>$(id).addEventListener("input",()=>document.querySelectorAll("input[name=ex]").forEach(x=>x.checked=false)));
+$("play").addEventListener("click",()=>{anim.playing=!anim.playing;$("play").textContent=anim.playing?"一時停止":"再生";if(anim.playing&&anim.t>=total()){anim.t=0;anim.hold=0;}});
+document.querySelectorAll("[data-s]").forEach(b=>b.addEventListener("click",()=>{anim.speed=+b.dataset.s;document.querySelectorAll("[data-s]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));}));
+(function(){const st=$("stage"),pin=$("pin");let pinned=true;try{pinned=localStorage.getItem("srvPinned")!=="0";}catch(e){}const ap=()=>{st.classList.toggle("unpinned",!pinned);pin.setAttribute("aria-pressed",pinned?"true":"false");pin.textContent=pinned?"固定":"固定しない";};ap();
+  pin.addEventListener("click",()=>{pinned=!pinned;try{localStorage.setItem("srvPinned",pinned?"1":"0");}catch(e){}ap();});})();
+function modeNote(){const v=document.querySelector("input[name=rub]:checked").value;$("modeNote").textContent=(v==="g9"||v==="inv")?"いまの計算：シートとスポンジを細かく分けて計算（実測で校正）":"いまの計算：粒を1本ずつ計算";}
+document.querySelectorAll("input[name=rub]").forEach(r=>r.addEventListener("change",modeNote));modeNote();
+// 初期値：「下回転ショート」の逆算結果を当て方の初期値にする
+(function init(){const e=EX.back;for(const k in e)$(k).value=e[k];document.querySelector("input[name=ex][value=back]").checked=true;const inv=inverse();setFwdFrom(inv.n,inv.V);
+  syncMode();$("play").textContent=anim.playing?"一時停止":"再生";compute();if(!anim.playing)anim.t=total();requestAnimationFrame(tick);})();
+</script>
+
+</body>
+</html>

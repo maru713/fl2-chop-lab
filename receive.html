@@ -75,7 +75,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 <div class="wrap">
 <header>
   <h1>横回転レシーブラボ</h1>
-  <p class="lead">相手のサーブ（横・下・上回転の組み合わせ）を、裏ソフト（グレイザー09C）とFL2でレシーブしたときの軌道を、上から見た図と横から見た図で再生します。右利き・自分から見た左右で表示します。</p>
+  <p class="lead">相手のサーブ（横・下・上回転の組み合わせ）を、裏ソフト（グレイザー09C）とFL2でレシーブしたときの軌道を、上から見た図と横から見た図で再生します。右利き・自分から見た左右で表示します。サーブを当て方から作るなら<a href="serve.html" style="color:var(--table)">サーブ編</a>へ。</p>
 </header>
 
 <section class="stage" id="stage" aria-label="軌道のアニメーション">
@@ -160,14 +160,14 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <label><input type="radio" name="sv" value="tilt">右横下<br>（軸傾き）</label>
   </div>
   <p class="note">回転のスライダーは打ち出したときの値です。台で2回弾むあいだに回転は減ったり変わったりするので、自分が打つ瞬間の回転は下の「打つ瞬間の回転」を見てください。「右横」は、自分に向いているボールの面が、自分から見て右へ動く回転です（ボールは自分から見て右へ曲がります）。</p>
-  <div class="row"><label for="sbk">上下の回転（＋上回転／−下回転、1秒あたり）</label><output id="sbko"></output><input type="range" id="sbk" min="-80" max="60" step="5" value="-65"></div>
-  <div class="row"><label for="ssd">横回転（＋右横／−左横、1秒あたり）</label><output id="ssdo"></output><input type="range" id="ssd" min="-80" max="80" step="5" value="0"></div>
-  <div class="row"><label for="sgx">回転軸の傾き（進む向きを軸にした回転。＋バウンドで右へ跳ねる）</label><output id="sgxo"></output><input type="range" id="sgx" min="-60" max="60" step="5" value="0"></div>
+  <div class="row"><label for="sbk">上下の回転（＋上回転／−下回転、1秒あたり）</label><output id="sbko"></output><input type="range" id="sbk" min="-80" max="60" step="1" value="-65"></div>
+  <div class="row"><label for="ssd">横回転（＋右横／−左横、1秒あたり）</label><output id="ssdo"></output><input type="range" id="ssd" min="-80" max="80" step="1" value="0"></div>
+  <div class="row"><label for="sgx">回転軸の傾き（進む向きを軸にした回転。＋バウンドで右へ跳ねる）</label><output id="sgxo"></output><input type="range" id="sgx" min="-60" max="60" step="1" value="0"></div>
   <div class="seg" style="grid-template-columns:1fr"><label><input type="checkbox" id="aimfix">テンプレートを選ぶとき、曲がりを補正せずまっすぐ狙う</label></div>
-  <div class="row"><label for="sv0">打ち出しの速さ</label><output id="sv0o"></output><input type="range" id="sv0" min="2" max="12" step="0.25" value="5.5"></div>
-  <div class="row"><label for="sel">打ち出しの上下の角度（−下向き）</label><output id="selo"></output><input type="range" id="sel" min="-40" max="20" step="0.5" value="-22"></div>
-  <div class="row"><label for="saz">打ち出しの左右の向き（＋自分から見て右へ）</label><output id="sazo"></output><input type="range" id="saz" min="-25" max="25" step="0.5" value="2.5"></div>
-  <div class="row"><label for="sy">相手の打点の左右（＋自分から見て右、台の中心から）</label><output id="syo"></output><input type="range" id="sy" min="-0.7" max="0.7" step="0.05" value="0.3"></div>
+  <div class="row"><label for="sv0">打ち出しの速さ</label><output id="sv0o"></output><input type="range" id="sv0" min="2" max="12" step="0.05" value="5.5"></div>
+  <div class="row"><label for="sel">打ち出しの上下の角度（−下向き）</label><output id="selo"></output><input type="range" id="sel" min="-40" max="20" step="0.1" value="-22"></div>
+  <div class="row"><label for="saz">打ち出しの左右の向き（＋自分から見て左へ）</label><output id="sazo"></output><input type="range" id="saz" min="-25" max="25" step="0.1" value="2.5"></div>
+  <div class="row"><label for="sy">相手の打点の左右（＋自分から見て右、台の中心から）</label><output id="syo"></output><input type="range" id="sy" min="-0.7" max="0.7" step="0.01" value="0.3"></div>
   <dl class="kv">
     <dt>1バウンド目（相手コート）</dt><dd id="s-b1"></dd>
     <dt>2バウンド目（自分のコート）</dt><dd id="s-b2"></dd>
@@ -206,27 +206,19 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 </div>
 
 <p style="text-align:center;font-size:13px;margin:0 0 32px"><a href="./">カット編</a> ／ <a href="attack.html">攻撃編</a> ／ <a href="grip.html">ラバーがつかむ仕組み</a></p>
-<script src="js/physics.js?v=2026102003"></script>
+<script src="js/physics.js?v=2026102101"></script>
+<script src="js/flight3d.js?v=2026102101"></script>
 <script>
+const DT=1e-3;
+const SRV={x:0.15,z:0.22}; // サーブを打つ位置（エンドラインからの距離・台の上面からの高さ）
 const $=id=>document.getElementById(id);
-const M=0.0027,R=0.02,AR=Math.PI*R*R,RHO=1.2,CD=0.5,G=9.8;
-const TL=2.74,HW=0.7625,NETX=1.37,NETH=0.1525,DT=1e-3;
-const PRE={g9:{k:0.95,e:0.84,es:0.021,et:0.35,keep:1,pip:false},inv:{k:0.8,e:0.88,es:0.021,et:0.45,keep:1,pip:false},ox:{k:0.15,e:0.45,es:0,et:0,keep:0.8,pip:true},"11":{k:0.15,e:0.55,es:0,et:0,keep:0.8,pip:true}};
 const SERVES={back:{sbk:-65,ssd:0,sv0:5.5,sel:-22,saz:2.5,sy:0.3},sideback:{sbk:-55,ssd:40,sv0:5.75,sel:-23,saz:8.5,sy:0.3},side:{sbk:-25,ssd:45,sv0:5.75,sel:-18,saz:11,sy:0.3},sidetop:{sbk:20,ssd:40,sv0:6,sel:-18,saz:11.5,sy:0.3},rsideback:{sbk:-55,ssd:-40,sv0:5.75,sel:-23,saz:-3.5,sy:0.3},knuckle:{sbk:-25,ssd:0,sv0:5.25,sel:-19,saz:2.5,sy:0.3},tilt:{sbk:-55,ssd:40,sv0:5.75,sel:-24,saz:11.5,sy:0.3,sgx:25}};
 const STROKES={stop:{th:50,sw:1.5,be:35,al:0},push:{th:70,sw:4,be:0,al:0},pushfw:{th:20,sw:3.5,be:0,al:0},flick:{th:-5,sw:6,be:30,al:0}};
 const P=()=>PRE[document.querySelector("input[name=rub]:checked").value];
-const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],mul=(a,k)=>[a[0]*k,a[1]*k,a[2]*k],dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],nrm=a=>Math.hypot(a[0],a[1],a[2]);
-function acc(v,w){const sp=nrm(v)||1e-6,q=0.5*RHO*AR*sp*sp/M;const c=cross(w,v),cn=nrm(c),Sp=R*(cn/sp)/sp;const [cd,cl]=aero(Sp);let a=mul(v,-q*cd/sp);a[2]-=G;
-  if(cn>1e-9)a=add(a,mul(c,q*cl/cn));return a;}
-function step(s,dt){const a=acc(s.v,s.w);return {p:add(s.p,mul(s.v,dt)),v:add(s.v,mul(a,dt)),w:mul(s.w,Math.exp(-0.15*dt))};}
-function bounce(s){const vz=s.v[2],v2=[s.v[0],s.v[1],-0.89*vz];const u=add([s.v[0],s.v[1],0],cross(s.w,[0,0,-R]));const un=Math.hypot(u[0],u[1]);
-  let J=[0,0,0];if(un>1e-9){const j=Math.min(0.25*1.89*Math.abs(vz),un/2.5);J=[-u[0]/un*j,-u[1]/un*j,0];}
-  return {p:[s.p[0],s.p[1],1e-4],v:add(v2,J),w:add(s.w,mul(cross([0,0,1],J),-1.5/R))};}
-const deg=Math.PI/180;
 function serveState(){const v0=+$("sv0").value,el=+$("sel").value*deg,az=+$("saz").value*deg,y=-(+$("sy").value);
   const v=[-v0*Math.cos(el)*Math.cos(az),v0*Math.cos(el)*Math.sin(az),v0*Math.sin(el)];
   const wy=-(+$("sbk").value)*2*Math.PI,wz=(+$("ssd").value)*2*Math.PI,wx=(+$("sgx").value)*2*Math.PI;
-  return {p:[TL+0.15,y,0.22],v,w:[wx,wy,wz]};}
+  return {p:[TL+SRV.x,y,SRV.z],v,w:[wx,wy,wz]};}
 function simServe(tcMs){let s=serveState(),pts=[[...s.p,...s.w]],t=0,b=0,b1=null,b2=null,tb=0,post=[],peakT=null,endT=null,endWhy="";
   while(t<3.5){const pr=s;s=step(s,DT);t+=DT;pts.push([...s.p,...s.w]);
     if(b<2&&pr.p[0]>NETX&&s.p[0]<=NETX&&s.p[2]<NETH)return {fail:"サーブがネットにかかります",pts};
@@ -246,12 +238,6 @@ function simServe(tcMs){let s=serveState(),pts=[[...s.p,...s.w]],t=0,b=0,b1=null
   return {pts:pts.slice(0,hit.i+1),hit:hit.s,b1,b2,peakMs,endMs,endWhy,useMs};}
 function racket(){const th=+$("th").value*deg,ps=+$("ps").value*deg,sw=+$("sw").value,be=+$("be").value*deg,al=+$("al").value*deg;
   return {n:[Math.cos(th)*Math.cos(ps),-Math.cos(th)*Math.sin(ps),Math.sin(th)],V:[sw*Math.cos(be)*Math.cos(al),-sw*Math.cos(be)*Math.sin(al),sw*Math.sin(be)],sw};}
-function hitBall(s,n,V,pr){const rv=sub(s.v,V),vn=dot(rv,n);if(vn>-0.3)return {miss:true};
-  const vt=sub(rv,mul(n,vn)),u=add(vt,cross(s.w,mul(n,-R)));let k=pr.k;
-  let keepX=pr.keep,et=pr.et,eT=null;const ik=invKey();if(ik){k=kLook(Math.abs(vn),nrm(u),ik);eT=kLook(Math.abs(vn),nrm(u),ik+"_e");et=0;keepX=1;}else if(pr.pip){k=kLook(Math.abs(vn),nrm(u));keepX=1;}
-  const dvt=mul(u,-k*(1+et)/2.5),e=eT!==null?eT:Math.max(0.3,pr.e-pr.es*Math.max(0,Math.abs(vn)-2));
-  const v2=add(add(mul(n,-e*vn),add(vt,dvt)),V),w2=mul(add(s.w,mul(cross(n,dvt),-1.5/R)),keepX);
-  return {p:[...s.p],v:v2,w:w2};}
 function flyBack(s0,rec,dt){dt=dt||DT;if(s0.miss)return {res:"面の裏に当たる",pts:[]};let s={p:[...s0.p],v:[...s0.v],w:[...s0.w]},pts=rec?[[...s.p,...s.w]]:null,t=0,out=null;
   const tail=()=>{let bounced=false,t2=0;while(t2<2.5){s=step(s,dt);t2+=dt;pts.push([...s.p,...s.w]);
       if(s.p[2]<=0&&!bounced&&s.p[0]>=0&&s.p[0]<=TL&&Math.abs(s.p[1])<=HW){s=bounce(s);bounced=true;continue;}
@@ -390,7 +376,7 @@ function outputs(){const L=(id,t)=>$(id).textContent=t;const v=id=>+$(id).value;
   L("tho",v("th")+"°");L("pso",v("ps")===0?"まっすぐ":(v("ps")>0?"右へ"+v("ps")+"°":"左へ"+(-v("ps"))+"°"));L("swo",v("sw").toFixed(2)+" m/s");L("beo",v("be")===0?"水平":(v("be")>0?"上へ"+v("be")+"°":"下へ"+(-v("be"))+"°"));L("alo",v("al")===0?"まっすぐ":(v("al")>0?"右へ"+v("al")+"°":"左へ"+(-v("al"))+"°"));
 
   L("sbko",v("sbk")===0?"なし":(v("sbk")>0?"上回転 "+v("sbk"):"下回転 "+(-v("sbk"))));L("sgxo",v("sgx")===0?"なし":(v("sgx")>0?"右へ跳ねる "+v("sgx"):"左へ跳ねる "+(-v("sgx"))));L("ssdo",v("ssd")===0?"なし":(v("ssd")>0?"右横 "+v("ssd"):"左横 "+(-v("ssd"))));
-  L("sv0o",v("sv0").toFixed(2)+" m/s");L("selo",v("sel")+"°");L("sazo",v("saz")===0?"まっすぐ":(v("saz")>0?"右へ"+v("saz")+"°":"左へ"+(-v("saz"))+"°"));L("syo",v("sy")===0?"中央":(v("sy")>0?"右"+fmt(v("sy")*100)+"cm":"左"+fmt(-v("sy")*100)+"cm"));}
+  L("sv0o",v("sv0").toFixed(2)+" m/s");L("selo",v("sel")+"°");L("sazo",v("saz")===0?"まっすぐ":(v("saz")>0?"左へ"+v("saz")+"°":"右へ"+(-v("saz"))+"°"));L("syo",v("sy")===0?"中央":(v("sy")>0?"右"+fmt(v("sy")*100)+"cm":"左"+fmt(-v("sy")*100)+"cm"));}
 let pend=0;function schedule(){outputs();cancelAnimationFrame(pend);pend=requestAnimationFrame(()=>{anim.t=0;anim.hold=0;compute();});}
 document.querySelectorAll("input[type=range]").forEach(r=>{r.addEventListener("input",schedule);let sx=0,sy=0,v0=null;const rv=()=>{if(v0!==null&&r.value!==v0){r.value=v0;schedule();}};
   r.addEventListener("touchstart",e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;v0=r.value;},{passive:true});
@@ -407,6 +393,9 @@ $("play").addEventListener("click",()=>{anim.playing=!anim.playing;$("play").tex
 window.addEventListener("resize",()=>{drawMap();});
 document.querySelectorAll("[data-s]").forEach(b=>b.addEventListener("click",()=>{anim.speed=+b.dataset.s;document.querySelectorAll("[data-s]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));}));
 document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>{VIEWMODE=b.dataset.view;document.querySelectorAll("[data-view]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));$("v-eye").hidden=VIEWMODE!=="eye";$("v-map").hidden=VIEWMODE!=="map";}));
+// サーブ編から渡されたサーブ（?sbk=…&sv0=…）があれば、それを使う
+(function fromServe(){const q=new URLSearchParams(location.search);if(!q.has("sv0"))return;for(const k of ["sbk","ssd","sgx","sv0","sel","saz","sy"])if(q.has(k))$(k).value=q.get(k);
+  if(q.has("sx"))SRV.x=+q.get("sx");if(q.has("sz"))SRV.z=+q.get("sz");document.querySelectorAll("input[name=sv]").forEach(r=>r.checked=false);SNAP=true;TCSNAP=true;})();
 $("play").textContent=anim.playing?"一時停止":"再生";outputs();compute();if(!anim.playing)anim.t=total();requestAnimationFrame(tick);
 
 function modeNote(){const el=document.getElementById("modeNote");if(!el)return;const v=document.querySelector("input[name=rub]:checked").value;const inv=(v==="g9"||v==="inv");el.textContent=inv?"いまの計算：シートとスポンジを細かく分けて計算（実測で校正）":"いまの計算：粒を1本ずつ計算";}
