@@ -208,6 +208,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 <p style="text-align:center;font-size:13px;margin:0 0 32px"><a href="./">カット編</a> ／ <a href="attack.html">攻撃編</a> ／ <a href="grip.html">ラバーがつかむ仕組み</a></p>
 <script src="js/physics.js?v=2026102101"></script>
 <script src="js/flight3d.js?v=2026102101"></script>
+<script src="js/view3d.js?v=2026102102"></script>
 <script>
 const DT=1e-3;
 const SRV={x:0.15,z:0.22}; // サーブを打つ位置（エンドラインからの距離・台の上面からの高さ）
@@ -326,18 +327,7 @@ function drawEye(idx,n1,sp,rp,col){const cv=$("eye"),W=cv.parentElement.clientWi
   if(S.sv.hit&&S.rk){const h=S.sv.hit.p,rk=S.rk,dir=rk.sw>0?mul(rk.V,1/rk.sw):[1,0,0];let off=0;if(idx<n1)off=Math.min(0.25,(n1-idx)*DT*rk.sw);else off=-Math.min(0.2,(idx-n1)*DT*rk.sw);
     const a0=sub(h,mul(dir,0.25)),a1=add(h,mul(dir,0.2));c.setLineDash([4,3]);line([a0,a1],col("--swing"),1.5,1,1e9);c.setLineDash([]);
     const n=rk.n,rb=document.querySelector("input[name=rub]:checked").value,bh=(rb==="11"||rb==="ox");
-    const RED="#c0392b",BLK="#262626",WOOD="#c9a46a",front=bh?BLK:RED,back=bh?RED:BLK;
-    const T=0.012,HL=0.080,HWd=0.0765,GL=0.100;
-    let a=bh?[-0.35,-0.85,-0.40]:[-0.45,0.75,-0.45];a=sub(a,mul(n,dot(a,n)));a=mul(a,1/nrm(a));const b=cross(n,a);
-    const cc=add(sub(h,mul(dir,off)),mul(n,-(R+T/2)));
-    const rim=sd=>{const r=[];for(let k=0;k<32;k++){const t=k/32*2*Math.PI;r.push(add(add(cc,mul(n,sd*T/2)),add(mul(a,HL*Math.cos(t)),mul(b,HWd*Math.sin(t)))));}return r;};
-    const fr=rim(1),bk=rim(-1),seeFront=dot(n,sub(cam.eye,cc))>0,TF=bh?0.0029:0.0038,TB=bh?0.0038:0.0029,m1=rim(1-2*TF/T),m2=rim(-1+2*TB/T);
-    {const g0=P(add(cc,mul(a,HL*0.9))),g1=P(add(cc,mul(a,HL+GL)));if(g0&&g1){c.strokeStyle=WOOD;c.lineCap="round";c.lineWidth=Math.max(4,0.026/g1[2]*F);c.beginPath();c.moveTo(g0[0],g0[1]);c.lineTo(g1[0],g1[1]);c.stroke();c.strokeStyle=col("--ink");c.lineWidth=1;c.globalAlpha=0.5;c.stroke();c.globalAlpha=1;c.lineCap="butt";}}
-    const far=seeFront?bk:fr,near=seeFront?fr:bk;
-    poly(far,seeFront?back:front,null);
-    for(const [A,B,C] of [[fr,m1,front],[m1,m2,WOOD],[m2,bk,back]])for(let k=0;k<32;k++){const k2=(k+1)%32;poly([A[k],A[k2],B[k2],B[k]],C,null);}
-    poly(near,seeFront?front:back,col("--ink"),1.5);
-    const nq0=P(cc),nq1=P(add(cc,mul(n,0.09)));if(nq0&&nq1){c.strokeStyle=col("--out");c.lineWidth=2;c.beginPath();c.moveTo(nq0[0],nq0[1]);c.lineTo(nq1[0],nq1[1]);c.stroke();}}
+    racket3D(c,P,cam.eye,F,sub(h,mul(dir,off)),n,bh?[-0.35,-0.85,-0.40]:[-0.45,0.75,-0.45],bh,col);}
   if(bp&&!hid(bp)){const sh=P([bp[0],bp[1],0]);if(sh&&bp[2]>0){c.globalAlpha=0.25;c.fillStyle=col("--ink");c.beginPath();c.ellipse(sh[0],sh[1],Math.max(2,R/sh[2]*F),Math.max(1,R/sh[2]*F*0.35),0,0,Math.PI*2);c.fill();c.globalAlpha=1;}
     const q=P(bp);if(q){const rr=Math.max(1.5,R/q[2]*F);c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.2;c.beginPath();c.arc(q[0],q[1],rr,0,Math.PI*2);c.fill();c.stroke();
       const proj=v=>[dot(v,cam.r),-dot(v,cam.u),dot(v,cam.fw)];
