@@ -148,12 +148,17 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     </div>
     <div class="row"><label for="tbk">欲しい上下の回転（＋上回転／−下回転）</label><output id="tbko"></output><input type="range" id="tbk" min="-80" max="60" step="1" value="-50"></div>
     <div class="row"><label for="tsd">欲しい横回転（相手から見て ＋右へ曲がる／−左へ）</label><output id="tsdo"></output><input type="range" id="tsd" min="-80" max="80" step="1" value="0"></div>
-    <div class="row" style="grid-template-columns:1fr auto"><span style="font-size:14px">進む向きの回転（レシーブ編の「回転軸の傾き」）<br><small style="color:var(--muted)">1回打つだけでは自由に選べず、打ち出しとトスで決まります。変えたいときは、打ち出しの角度・向きか、トスの落ちる速さを変えます</small></span><output id="tgxo">—</output></div>
+    <div class="seg" role="radiogroup" aria-label="進む向きの回転の扱い" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+      <label><input type="radio" name="fix" value="launch" checked>左右の向きを決める<br>（進む向きの回転は決まる）</label>
+      <label><input type="radio" name="fix" value="gyro">進む向きの回転を決める<br>（左右の向きは決まる）</label>
+    </div>
+    <div class="row" id="row-tgx" hidden><label for="tgx">欲しい進む向きの回転（レシーブ編の「回転軸の傾き」、＋相手のバウンドで右へ跳ねる）</label><output id="tgxo2"></output><input type="range" id="tgx" min="-40" max="40" step="1" value="0"></div>
+    <div class="row" id="row-tgxo" style="grid-template-columns:1fr auto"><span style="font-size:14px">進む向きの回転（レシーブ編の「回転軸の傾き」）<br><small style="color:var(--muted)">1回打つだけでは自由に選べず、打ち出しとトスで決まります。変えたいときは、打ち出しの角度・向きか、トスの落ちる速さを変えます</small></span><output id="tgxo">—</output></div>
     <div class="seg" style="grid-template-columns:1fr"><label><input type="checkbox" id="autoL" checked>打ち出しの速さと角度を「よいサーブの基準」から自動で決める</label></div>
     <p class="note" style="margin:0 0 4px">基準（高さ・速さ・短さ）は、下の「結果」の中で変えられます。左右の向きは自分で決めます。</p>
     <div class="row"><label for="tv0">打ち出しの速さ</label><output id="tv0o"></output><input type="range" id="tv0" min="1.5" max="12" step="0.05" value="5"></div>
     <div class="row"><label for="tel">打ち出しの上下の角度（＋上向き／−下向き）</label><output id="telo"></output><input type="range" id="tel" min="-40" max="30" step="0.5" value="-20"></div>
-    <div class="row"><label for="taz">打ち出しの左右の向き（＋自分から見て右へ）</label><output id="tazo"></output><input type="range" id="taz" min="-25" max="25" step="0.5" value="0"></div>
+    <div class="row"><label for="taz">打ち出しの左右の向き（＋自分から見て右へ）</label><output id="tazo"></output><input type="range" id="taz" min="-40" max="40" step="0.1" value="0"></div>
     <p class="howto" id="howto"></p>
   </div>
 
@@ -256,6 +261,15 @@ function prefFor(){const rb=document.querySelector("input[name=rub]:checked").va
 function racketHitsTable(rk,h){const sw=nrm(rk.V)||1,dir=mul(rk.V,1/sw),pref=prefFor();
   for(let d=-0.1;d<=0.12+1e-9;d+=0.01){for(const q of racketPoints(add(h,mul(dir,d)),rk.n,pref))if(q[0]<=TL&&q[0]>=0&&Math.abs(q[1])<=HW+0.02&&q[2]<=0.003)return {d:Math.max(0,d),q};}
   return null;}
+// 進む向きの回転を決めるか（そのときは打ち出しの左右の向きが決まる）
+const fixGyro=()=>document.querySelector("input[name=fix]:checked").value==="gyro";
+// 欲しい回転（上下・横・進む向き）と打ち出しの速さ・上下の角度から、回転軸が (打球−トス) と直角になる左右の向きを出す（±40°まで、なければ null）
+function azFor(v0,el){const wx=+$("tgx").value*TAU,wy=-(+$("tbk").value)*TAU,wz=+$("tsd").value*TAU,E=el*deg,vt=tossV();
+  const K=-wz*(v0*Math.sin(E)+vt)/(v0*Math.cos(E)),M=Math.hypot(wx,wy);
+  if(M<1e-6)return Math.abs(K)<1e-6?+$("taz").value*deg:null;if(Math.abs(K)>M)return null;
+  const psi=Math.atan2(wx,wy),nz=a=>Math.atan2(Math.sin(a),Math.cos(a)),c=[nz(psi+Math.asin(K/M)),nz(psi+Math.PI-Math.asin(K/M))].filter(a=>Math.abs(a)<=40*deg);
+  return c.length?c.sort((p,q)=>Math.abs(p)-Math.abs(q))[0]:null;}
+function setLaunch(v0,el){$("tv0").value=v0;$("tel").value=el;if(fixGyro()){const a=azFor(v0,el);if(a!==null)$("taz").value=a/deg;}}
 // サーブの基準への余裕（0以上なら全部満たす）。入らないサーブは −50
 function serveParts(f){const hm=+$("hmax").value,vm=+$("vmin").value,sm=+$("smin").value,pk=f.peak?f.peak[2]:0,sh=f.b3?f.b3[0]:-0.3,clr=f.netZ-NETH;
   return {h:(hm-pk)/0.05,v:(f.v0-vm)/1,s:(sh-sm)/0.15,c:(clr-0.01)/0.02};}
@@ -264,8 +278,8 @@ function serveScore(f){if(f.fail||f.netZ===undefined)return -50;const p=servePar
 let VMAX=null;
 // 打ち出しの自動決定：欲しい回転（または実際に出る回転 wFix）のまま、打ち出しの速さと角度を総当たりで調べ、
 // 高さ・速さ・短さ・ネットの上の余裕が一番余裕をもって満たせるものを選ぶ（score≧0 なら全部満たす）
-function autoLaunch(wFix){if(!wFix)VMAX=null;const s0=tossState(),tbk=+$("tbk").value,tsd=+$("tsd").value,az=+$("taz").value*deg;
-  const evalAt=(v0,el)=>{const e=el*deg,vout=[-v0*Math.cos(e)*Math.cos(az),v0*Math.cos(e)*Math.sin(az),v0*Math.sin(e)],dv=sub(vout,s0.v);let w=wFix;
+function autoLaunch(wFix){if(!wFix)VMAX=null;const s0=tossState(),tbk=+$("tbk").value,tsd=+$("tsd").value,az0=+$("taz").value*deg,gy=fixGyro();
+  const evalAt=(v0,el)=>{const az=gy?azFor(v0,el):az0;if(az===null)return null;const e=el*deg,vout=[-v0*Math.cos(e)*Math.cos(az),v0*Math.cos(e)*Math.sin(az),v0*Math.sin(e)],dv=sub(vout,s0.v);let w=wFix;
     if(!w){const wy=-tbk*TAU,wz=tsd*TAU,wx=-(wy*dv[1]+wz*dv[2])/dv[0];w=[wx,wy,wz];if((2*R/3)*nrm(w)/nrm(dv)>0.9)return null;}
     const f=fly({p:s0.p,v:vout,w});if(!f.fail&&f.netZ!==undefined){const p=serveParts(f);if(Math.min(p.h,p.s,p.c)>=0&&(VMAX===null||f.v0>VMAX))VMAX=f.v0;}
     return {v0,el,score:serveScore(f)};};
@@ -323,14 +337,14 @@ function tossZ(t){const sz=S.s0.p[2],vt=-S.s0.v[2];return sz-vt*t-0.5*G*t*t;}
 let S=null,anim={t:-PRE_T,playing:!matchMedia("(prefers-reduced-motion: reduce)").matches,last:0,hold:0,speed:0.25};
 function compute(){const s0=tossState(),pr=P();let inv=null;PRE_T=Math.sqrt(2*(+$("tth").value)/G)+tossV()/G;
   if(mode()==="inv"){let al=null;const auto=$("autoL").checked;if(!auto)VMAX=undefined;
-    if(auto){al=autoLaunch(null);if(al){$("tv0").value=al.v0;$("tel").value=al.el;}}
+    if(auto){al=autoLaunch(null);if(al)setLaunch(al.v0,al.el);}else if(fixGyro())setLaunch(+$("tv0").value,+$("tel").value);
     inv=inverse();
     // ラバーがつかみきれない・ぴったりの当て方がないときは、ラケットの逆算まで含めて、まわりの打ち出しを探し直す
     if(auto&&al){const real=()=>{const o1=hitBall(s0,inv.n,inv.V,pr);return o1.miss?-99:racketHitsTable({n:inv.n,V:inv.V},s0.p)?-60:serveScore(fly(o1));};let cur=real();
       if(cur<al.score-0.2){let best={v0:al.v0,el:al.el,sc:cur};
-        for(const c of (al.tops||[])){$("tv0").value=c.v0;$("tel").value=c.el;inv=inverse();const sc=real();if(sc>best.sc)best={v0:c.v0,el:c.el,sc};}al={...al,v0:best.v0,el:best.el};
-        for(let dv=-0.9;dv<=0.9+1e-9;dv+=0.3)for(let de=-3;de<=3;de+=1){const v0=+(al.v0+dv).toFixed(2),el=+(al.el+de).toFixed(2);if(v0<2)continue;$("tv0").value=v0;$("tel").value=el;inv=inverse();const sc=real();if(sc>best.sc)best={v0,el,sc};}
-        $("tv0").value=best.v0;$("tel").value=best.el;inv=inverse();al={v0:best.v0,el:best.el,score:best.sc};}}
+        for(const c of (al.tops||[])){setLaunch(c.v0,c.el);inv=inverse();const sc=real();if(sc>best.sc)best={v0:c.v0,el:c.el,sc};}al={...al,v0:best.v0,el:best.el};
+        for(let dv=-0.9;dv<=0.9+1e-9;dv+=0.3)for(let de=-3;de<=3;de+=1){const v0=+(al.v0+dv).toFixed(2),el=+(al.el+de).toFixed(2);if(v0<1.5||(fixGyro()&&azFor(v0,el)===null))continue;setLaunch(v0,el);inv=inverse();const sc=real();if(sc>best.sc)best={v0,el,sc};}
+        setLaunch(best.v0,best.el);inv=inverse();al={v0:best.v0,el:best.el,score:best.sc};}}
     inv.auto=auto?(al||{score:-99}):null;inv.a=setFwdFrom(inv.n,inv.V);}
   outputs();const rk=inv?{n:inv.n,V:inv.V}:fwdRacket(),o=hitBall(s0,rk.n,rk.V,pr);const w=$("warn");
   if(o.miss){S={pts:[[...s0.p,0,0,0]],rk,s0,o:null};w.hidden=false;w.textContent="ラケットがボールに向かって動いていないので当たりません。面の向きかスイングの向きを変えてください。";["v-res","v-spin","v-speed","v-len","r-v2","r-peak","r-stop","tgxo","r-launch","r-spin0","r-axis","r-b1","r-net","r-b2","r-spin2","r-curve","r-kick","r-after"].forEach(i=>$(i).textContent="—");$("s-res").className="bad";howto(inv,null);return;}
@@ -366,7 +380,8 @@ function howto(inv,o){const el=$("howto");if(!inv){el.textContent="";return;}
   if(inv.capped)h+="<br>欲しい回転は、この打ち出しの速さでは理論上も出せない強さです（こするだけで打っても上限の"+fmt(inv.ratio*100)+"%）。";
   if(o&&!o.miss){const want=nrm(inv.wWant)/TAU,got=nrm(o.w)/TAU;h+="<br>出る回転："+spinLong(o.w)+"。"+(want>3&&got<want*0.9?"ラバーがつかみきれず、欲しい回転（"+fmt(want)+"回転/秒）より弱くなります。":"");
     if(inv.res>0.05)h+="<br>このラバーでは、この打ち出しにぴったり合う当て方が見つかりませんでした（打ち出しのずれ "+fmt(inv.res,2)+" m/s）。";}
-  {const g=comp(inv.wWant).sgx;h+="<br>進む向きの回転は自由に選べず、この打ち出しとトスでは "+(Math.abs(g)<0.5?"ほぼ0":(g>0?"＋":"−")+fmt(Math.abs(g))+" 回転/秒（相手のバウンドで"+(g>0?"右":"左")+"へ跳ねる向き）")+"に決まります。";}
+  if(fixGyro()){const a=azFor(+$("tv0").value,+$("tel").value);h+=a===null?"<br><b style=\"color:var(--bad)\">この打ち出しの速さと角度では、欲しい進む向きの回転は作れません</b>（打ち出しの左右の向きが±40°を超えます）。上下・横の回転を強くするか、進む向きの回転を小さくしてください。":"<br>欲しい進む向きの回転にするため、打ち出しを"+(Math.abs(a/deg)<0.5?"まっすぐ":(a>0?"右へ":"左へ")+fmt(Math.abs(a/deg),1)+"°")+"に向けます。";}
+  else {const g=comp(inv.wWant).sgx;h+="<br>進む向きの回転は自由に選べず、この打ち出しとトスでは "+(Math.abs(g)<0.5?"ほぼ0":(g>0?"＋":"−")+fmt(Math.abs(g))+" 回転/秒（相手のバウンドで"+(g>0?"右":"左")+"へ跳ねる向き）")+"に決まります。";}
   el.innerHTML=h;}
 // 図：自分を左に置く（x を反転）
 function views(){const top=$("top"),W=top.parentElement.clientWidth||340,xmin=-0.5,xmax=TL+0.65,sc=W/(xmax-xmin);
@@ -442,12 +457,13 @@ function total(){return S?S.pts.length*DT:0;}
 function tick(ts){const dt=anim.last?Math.min(0.05,(ts-anim.last)/1000):0;anim.last=ts;if(anim.playing&&S){if(anim.t>=total()){anim.hold+=dt;if(anim.hold>0.8){anim.t=-PRE_T;anim.hold=0;}}else anim.t+=dt*anim.speed;}spinVis(dt);if(VIEW==="hand")draw3D();else drawViews();requestAnimationFrame(tick);}
 function outputs(){const L=(id,t)=>$(id).textContent=t,v=id=>+$(id).value,sg=(x,p,n,z,u)=>Math.abs(x)<0.5?z:(x>0?p:n)+fmt(Math.abs(x))+(u||"");
   L("tho",v("th")>=0?"開き "+fmt(v("th"))+"°":"かぶせ "+fmt(-v("th"))+"°");L("pso",sg(v("ps"),"右へ","左へ","まっすぐ","°"));L("swo",fmt(v("sw"),1)+" m/s");L("beo",sg(v("be"),"上へ","下へ","水平","°"));L("alo",sg(v("al"),"右へ","左へ","前へ","°"));
-  L("tbko",sg(v("tbk"),"上回転 ","下回転 ","なし"));L("tsdo",sg(v("tsd"),"右横 ","左横 ","なし"));L("tv0o",fmt(v("tv0"),2)+" m/s");L("telo",fmt(v("tel"),1)+"°");L("tazo",Math.abs(v("taz"))<0.25?"まっすぐ":(v("taz")>0?"右へ":"左へ")+fmt(Math.abs(v("taz")),1)+"°");
+  L("tgxo2",Math.abs(v("tgx"))<0.5?"なし":(v("tgx")>0?"＋":"−")+fmt(Math.abs(v("tgx")))+"（"+(v("tgx")>0?"右":"左")+"へ跳ねる）");L("tbko",sg(v("tbk"),"上回転 ","下回転 ","なし"));L("tsdo",sg(v("tsd"),"右横 ","左横 ","なし"));L("tv0o",fmt(v("tv0"),2)+" m/s");L("telo",fmt(v("tel"),1)+"°");L("tazo",Math.abs(v("taz"))<0.25?"まっすぐ":(v("taz")>0?"右へ":"左へ")+fmt(Math.abs(v("taz")),1)+"°");
   L("hzo",fmt(v("hz")*100)+" cm");L("ttho",fmt(v("tth")*100)+" cm");L("szo",fmt(v("sz")*100)+" cm");
   {const apex=v("hz")+v("tth"),d=apex-v("sz");$("tossNote").textContent=d>0?"トスの頂点は台の上"+fmt(apex*100)+"cm。打つ高さまで"+fmt(d*100)+"cm落ちてくるので、当たるときの落ちる速さは "+fmt(tossV(),1)+" m/s です。":"打つ高さがトスの頂点より高いので、頂点で打つとして計算しています。";}
   L("hmaxo",fmt(v("hmax")*100)+" cm");L("vmino",fmt(v("vmin"),1)+" m/s");L("smino",fmt(v("smin")*100)+" cm");L("sxo",fmt(v("sx")*100)+" cm");L("syo",lrS(v("sy")));}
 let pend=0;function schedule(){cancelAnimationFrame(pend);pend=requestAnimationFrame(()=>{compute();anim.t=-PRE_T;anim.hold=0;});}
-function syncMode(){const m=mode();$("g-inv").hidden=m!=="inv";$("g-fwd").querySelectorAll("input").forEach(i=>i.disabled=m==="inv");$("tv0").disabled=$("tel").disabled=$("autoL").checked;}
+function syncMode(){const m=mode(),g=fixGyro();$("g-inv").hidden=m!=="inv";$("g-fwd").querySelectorAll("input").forEach(i=>i.disabled=m==="inv");$("tv0").disabled=$("tel").disabled=$("autoL").checked;$("taz").disabled=g;$("row-tgx").hidden=!g;$("row-tgxo").hidden=g;}
+document.querySelectorAll("input[name=fix]").forEach(r=>r.addEventListener("change",()=>{syncMode();schedule();}));
 $("autoL").addEventListener("change",()=>{syncMode();schedule();});
 document.querySelectorAll("input[type=range]").forEach(r=>{r.addEventListener("input",schedule);let sx=0,sy=0,v0=null;const rv=()=>{if(v0!==null&&r.value!==v0){r.value=v0;schedule();}};
   r.addEventListener("touchstart",e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;v0=r.value;},{passive:true});
