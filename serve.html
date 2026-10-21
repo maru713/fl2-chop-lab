@@ -420,8 +420,16 @@ function draw3D(){const cv=$("c3d"),W=cv.parentElement.clientWidth||340,H=Math.r
   const ballNear=dot(sub(ballP,eye),fw)<dot(sub(add(rkP,mul(rk.n,-R)),eye),fw);
   if(ballNear){racket3D(c,P,eye,F,rkP,rk.n,pref,bh,col);drawBall();}else{drawBall();racket3D(c,P,eye,F,rkP,rk.n,pref,bh,col);}
   if(S.hitT){const q=P(S.hitT.q);if(q){c.strokeStyle=col("--bad");c.lineWidth=3;c.beginPath();c.moveTo(q[0]-7,q[1]-7);c.lineTo(q[0]+7,q[1]+7);c.moveTo(q[0]+7,q[1]-7);c.lineTo(q[0]-7,q[1]+7);c.stroke();}}
-  c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.fillText((bh?"黒＝FL2の面":"赤＝裏ソフトの面")+"・緑＝面の向き・紫＝回転軸・点線＝ラケットの動き",6,H-6);
-  c.fillStyle=col("--ink");c.font="11px "+col("--f-num");c.fillText(t<0?(t<-(tossV()/G)?"トス（上がっていく）":"トス（落ちてくる）"):"打った後："+spinShort(S.o?S.o.w:[0,0,0]),6,14);}
+  c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.fillText((bh?"黒＝FL2の面":"赤＝裏ソフトの面")+"・緑＝面の向き・紫＝回転軸（点が親指の向き）・点線＝ラケットの動き",6,H-6);
+  c.fillStyle=col("--ink");c.font="11px "+col("--f-num");c.fillText(t<0?(t<-(tossV()/G)?"トス（上がっていく）":"トス（落ちてくる）"):"打った後："+spinShort(S.o?S.o.w:[0,0,0]),6,14);
+  // 右上：ボールを拡大して、回る様子（輪）と回転軸（紫）を今の視点から見せる（レシーブ編の「回転（拡大）」と同じ）
+  {const zr=26,zx=W-zr-12,zy=zr+14,pj=v=>[dot(v,r),-dot(v,u),dot(v,fw)];c.fillStyle=col("--ball");c.strokeStyle=col("--ink");c.lineWidth=1.5;c.beginPath();c.arc(zx,zy,zr,0,Math.PI*2);c.fill();c.stroke();
+    const w=curW3(),m=nrm(w);
+    if(m>TAU*2&&RING){c.lineWidth=3;for(let k=0;k<36;k++){const a0=k/36*TAU,a1=(k+1)/36*TAU,A=pj(add(mul(RING[0],Math.cos(a0)),mul(RING[1],Math.sin(a0)))),B=pj(add(mul(RING[0],Math.cos(a1)),mul(RING[1],Math.sin(a1)))),front=(A[2]+B[2])<0;
+        c.strokeStyle=front?col("--ink"):col("--muted");c.globalAlpha=front?1:0.3;c.beginPath();c.moveTo(zx+A[0]*zr,zy+A[1]*zr);c.lineTo(zx+B[0]*zr,zy+B[1]*zr);c.stroke();}c.globalAlpha=1;
+      const ax=pj(mul(w,1/m));c.strokeStyle=col("--axis");c.lineWidth=2.5;c.beginPath();c.moveTo(zx-ax[0]*zr*1.35,zy-ax[1]*zr*1.35);c.lineTo(zx+ax[0]*zr*1.35,zy+ax[1]*zr*1.35);c.stroke();
+      c.fillStyle=col("--axis");c.beginPath();c.arc(zx+ax[0]*zr*1.35,zy+ax[1]*zr*1.35,3,0,Math.PI*2);c.fill();}
+    c.fillStyle=col("--muted");c.font="10px "+col("--f-body");c.textAlign="center";c.fillText(m>TAU*2?"回転（拡大）":"回転なし",zx,zy+zr+12);c.textAlign="left";}}
 {const cv=$("c3d");let drag=null;
   cv.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY,yaw:V3D.yaw,pitch:V3D.pitch,mouse:e.pointerType==="mouse"};cv.setPointerCapture(e.pointerId);cv.style.cursor="grabbing";});
   cv.addEventListener("pointermove",e=>{if(!drag)return;V3D.yaw=drag.yaw-(e.clientX-drag.x)*0.5;if(drag.mouse)V3D.pitch=Math.max(-10,Math.min(80,drag.pitch+(e.clientY-drag.y)*0.4));if(!anim.playing)draw3D();});
