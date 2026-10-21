@@ -197,7 +197,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
   <h2 style="margin-top:12px">よいサーブの基準</h2>
   <p class="note" style="margin-top:0">3つとも満たすと「良い」、外れたものを結果の上に赤で出します。</p>
   <div class="row"><label for="hmax">高さ：相手のコートで弾んだ後の頂点が、台からこの高さ以下</label><output id="hmaxo"></output><input type="range" id="hmax" min="0.05" max="0.4" step="0.01" value="0.15"></div>
-  <div class="row"><label for="vmin">速さ：相手のコートに来たときの速さが、これ以上</label><output id="vmino"></output><input type="range" id="vmin" min="1" max="6" step="0.1" value="3"></div>
+  <div class="row"><label for="vmin">速さ：打った直後の速さが、これ以上</label><output id="vmino"></output><input type="range" id="vmin" min="3" max="10" step="0.1" value="5.4"></div>
   <p class="note" id="vmaxNote" style="margin:0 0 4px"></p>
   <div class="row"><label for="smin">短さ：相手の台で2回目に弾む位置が、エンドラインからこれ以上内側</label><output id="smino"></output><input type="range" id="smin" min="0" max="0.8" step="0.01" value="0.15"></div>
   <p class="howto" id="evalTxt"></p>
@@ -213,7 +213,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
       <li>完全に食いついてこするだけで打っても、回転によるボールの表面の速さは、ボールの速さの変化の1.5倍までです。逆算でこれを超える回転を選ぶと、出せる一番強い回転に下げて計算します。</li>
       <li>逆算では、欲しい回転と打ち出しから、面の向きを式で求め、ラバーの表を使ってラケットの速さと向きを探しています。ラバーがつかみきれないと、欲しい回転より弱くなります。</li>
       <li>トスは、手の高さ＋トスの高さを頂点として、打つ高さまで自由落下した速さで当たるとしています（空気抵抗は入れていません）。</li>
-      <li>よいサーブの基準は、相手のコートで弾んだ後の一番高い位置（相手の台の上にある間）、相手のコートで弾む直前の速さ、相手の台で2回目に弾む位置で判定しています。この計算では、短く入れて弾んだ後をネット（15cm）より低くするのは、下回転でもぎりぎりです。</li>
+      <li>よいサーブの基準は、相手のコートで弾んだ後の一番高い位置（相手の台の上にある間）、打った直後の速さ、相手の台で2回目に弾む位置で判定しています。速さの目安は、Tリーグの試合1773本のサーブを計測した研究（<a href="https://journals.sagepub.com/doi/10.1177/22150218251409592" target="_blank" rel="noopener" style="color:var(--table)">Tamaki &amp; Yoshida 2025</a>）の中央値です。この計算では、短く入れて弾んだ後をネット（15cm）より低くするのは、下回転でもぎりぎりです。</li>
       <li>ラケットが台に当たるかは、ボールに当たる10cm手前から、当たった後もまっすぐ12cm振り抜くとして、ラケットの縁とグリップの先が台の上面（エンドラインより内側）より下に入るかで判定しています。実際は打った後にスイングを持ち上げられるので、厳しめの判定です。</li>
       <li>空気の力と台での弾みは、レシーブ編と同じです（卓球ボールのCFD式、台の反発0.89・摩擦0.25）。手首の回転や、ラケットの中心から外れた位置に当たる効果は入っていません。</li>
     </ul>
@@ -254,7 +254,7 @@ function racketHitsTable(rk,h){const sw=nrm(rk.V)||1,dir=mul(rk.V,1/sw),pref=pre
   return null;}
 // サーブの基準への余裕（0以上なら全部満たす）。入らないサーブは −50
 function serveParts(f){const hm=+$("hmax").value,vm=+$("vmin").value,sm=+$("smin").value,pk=f.peak?f.peak[2]:0,sh=f.b3?f.b3[0]:-0.3,clr=f.netZ-NETH;
-  return {h:(hm-pk)/0.05,v:((f.v2||0)-vm)/1,s:(sh-sm)/0.15,c:(clr-0.01)/0.02};}
+  return {h:(hm-pk)/0.05,v:(f.v0-vm)/1,s:(sh-sm)/0.15,c:(clr-0.01)/0.02};}
 function serveScore(f){if(f.fail||f.netZ===undefined)return -50;const p=serveParts(f);return Math.min(p.h,p.v,p.s,p.c);}
 // 速さ以外の基準（高さ・短さ・ネットの上）を満たしたまま出せる一番速い「相手のコートに来たときの速さ」。自動の逆算で一緒に調べる
 let VMAX=null;
@@ -263,7 +263,7 @@ let VMAX=null;
 function autoLaunch(wFix){if(!wFix)VMAX=null;const s0=tossState(),tbk=+$("tbk").value,tsd=+$("tsd").value,az=+$("taz").value*deg;
   const evalAt=(v0,el)=>{const e=el*deg,vout=[-v0*Math.cos(e)*Math.cos(az),v0*Math.cos(e)*Math.sin(az),v0*Math.sin(e)],dv=sub(vout,s0.v);let w=wFix;
     if(!w){const wy=-tbk*TAU,wz=tsd*TAU,wx=-(wy*dv[1]+wz*dv[2])/dv[0];w=[wx,wy,wz];if((2*R/3)*nrm(w)/nrm(dv)>0.9)return null;}
-    const f=fly({p:s0.p,v:vout,w});if(!f.fail&&f.netZ!==undefined){const p=serveParts(f);if(Math.min(p.h,p.s,p.c)>=0&&(VMAX===null||f.v2>VMAX))VMAX=f.v2;}
+    const f=fly({p:s0.p,v:vout,w});if(!f.fail&&f.netZ!==undefined){const p=serveParts(f);if(Math.min(p.h,p.s,p.c)>=0&&(VMAX===null||f.v0>VMAX))VMAX=f.v0;}
     return {v0,el,score:serveScore(f)};};
   let best=null;const take=r=>{if(r&&(!best||r.score>best.score))best=r;};
   for(let v0=2.5;v0<=11;v0+=0.5)for(let el=-40;el<=5;el+=1)take(evalAt(v0,el));
@@ -297,7 +297,7 @@ function inverse(){const s0=tossState(),pr=P(),v0=+$("tv0").value,el=+$("tel").v
 function setFwdFrom(n,V){const th=Math.asin(Math.max(-1,Math.min(1,n[2])))/deg,ps=Math.atan2(n[1],-n[0])/deg,sw=nrm(V),be=Math.asin(Math.max(-1,Math.min(1,V[2]/(sw||1))))/deg,al=Math.atan2(V[1],-V[0])/deg;
   $("th").value=th;$("ps").value=ps;$("sw").value=sw;$("be").value=be;$("al").value=al;return {th,ps,sw,be,al};}
 // サーブの飛び方：自分のコート→ネット→相手のコート→その後
-function fly(s0){let s={p:[...s0.p],v:[...s0.v],w:[...s0.w]};const pts=[[...s.p,...s.w]];let t=0,stage=0;const o={pts};
+function fly(s0){let s={p:[...s0.p],v:[...s0.v],w:[...s0.w]};const pts=[[...s.p,...s.w]];let t=0,stage=0;const o={pts,v0:nrm(s0.v)};
   while(t<3){const pr=s;s=step(s,DT);t+=DT;pts.push([...s.p,...s.w]);
     if(stage>=1&&stage<2&&pr.p[0]>NETX&&s.p[0]<=NETX){const f=(NETX-pr.p[0])/(s.p[0]-pr.p[0]),z=pr.p[2]+(s.p[2]-pr.p[2])*f,y=pr.p[1]+(s.p[1]-pr.p[1])*f;o.netZ=z;if(z<NETH&&Math.abs(y)<HW+0.15){o.fail="ネットにかかります";break;}stage=1.5;}
     if(stage===0&&pr.p[0]>NETX&&s.p[0]<=NETX){o.fail="自分のコートで弾まずに相手側へ飛んでいます";break;}
@@ -331,11 +331,12 @@ function compute(){const s0=tossState(),pr=P();let inv=null;PRE_T=Math.sqrt(2*(+
   const sp=nrm(o.v),el=Math.asin(o.v[2]/sp)/deg,az=Math.atan2(o.v[1],-o.v[0])/deg;
   $("s-res").className=f.fail?"bad":"ok";$("v-res").textContent=f.fail?"入らない":"入る";$("v-spin").textContent=spinShort(o.w);$("v-speed").textContent=fmt(sp,1)+" m/s";
   {const bad=[];let txt="";if(!f.fail){const hm=+$("hmax").value,vm=+$("vmin").value,sm=+$("smin").value,pk=f.peak?f.peak[2]:0,sh=f.b3?f.b3[0]:-1;
-     if(hitT)bad.push("台に当たる");if(pk>hm)bad.push("高い");if((f.v2||0)<vm)bad.push("遅い");if(sh<sm)bad.push(f.b3?"短さが足りない":"長い");
-     txt="高さ："+(pk>hm?"<b style=\"color:var(--bad)\">×</b>":"○")+" 頂点"+fmt(pk*100)+"cm（基準"+fmt(hm*100)+"cm以下）<br>速さ："+((f.v2||0)<vm?"<b style=\"color:var(--bad)\">×</b>":"○")+" "+fmt(f.v2||0,1)+" m/s（基準"+fmt(vm,1)+" m/s以上）<br>短さ："+(sh<sm?"<b style=\"color:var(--bad)\">×</b>":"○")+" "+(f.b3?"2回目はエンドから"+fmt(sh*100)+"cm内側":"相手の台で2回目に弾まない")+"（基準"+fmt(sm*100)+"cm以上内側）";}
+     if(hitT)bad.push("台に当たる");if(pk>hm)bad.push("高い");if(f.v0<vm)bad.push("遅い");if(sh<sm)bad.push(f.b3?"短さが足りない":"長い");
+     txt="高さ："+(pk>hm?"<b style=\"color:var(--bad)\">×</b>":"○")+" 頂点"+fmt(pk*100)+"cm（基準"+fmt(hm*100)+"cm以下）<br>速さ："+(f.v0<vm?"<b style=\"color:var(--bad)\">×</b>":"○")+" 打った直後"+fmt(f.v0,1)+" m/s（基準"+fmt(vm,1)+" m/s以上）<br>短さ："+(sh<sm?"<b style=\"color:var(--bad)\">×</b>":"○")+" "+(f.b3?"2回目はエンドから"+fmt(sh*100)+"cm内側":"相手の台で2回目に弾まない")+"（基準"+fmt(sm*100)+"cm以上内側）";}
    $("v-len").textContent=f.fail?"—":(bad.length?bad.join("・"):"良い");$("s-ev").className=f.fail?"":(bad.length?"bad":"ok");$("evalTxt").innerHTML=f.fail?"サーブが入っていません。":txt;}
   $("r-v2").textContent=f.v2?fmt(f.v2,1)+" m/s":"—";
-  $("vmaxNote").textContent=mode()==="inv"&&$("autoL").checked?(VMAX?"いまの回転・打つ位置で、高さと短さの基準を満たしたまま出せる一番速いのは "+fmt(VMAX,1)+" m/s です。":"いまの回転・打つ位置では、高さと短さの基準を同時に満たす打ち出しがありません。"):"出せる一番速い速さは、逆算モードで「自動で決める」を選ぶと表示します。短く入れるサーブでは、ふつう4 m/s前後が上限です。";
+  $("vmaxNote").textContent=mode()==="inv"&&$("autoL").checked?(VMAX?"いまの回転・打つ位置で、高さと短さの基準を満たしたまま出せる一番速い打球は "+fmt(VMAX,1)+" m/s です。":"いまの回転・打つ位置では、高さと短さの基準を同時に満たす打ち出しがありません。"):"出せる一番速い打球は、逆算モードで「自動で決める」を選ぶと表示します。";
+  $("vmaxNote").textContent+="目安（Tリーグの試合で計測した打った直後の速さの中央値）：短いサーブ 男子5.4・女子5.6 m/s、長いサーブ 男子7.2・女子7.3 m/s。";
   $("r-peak").textContent=f.peak?"台から"+fmt(f.peak[2]*100)+"cm・"+(f.peak[0]>=0?"エンドから"+fmt(f.peak[0]*100)+"cm内側":"エンドの外"):"—";
   $("r-launch").textContent=fmt(sp,2)+" m/s・"+(el<0?"下へ"+fmt(-el,1):"上へ"+fmt(el,1))+"°・"+(Math.abs(az)<0.25?"まっすぐ":(az>0?"右へ":"左へ")+fmt(Math.abs(az),1)+"°");
   $("r-spin0").textContent=spinLong(o.w);$("r-axis").textContent=axisTxt(o.w);
