@@ -130,17 +130,18 @@ details.more>summary{font-size:13px;color:var(--table);padding:8px 0 4px}
 
 <section class="panel">
   <h2>自分のカット</h2>
-  <div class="seg" role="radiogroup" aria-label="ラバー">
+  <div class="seg seg4" role="radiogroup" aria-label="ラバー">
     <label><input type="radio" name="rub" id="r-11" value="11" checked>FL2 薄<br>（1.1mm）</label>
     <label><input type="radio" name="rub" id="r-ox" value="ox">FL2 OX</label>
-    <label><input type="radio" name="rub" id="r-inv" value="inv">裏ソフト<br>（比較）</label>
+    <label><input type="radio" name="rub" id="r-g9" value="g9">グレイザー<br>09C 厚</label>
+    <label><input type="radio" name="rub" id="r-inv" value="inv">テンション<br>（比較）</label>
   </div>
   <p class="note" id="modeNote" style="margin:2px 0 6px"></p>
   <div class="seg" role="group" aria-label="打ち方の例"><label><input type="radio" name="stroke" value="touch">触るだけ</label><label><input type="radio" name="stroke" value="brush">下を強くこする</label><label><input type="radio" name="stroke" value="chop">下へ振るカット</label></div>
   <div class="row"><label for="face">面の開き（垂直＝0°）</label><output id="faceo"></output><input type="range" id="face" min="0" max="85" step="1" value="30"></div>
   <div class="row"><label for="dist">打点（エンドラインの後ろ、マイナスは台の上）</label><output id="disto"></output><input type="range" id="dist" min="-0.6" max="4.5" step="0.1" value="2.5"></div>
-  <div class="row"><label for="sw">スイングの速さ</label><output id="swo"></output><input type="range" id="sw" min="0" max="10" step="0.5" value="5"></div>
-  <div class="row"><label for="sa">スイングの向き（水平から下へ、マイナスは上へ）</label><output id="sao"></output><input type="range" id="sa" min="-30" max="75" step="1" value="35"></div>
+  <div class="row"><label for="sw">スイングの速さ</label><output id="swo"></output><input type="range" id="sw" min="0" max="10" step="0.5" value="7"></div>
+  <div class="row"><label for="sa">スイングの向き（水平から下へ、マイナスは上へ）</label><output id="sao"></output><input type="range" id="sa" min="-30" max="75" step="1" value="40"></div>
 </section>
 
 <section class="panel">
@@ -198,9 +199,9 @@ details.more>summary{font-size:13px;color:var(--table);padding:8px 0 4px}
   <ul class="find">
     <li>再生すると、FL2のカットでも球の回る向きは来たときのままです。進む向きが逆になるので、相手から見ると下回転になります。</li>
     <li>FL2で「スイングの速さ」を変えても、返球の下回転はほとんど変わりません。下回転の量は、ほぼ相手の上回転で決まります。</li>
-    <li>相手の上回転を下げると、FL2の返球は軽い回転になります。裏ソフトに切り替えると、スイングで回転を足せることが分かります。</li>
+    <li>相手の上回転を下げると、FL2の返球は軽い回転になります。グレイザーやテンションに切り替えると、スイングで回転を足せることが分かります。</li>
     <li>「ツッツキ（下回転）」を選び、打ち方の例を「触るだけ」と「下を強くこする」で切り替えると、粒が倒れて滑るか、引っかかるかで返球の回転が変わります。</li>
-    <li>「ツッツキ（下回転）」をFL2で返すと、回る向きが残るので相手から見て上回転（ナックル気味）になります。裏ソフトと比べてみてください。</li>
+    <li>「ツッツキ（下回転）」をFL2で返すと、回る向きが残るので相手から見て上回転（ナックル気味）になります。グレイザーと比べてみてください。</li>
     <li>山なりのループや高い球は、選ぶと打点が「台の高さまで落ちる位置」に自動で合わせられます。打点を前後させると、面の開きの許容範囲がどう変わるか分かります。</li>
   </ul>
 </section>
@@ -270,8 +271,8 @@ const M=0.0027,R=0.02,AR=Math.PI*R*R,RHO=1.2,CD=0.5,G=9.8;
 const NETH=0.1525,FLOOR=-0.76,DT=5e-4,EX=1.5;
 const COURSE={straight:2.74,cross:Math.hypot(2.74,1.525)};
 let TL=2.74,NETX=1.37;
-const SHOTS={drive:{v0:22,rps:110,bx:0.6,arc:"low",sw:4.5,sa:10},loop:{v0:13,rps:120,bx:0.7,arc:"low",sw:4.5,sa:10},high:{v0:10,rps:70,bx:0.8,arc:"high",sw:6,sa:0},push:{v0:7,rps:-40,bx:0.5,arc:"low",dist:-0.2,sw:3.5,sa:0}};
-const PRE={ox:{k:0.15,e:0.45,keep:0.8,et:0},"11":{k:0.15,e:0.55,keep:0.8,et:0},inv:{k:0.8,e:0.75,keep:1.0,et:0.35}};
+const SHOTS={drive:{v0:22,rps:110,bx:0.6,arc:"low",sw:7,sa:40,ura:{sw:10,sa:67}},loop:{v0:13,rps:120,bx:0.7,arc:"low",sw:8,sa:40,ura:{sw:9,sa:60}},high:{v0:10,rps:70,bx:0.8,arc:"high",sw:6,sa:0},push:{v0:7,rps:-40,bx:0.5,arc:"low",dist:-0.2,sw:3.5,sa:0}};
+const PRE={g9:{k:0.95,e:0.84,keep:1.0,et:0.35},ox:{k:0.15,e:0.45,keep:0.8,et:0},"11":{k:0.15,e:0.55,keep:0.8,et:0},inv:{k:0.8,e:0.75,keep:1.0,et:0.35}};
 let keep=0.8;
 const $=id=>document.getElementById(id);
 function acc(vx,vy,om){const v=Math.hypot(vx,vy)||1e-6;const q=0.5*RHO*AR*v*v/M;const [cd,cl]=aero(R*Math.abs(om)/v);
@@ -363,7 +364,14 @@ function update(){const v0=+$("v0").value,rps=+$("rps").value,bx=+$("bx").value,
   drawInset();}
 let pend=0;function schedule(){cancelAnimationFrame(pend);pend=requestAnimationFrame(update);}
 function applyPreset(key){const p=PRE[key];$("e").value=p.e;$("et").value=p.et;keep=p.keep;}
-document.querySelectorAll("input[name=rub]").forEach(r=>r.addEventListener("change",()=>{applyPreset(r.value);schedule();}));
+// 裏ソフト（グレイザー・テンション）は粒より強く回転をかけて飛ぶので、低く入るスイングが粒と違う。ura があればそちらを使う
+const isUra=()=>["g9","inv"].includes(document.querySelector("input[name=rub]:checked").value);
+const shotSwing=p=>isUra()&&p.ura?p.ura:p;
+let uraNow=isUra();
+// 粒⇔裏ソフトをまたいで切り替えたときだけ、相手の打球に合ったスイングに戻す（同じ種類どうしなら今のスイングのまま比べられる）
+document.querySelectorAll("input[name=rub]").forEach(r=>r.addEventListener("change",()=>{applyPreset(r.value);
+  if(isUra()!==uraNow){uraNow=isUra();const sh=document.querySelector("input[name=shot]:checked");if(sh){const q=shotSwing(SHOTS[sh.value]);$("sw").value=q.sw;$("sa").value=q.sa;}}
+  bestFace();schedule();}));
 document.querySelectorAll("input[name=course]").forEach(r=>r.addEventListener("change",schedule));
 $("arc").addEventListener("change",schedule);
 const STROKES={touch:{sw:1.5,sa:0},brush:{sw:8,sa:0},chop:{sw:6,sa:30}};
@@ -379,7 +387,7 @@ document.querySelectorAll("input[name=aim]").forEach(r=>r.addEventListener("chan
 document.querySelectorAll("input[name=shot]").forEach(r=>r.addEventListener("change",()=>{const p=SHOTS[r.value];document.querySelector("input[name=aim][value=bounce]").checked=true;
   $("v0").value=p.v0;$("rps").value=p.rps;$("bx").value=p.bx;$("arc").checked=p.arc==="high";
   TL=COURSE[document.querySelector("input[name=course]:checked").value];NETX=TL/2;
-  $("sw").value=p.sw;$("sa").value=p.sa;if(p.dist!==undefined)$("dist").value=p.dist;else fitDist();
+  {const q=shotSwing(p);$("sw").value=q.sw;$("sa").value=q.sa;}if(p.dist!==undefined)$("dist").value=p.dist;else fitDist();
   bestFace();schedule();}));
 document.querySelectorAll("input[type=range]").forEach(r=>r.addEventListener("input",()=>{schedule();if(!["sw","sa","face"].includes(r.id)&&HEAT){HEAT=null;drawHeat();$("srch-best").textContent="条件が変わったので、もう一度探してください。";$("srch-msg").textContent="";}else if(HEAT)requestAnimationFrame(drawHeat);}));
 $("play").addEventListener("click",()=>{anim.playing=!anim.playing;$("play").textContent=anim.playing?"一時停止":"再生";if(anim.playing&&anim.t>=total()){anim.t=0;anim.hold=0;}});
