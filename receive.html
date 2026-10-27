@@ -67,6 +67,8 @@ details>summary{cursor:pointer;font-weight:700;padding:4px 0;min-height:32px}
 ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 .warn{color:var(--bad);font-size:13px;margin:4px 0 0}
 .src a{color:var(--table);word-break:break-all}
+details.more{margin-top:6px;border-top:1px solid var(--line)}
+details.more>summary{font-size:13px;color:var(--table);padding:8px 0 4px}
 </style>
 </head>
 <body>
@@ -111,6 +113,8 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
   </div>
 </section>
 
+<section class="panel saves" id="saves"></section>
+
 <section class="panel">
   <h2>面の向きマップ</h2>
   <p class="note" style="margin-top:0">サーブ・ラバー・打ち方の例を選ぶと、面は自動で◎に合わせます。今のスイングのまま、面の開き（縦）と左右の向き（横）を変えたときに入るかどうかです。緑が入る範囲、濃いほど周りに余裕があります。●が今の面、◎が一番余裕のある面。タップするとその面に切り替わります。</p>
@@ -136,9 +140,11 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
   <div class="row"><label for="th">面の開き（＋上に開く／−かぶせる）</label><output id="tho"></output><input type="range" id="th" min="-40" max="80" step="1" value="40"></div>
   <div class="row"><label for="ps">面の左右の向き（＋自分から見て右へ向ける）</label><output id="pso"></output><input type="range" id="ps" min="-45" max="45" step="1" value="0"></div>
   <div class="row"><label for="sw">スイングの速さ</label><output id="swo"></output><input type="range" id="sw" min="0" max="12" step="0.25" value="2.5"></div>
+  <details class="more"><summary>スイングの向き・打つタイミングを変える</summary>
   <div class="row"><label for="be">スイングの上下の向き（＋上へ／−下へ）</label><output id="beo"></output><input type="range" id="be" min="-60" max="60" step="1" value="5"></div>
   <div class="row"><label for="al">スイングの左右の向き（＋右へ）</label><output id="alo"></output><input type="range" id="al" min="-60" max="60" step="1" value="0"></div>
   <div class="row"><label for="tc">打つタイミング（自分のコートで弾んでから見逃してミスになるまで）</label><output id="tco"></output><input type="range" id="tc" min="0" max="300" step="5" value="100"></div>
+  </details>
   <dl class="kv">
     <dt>打点の高さ（台の面＝0）</dt><dd id="o-h"></dd>
     <dt>打点の位置</dt><dd id="o-pos"></dd>
@@ -159,6 +165,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <label><input type="radio" name="sv" value="knuckle">ナックル</label>
     <label><input type="radio" name="sv" value="tilt">右横下<br>（軸傾き）</label>
   </div>
+  <details class="more"><summary>回転・速さ・コースを細かく変える</summary>
   <p class="note">回転のスライダーは打ち出したときの値です。台で2回弾むあいだに回転は減ったり変わったりするので、自分が打つ瞬間の回転は下の「打つ瞬間の回転」を見てください。「右横」は、自分に向いているボールの面が、自分から見て右へ動く回転です（ボールは自分から見て右へ曲がります）。</p>
   <div class="row"><label for="sbk">上下の回転（＋上回転／−下回転、1秒あたり）</label><output id="sbko"></output><input type="range" id="sbk" min="-80" max="60" step="1" value="-65"></div>
   <div class="row"><label for="ssd">横回転（＋右横／−左横、1秒あたり）</label><output id="ssdo"></output><input type="range" id="ssd" min="-80" max="80" step="1" value="0"></div>
@@ -168,6 +175,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
   <div class="row"><label for="sel">打ち出しの上下の角度（−下向き）</label><output id="selo"></output><input type="range" id="sel" min="-40" max="20" step="0.1" value="-22"></div>
   <div class="row"><label for="saz">打ち出しの左右の向き（＋自分から見て左へ）</label><output id="sazo"></output><input type="range" id="saz" min="-25" max="25" step="0.1" value="2.5"></div>
   <div class="row"><label for="sy">相手の打点の左右（＋自分から見て右、台の中心から）</label><output id="syo"></output><input type="range" id="sy" min="-0.7" max="0.7" step="0.01" value="0.3"></div>
+  </details>
   <dl class="kv">
     <dt>1バウンド目（相手コート）</dt><dd id="s-b1"></dd>
     <dt>2バウンド目（自分のコート）</dt><dd id="s-b2"></dd>
@@ -209,6 +217,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 <script src="js/physics.js?v=2026102202"></script>
 <script src="js/flight3d.js?v=2026102202"></script>
 <script src="js/view3d.js?v=2026102201"></script>
+<script src="js/settings.js?v=2026102702"></script>
 <script>
 const DT=1e-3;
 const SRV={x:0.15,z:0.22}; // サーブを打つ位置（エンドラインからの距離・台の上面からの高さ）
@@ -390,6 +399,8 @@ $("play").textContent=anim.playing?"一時停止":"再生";outputs();compute();i
 
 function modeNote(){const el=document.getElementById("modeNote");if(!el)return;const v=document.querySelector("input[name=rub]:checked").value;const inv=(v==="g9"||v==="inv");el.textContent=inv?"いまの計算：シートとスポンジを細かく分けて計算（実測で校正）":"いまの計算：粒を1本ずつ計算";}
 document.querySelectorAll("input[name=rub]").forEach(r=>r.addEventListener("change",modeNote));modeNote();
+// 前回の設定を戻す。サーブ編から渡されたサーブがあるときはそちらを使う
+labSettings({page:"receive",skip:()=>new URLSearchParams(location.search).has("sv0"),refresh:()=>{SNAP=false;TCSNAP=false;modeNote();schedule();}});
 </script>
 
 </body>

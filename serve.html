@@ -74,6 +74,8 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 .howto{font-size:14px;margin:6px 0 0;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 .howto b{color:var(--table)}
 .go{display:inline-block;margin-top:8px;font-weight:700;color:var(--table)}
+details.more{margin-top:6px;border-top:1px solid var(--line)}
+details.more>summary{font-size:13px;color:var(--table);padding:8px 0 4px}
 </style>
 </head>
 <body>
@@ -122,6 +124,8 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
   </div>
 </section>
 
+<section class="panel saves" id="saves"></section>
+
 <section class="panel" aria-labelledby="h-hit">
   <h2 id="h-hit">当て方</h2>
   <div class="seg" role="radiogroup" aria-label="入力の仕方" style="grid-template-columns:repeat(2,minmax(0,1fr))">
@@ -148,14 +152,17 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     </div>
     <div class="row"><label for="tbk">欲しい上下の回転（＋上回転／−下回転）</label><output id="tbko"></output><input type="range" id="tbk" min="-80" max="60" step="1" value="-50"></div>
     <div class="row"><label for="tsd">欲しい横回転（相手から見て ＋右へ曲がる／−左へ）</label><output id="tsdo"></output><input type="range" id="tsd" min="-80" max="80" step="1" value="0"></div>
+    <details class="more"><summary>進む向きの回転（軸の傾き）も決める</summary>
     <div class="seg" role="radiogroup" aria-label="進む向きの回転の扱い" style="grid-template-columns:repeat(2,minmax(0,1fr))">
       <label><input type="radio" name="fix" value="launch" checked>左右の向きを決める<br>（進む向きの回転は決まる）</label>
       <label><input type="radio" name="fix" value="gyro">進む向きの回転を決める<br>（左右の向きは決まる）</label>
     </div>
     <div class="row" id="row-tgx" hidden><label for="tgx">欲しい進む向きの回転（レシーブ編の「回転軸の傾き」、＋相手のバウンドで右へ跳ねる）</label><output id="tgxo2"></output><input type="range" id="tgx" min="-40" max="40" step="1" value="0"></div>
     <div class="row" id="row-tgxo" style="grid-template-columns:1fr auto"><span style="font-size:14px">進む向きの回転（レシーブ編の「回転軸の傾き」）<br><small style="color:var(--muted)">1回打つだけでは自由に選べず、打ち出しとトスで決まります。変えたいときは、打ち出しの角度・向きか、トスの落ちる速さを変えます</small></span><output id="tgxo">—</output></div>
+    </details>
     <div class="seg" style="grid-template-columns:1fr"><label><input type="checkbox" id="autoL" checked>打ち出しの速さと角度を自動で決める（速く・低いほど良い）</label></div>
     <div class="seg" role="radiogroup" aria-label="サーブの長さ"><label><input type="radio" name="len" value="short" checked>短い<br>（相手の台で2回）</label><label><input type="radio" name="len" value="long">長い<br>（台から出る）</label><label><input type="radio" name="len" value="any">長さは<br>問わない</label></div>
+    <details class="more" id="det-front"><summary>速さと低さのグラフ・打ち出しを手で決める</summary>
     <div class="row"><label for="lam">速さと低さのどちらを重視するか（真ん中＝1 m/s速いのと5cm低いのが同じ価値）</label><output id="lamo"></output><input type="range" id="lam" min="0" max="1" step="0.05" value="0.5"></div>
     <canvas id="front" role="img" aria-label="この回転で出せるサーブの、打った直後の速さと弾んだ後の頂点の高さの関係" style="display:block;width:100%;height:170px;touch-action:manipulation;cursor:pointer"></canvas>
     <p class="note" style="margin:2px 0 6px">点は、この回転・打つ位置で出せるサーブのうち「これより速くて低いものはない」もの（右下ほど良い）。●が今のサーブ。点をタップすると、その打ち出しにします（自動はオフになります）。ラバーがつかみきれないと、実際の点は少しずれます。</p>
@@ -163,6 +170,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <div class="row"><label for="tv0">打ち出しの速さ</label><output id="tv0o"></output><input type="range" id="tv0" min="1.5" max="12" step="0.05" value="5"></div>
     <div class="row"><label for="tel">打ち出しの上下の角度（＋上向き／−下向き）</label><output id="telo"></output><input type="range" id="tel" min="-40" max="30" step="0.5" value="-20"></div>
     <div class="row"><label for="taz">打ち出しの左右の向き（＋自分から見て右へ）</label><output id="tazo"></output><input type="range" id="taz" min="-40" max="40" step="0.1" value="0"></div>
+    </details>
     <p class="howto" id="howto"></p>
   </div>
 
@@ -174,8 +182,8 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <div class="row"><label for="al">スイングの左右の向き（0＝前へ、＋右へ／−左へ、±90＝真横）</label><output id="alo"></output><input type="range" id="al" min="-150" max="150" step="1" value="0"></div>
   </div>
 
-  <details style="margin-top:6px">
-    <summary>トスと打つ位置</summary>
+  <details class="more">
+    <summary>トスと打つ位置を変える</summary>
     <div class="row"><label for="hz">トスを上げる手の高さ（台の上面から）</label><output id="hzo"></output><input type="range" id="hz" min="0" max="0.3" step="0.01" value="0.02"></div>
     <div class="row"><label for="tth">トスの高さ（手から頂点まで、ルールで16cm以上）</label><output id="ttho"></output><input type="range" id="tth" min="0.16" max="1" step="0.01" value="0.25"></div>
     <div class="row"><label for="sz">打つ高さ（台の上面から）</label><output id="szo"></output><input type="range" id="sz" min="0.02" max="0.45" step="0.01" value="0.12"></div>
@@ -206,12 +214,13 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <dt>そのあと</dt><dd id="r-after">—</dd>
     <dt>止まり具合（相手のコートで弾んでから2回目までに進む距離）</dt><dd id="r-stop">—</dd>
   </dl>
-  <h2 style="margin-top:12px">よいサーブの基準</h2>
+  <details class="more"><summary>「良い」とする基準（高さ・速さ・短さ）を変える</summary>
   <p class="note" style="margin-top:0">3つとも満たすと「良い」、外れたものを結果の上に赤で出します。</p>
   <div class="row"><label for="hmax">高さ：相手のコートで弾んだ後の頂点が、台からこの高さ以下</label><output id="hmaxo"></output><input type="range" id="hmax" min="0.05" max="0.4" step="0.01" value="0.15"></div>
   <div class="row"><label for="vmin">速さ：打った直後の速さが、これ以上</label><output id="vmino"></output><input type="range" id="vmin" min="3" max="10" step="0.1" value="5.4"></div>
   <p class="note" id="vmaxNote" style="margin:0 0 4px"></p>
   <div class="row"><label for="smin">短さ：相手の台で2回目に弾む位置が、エンドラインからこれ以上内側</label><output id="smino"></output><input type="range" id="smin" min="0" max="0.8" step="0.01" value="0.15"></div>
+  </details>
   <p class="howto" id="evalTxt"></p>
   <a class="go" id="go-rcv" href="receive.html">このサーブをレシーブ編で受ける →</a>
 </section>
@@ -236,6 +245,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 <script src="js/physics.js?v=2026102202"></script>
 <script src="js/flight3d.js?v=2026102202"></script>
 <script src="js/view3d.js?v=2026102201"></script>
+<script src="js/settings.js?v=2026102702"></script>
 <script>
 const $=id=>document.getElementById(id);
 const DT=1e-3,TAU=2*Math.PI;
@@ -517,6 +527,8 @@ document.querySelectorAll("input[name=rub]").forEach(r=>r.addEventListener("chan
 // 初期値：「下回転ショート」の逆算結果を当て方の初期値にする
 (function init(){const e=EX.back;for(const k in e)$(k).value=e[k];document.querySelector("input[name=ex][value=back]").checked=true;const inv=inverse();setFwdFrom(inv.n,inv.V);
   syncMode();$("play").textContent=anim.playing?"一時停止":"再生";compute();anim.t=anim.playing?-PRE_T:total();requestAnimationFrame(tick);})();
+$("det-front").addEventListener("toggle",drawFront);
+labSettings({page:"serve",refresh:()=>{syncMode();modeNote();schedule();}});
 </script>
 
 </body>

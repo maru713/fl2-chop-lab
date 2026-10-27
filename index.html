@@ -75,6 +75,8 @@ details>summary{cursor:pointer;font-weight:700;padding:4px 0;min-height:32px}
 ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 .src a{color:var(--table);word-break:break-all}
 .warn{color:var(--bad);font-size:13px;margin:4px 0 0}
+details.more{margin-top:6px;border-top:1px solid var(--line)}
+details.more>summary{font-size:13px;color:var(--table);padding:8px 0 4px}
 </style>
 </head>
 <body>
@@ -119,11 +121,12 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
       <span><i style="background:var(--in)"></i>相手の打球</span>
       <span><i style="background:var(--out)"></i>カット（入る）</span>
       <span><i style="background:var(--bad)"></i>カット（入らない）</span>
-      <span>球の黒い線＝回る向き（見やすく遅くしています）</span>
       <span><i style="background:var(--swing)"></i>ラケットの軌跡（薄いラケット＝通過する位置）</span>
-      <span>人の形＝身長165cm、膝を軽く曲げた構え。肘の点の色：緑＝余裕あり、橙＝伸びすぎ・窮屈、赤＝伸びきり</span>
     </div>
+  <details class="more"><summary>図の見方</summary><p class="note" style="margin-top:0">球の黒い線＝回る向き（見やすく遅くしています）。人の形＝身長165cm、膝を軽く曲げた構え。肘の点の色：緑＝余裕あり、橙＝伸びすぎ・窮屈、赤＝伸びきり。</p></details>
 </section>
+
+<section class="panel saves" id="saves"></section>
 
 <section class="panel">
   <h2>自分のカット</h2>
@@ -141,26 +144,6 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 </section>
 
 <section class="panel">
-  <h2>面の角度がぶれても入る振り方</h2>
-  <p class="note" style="margin-top:0">スイングの速さと向きを変えながら、相手コートに入る面の開きの幅（何度ぶれても入るか）を計算します。色が濃いほど幅が広く、ぶれに強い振り方です。マスをタップすると、その振り方に切り替わります。</p>
-  <div class="seg" role="radiogroup" aria-label="評価のしかた" style="grid-template-columns:repeat(2,minmax(0,1fr))"><label><input type="radio" name="crit" value="low" checked>入って浮かない</label><label><input type="radio" name="crit" value="target">狙った位置に落とす</label></div>
-  <div id="crit-target" hidden>
-  <p class="note" style="margin-top:6px">返球が相手コートで弾む位置と、弾んだ後の頂点の高さを指定すると、それを満たす振り方を逆算します。</p>
-  <div class="row"><label for="tg">狙う弾む位置（相手のエンドラインから手前へ）</label><output id="tgo"></output><input type="range" id="tg" min="0.05" max="1.3" step="0.05" value="0.3"></div>
-  <div class="row"><label for="tol">許す誤差（前後）</label><output id="tolo"></output><input type="range" id="tol" min="5" max="40" step="5" value="15"></div>
-  <div class="row"><label for="pmax">弾んだ後の頂点の上限</label><output id="pmaxo"></output><input type="range" id="pmax" min="10" max="80" step="5" value="35"></div>
-  </div>
-  <div id="crit-low">
-  <p class="note" style="margin-top:6px">低く返す条件：相手コートで弾んだ後の頂点が高いと強打されやすいため、頂点の高さに上限を設けます。頂点がエンドラインより後ろに来るほど相手は打ちにくいので、その分だけ高さを許します。</p>
-  <div class="row"><label for="hb">台の上で頂点になるときの高さの上限</label><output id="hbo"></output><input type="range" id="hb" min="10" max="100" step="5" value="100"></div>
-  <div class="row"><label for="hs">頂点がエンドラインの後ろ1mごとに許す高さ</label><output id="hso"></output><input type="range" id="hs" min="0" max="100" step="5" value="40"></div>
-  </div>
-  <div class="bar" style="margin:4px 0 8px"><button class="btn" id="search" type="button">ぶれに強い振り方を探す</button><span class="note" id="srch-msg"></span></div>
-  <canvas id="heat" role="img" aria-label="スイングの速さと向きごとの、入る面の開きの幅" style="width:100%;display:block;touch-action:manipulation"></canvas>
-  <p class="note" id="srch-best"></p>
-</section>
-
-<section class="panel">
   <h2>相手の打球</h2>
   <div class="seg seg4" role="radiogroup" aria-label="打球の種類">
     <label><input type="radio" name="shot" value="drive" checked>強いドライブ</label>
@@ -173,6 +156,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <label><input type="radio" name="course" value="straight">ストレート</label>
     <label><input type="checkbox" id="arc">弾道を高く</label>
   </div>
+  <details class="more"><summary>速さ・回転・弾む位置を細かく変える</summary>
   <div class="row"><label for="v0">打ち出しの速さ</label><output id="v0o"></output><input type="range" id="v0" min="4" max="28" step="1" value="22"></div>
   <div class="row"><label for="rps">回転（1秒あたり、＋上回転／−下回転）</label><output id="rpso"></output><input type="range" id="rps" min="-100" max="200" step="5" value="110"></div>
   <div class="seg" role="radiogroup" aria-label="相手の打球の決め方" style="grid-template-columns:repeat(2,minmax(0,1fr))"><label><input type="radio" name="aim" value="bounce" checked>弾む位置で決める</label><label><input type="radio" name="aim" value="angle">打ち出し角度で決める</label></div>
@@ -184,6 +168,29 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
     <dt>台から30cm下まで落ちる位置</dt><dd id="h-30">—</dd>
   </dl>
   <p class="note">位置はすべてエンドラインからの距離です。クロスは台の対角線（約3.14m）に沿って計算し、返球も同じコースに返す想定です。上手な若手選手のフォアドライブは約23m/s・約117回転/秒という計測があります。</p>
+  </details>
+</section>
+
+<section class="panel">
+  <h2>面の角度がぶれても入る振り方</h2>
+  <p class="note" style="margin-top:0">スイングの速さと向きを変えながら、相手コートに入る面の開きの幅（何度ぶれても入るか）を計算します。色が濃いほど幅が広く、ぶれに強い振り方です。マスをタップすると、その振り方に切り替わります。</p>
+  <details class="more"><summary>探す条件（低く返す・狙った位置に落とす）</summary>
+  <div class="seg" role="radiogroup" aria-label="評価のしかた" style="grid-template-columns:repeat(2,minmax(0,1fr))"><label><input type="radio" name="crit" value="low" checked>入って浮かない</label><label><input type="radio" name="crit" value="target">狙った位置に落とす</label></div>
+  <div id="crit-target" hidden>
+  <p class="note" style="margin-top:6px">返球が相手コートで弾む位置と、弾んだ後の頂点の高さを指定すると、それを満たす振り方を逆算します。</p>
+  <div class="row"><label for="tg">狙う弾む位置（相手のエンドラインから手前へ）</label><output id="tgo"></output><input type="range" id="tg" min="0.05" max="1.3" step="0.05" value="0.3"></div>
+  <div class="row"><label for="tol">許す誤差（前後）</label><output id="tolo"></output><input type="range" id="tol" min="5" max="40" step="5" value="15"></div>
+  <div class="row"><label for="pmax">弾んだ後の頂点の上限</label><output id="pmaxo"></output><input type="range" id="pmax" min="10" max="80" step="5" value="35"></div>
+  </div>
+  <div id="crit-low">
+  <p class="note" style="margin-top:6px">低く返す条件：相手コートで弾んだ後の頂点が高いと強打されやすいため、頂点の高さに上限を設けます。頂点がエンドラインより後ろに来るほど相手は打ちにくいので、その分だけ高さを許します。</p>
+  <div class="row"><label for="hb">台の上で頂点になるときの高さの上限</label><output id="hbo"></output><input type="range" id="hb" min="10" max="100" step="5" value="100"></div>
+  <div class="row"><label for="hs">頂点がエンドラインの後ろ1mごとに許す高さ</label><output id="hso"></output><input type="range" id="hs" min="0" max="100" step="5" value="40"></div>
+  </div>
+  </details>
+  <div class="bar" style="margin:4px 0 8px"><button class="btn" id="search" type="button">ぶれに強い振り方を探す</button><span class="note" id="srch-msg"></span></div>
+  <canvas id="heat" role="img" aria-label="スイングの速さと向きごとの、入る面の開きの幅" style="width:100%;display:block;touch-action:manipulation"></canvas>
+  <p class="note" id="srch-best"></p>
 </section>
 
 <section class="panel">
@@ -199,7 +206,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 </section>
 
 <section class="panel">
-  <details>
+  <details id="det-num">
     <summary>詳しい数値と打点の速度</summary>
     <dl class="kv">
       <dt>打点（体のどの高さか）</dt><dd id="o-body"></dd>
@@ -257,6 +264,7 @@ ul.find{margin:0;padding-left:1.1em;font-size:14px} ul.find li{margin:4px 0}
 <p style="text-align:center;font-size:13px;margin:0 0 32px"><a href="attack.html">攻撃編</a> ／ <a href="receive.html">レシーブ編</a> ／ <a href="grip.html">ラバーがつかむ仕組み</a></p>
 <script src="js/physics.js?v=2026102202"></script>
 <script src="js/side-view.js?v=2026102003"></script>
+<script src="js/settings.js?v=2026102702"></script>
 <script>
 const M=0.0027,R=0.02,AR=Math.PI*R*R,RHO=1.2,CD=0.5,G=9.8;
 const NETH=0.1525,FLOOR=-0.76,DT=5e-4,EX=1.5;
@@ -376,7 +384,7 @@ document.querySelectorAll("input[name=shot]").forEach(r=>r.addEventListener("cha
 document.querySelectorAll("input[type=range]").forEach(r=>r.addEventListener("input",()=>{schedule();if(!["sw","sa","face"].includes(r.id)&&HEAT){HEAT=null;drawHeat();$("srch-best").textContent="条件が変わったので、もう一度探してください。";$("srch-msg").textContent="";}else if(HEAT)requestAnimationFrame(drawHeat);}));
 $("play").addEventListener("click",()=>{anim.playing=!anim.playing;$("play").textContent=anim.playing?"一時停止":"再生";if(anim.playing&&anim.t>=total()){anim.t=0;anim.hold=0;}});
 document.querySelectorAll("[data-s]").forEach(b=>b.addEventListener("click",()=>{anim.speed=+b.dataset.s;document.querySelectorAll("[data-s]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));}));
-document.querySelector("details").addEventListener("toggle",drawInset);
+$("det-num").addEventListener("toggle",drawInset);
 window.addEventListener("resize",()=>{drawInset();});
 
 const SW_STEPS=[];for(let v=0;v<=10;v+=1)SW_STEPS.push(v);
@@ -429,6 +437,7 @@ document.querySelectorAll("input[name=pmu],input[name=pE]").forEach(r=>r.addEven
 
 function modeNote(){const el=document.getElementById("modeNote");if(!el)return;const v=document.querySelector("input[name=rub]:checked").value;const inv=(v==="g9"||v==="inv");el.textContent=inv?"いまの計算：シートとスポンジを細かく分けて計算（実測で校正）":"いまの計算：粒を1本ずつ計算";}
 document.querySelectorAll("input[name=rub]").forEach(r=>r.addEventListener("change",modeNote));modeNote();
+labSettings({page:"cut",refresh:schedule});
 </script>
 
 </body>
